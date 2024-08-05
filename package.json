@@ -5,12 +5,16 @@
   "main": "index.js",
   "type": "module",
   "imports": {
-    "#*": "./*"
+    "~/*": "./*"
   },
   "scripts": {
-    "dev": "vite",
+    "dev": "bun run tasks/dev.ts",
+    "dev:app": "vite",
+    "dev:api": "bun run --hot api/server.ts",
     "build": "remix vite:build",
-    "start": "remix-serve build/server/index.js"
+    "prestart:app": "bun run build",
+    "start:app": "remix-serve build/server/index.js",
+    "test": "vitest"
   },
   "repository": {
     "type": "git",
@@ -26,22 +30,33 @@
   },
   "homepage": "https://github.com/jacobparis/underkill-stack#readme",
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.25.0",
+    "@radix-ui/react-checkbox": "^1.1.1",
+    "@radix-ui/react-label": "^2.1.0",
     "@radix-ui/react-slot": "^1.1.0",
     "@remix-run/node": "^2.10.3",
     "@remix-run/react": "^2.10.3",
     "@remix-run/serve": "^2.10.3",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
+    "eventsource-parser": "^1.1.2",
+    "gpt-tokenizer": "^2.2.1",
+    "hono": "^4.5.3",
     "isbot": "^4.4.0",
     "lucide-react": "^0.424.0",
+    "markdown-to-jsx": "^7.4.7",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-icons": "^5.2.1",
+    "remix-params-helper": "^0.5.1",
     "tailwind-merge": "^2.4.0",
     "tailwindcss-animate": "^1.0.7",
+    "vitest": "^2.0.5",
     "zod": "^3.23.8"
   },
   "devDependencies": {
     "@remix-run/dev": "^2.10.3",
+    "@tailwindcss/typography": "^0.5.13",
     "@total-typescript/tsconfig": "^1.0.4",
     "@types/bun": "latest",
     "@types/react": "^18.3.3",
