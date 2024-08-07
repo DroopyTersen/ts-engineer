@@ -30,7 +30,7 @@ export default function ProjectDetailsRoute() {
     <div className="max-w-3xl mx-auto mt-8">
       <h1 className="text-4xl font-bold">{project.name}</h1>
       <ProjectStats project={project} />
-      <FolderExplorer files={project.files || []} />
+      <FolderExplorer files={project.filepaths || []} />
       {project.summary && (
         <div className="prose prose-sm max-w-[1200px]">
           <Markdown>{summary}</Markdown>
@@ -63,6 +63,26 @@ function useProjectSummary(project: CodeProject) {
   };
 }
 
+function useProjectCodeMap(project: CodeProject) {
+  let apiUrl = useApiUrl();
+
+  let { actions, status, isStreaming, message } = useLLMEventStream({
+    bodyInput: {},
+    apiPath: apiUrl + `/projects/${project.id}/code-map`,
+  });
+
+  return {
+    isStreaming,
+    codeMap: isStreaming
+      ? message?.content || ""
+      : message?.content ||
+        project?.files
+          .map((f) => `${f.filepath}\n${f.documentation}`)
+          .join("\n\n") ||
+        "",
+  };
+}
+
 export function ProjectStats({ project }: { project: CodeProject }) {
   return (
     <dl className="grid grid-cols-1 sm:grid-cols-2">
@@ -79,7 +99,7 @@ export function ProjectStats({ project }: { project: CodeProject }) {
           Total Files
         </dt>
         <dd className="mt-1 text-sm leading-6 text-gray-700 sm:mt-2  font-mono">
-          {project.files?.length || 0}
+          {project.filepaths?.length || 0}
         </dd>
       </div>
       <div className="border-t border-gray-100 px-4 py-6 sm:col-span-1 sm:px-0">

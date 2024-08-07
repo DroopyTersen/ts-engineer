@@ -12,8 +12,8 @@ export async function getProject(id: string): Promise<CodeProject> {
     "🚀 | getProject | project.absolute_path:",
     project.absolute_path
   );
-  let files = await getProjectFiles(project.absolute_path);
-  let markdown = await filesToMarkdown(files, project.absolute_path);
+  let filepaths = await getProjectFiles(project.absolute_path);
+  let markdown = await filesToMarkdown(filepaths, project.absolute_path);
   let estimatedTokens = countTokens(markdown);
 
   const usageEstimate = {
@@ -23,6 +23,6 @@ export async function getProject(id: string): Promise<CodeProject> {
   return {
     ...project,
     usageEstimate,
-    files,
+    filepaths,
   };
 }

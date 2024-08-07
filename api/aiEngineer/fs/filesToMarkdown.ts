@@ -1,37 +1,37 @@
-import { join } from "node:path";
+import { defineTemplate } from "~/toolkit/utils/defineTemplate";
+import { processFileContents } from "./getFileContent";
 
-export const getFileContent = (filePath: string) => {
-  try {
-    return Bun.file(filePath).text();
-  } catch (error) {
-    console.error(`Error reading file ${filePath}`, error);
-    return "";
-  }
-};
-
-export async function filesToMarkdown(filePaths: string[], absolutePath = "") {
-  let allFileContents = await Promise.all(
-    filePaths.map(async (path, index) => {
-      let filepath = path.includes(absolutePath)
-        ? path
-        : join(absolutePath, path);
-      let content = await getFileContent(filepath);
-      let fileExtension = path.split(".").pop();
-      return `${filePaths[index]}
-    
-\`\`\`${fileExtension}
-${content}
-\`\`\`
-`;
-    })
+export async function filesToMarkdown(filePaths: string[], projectPath = "") {
+  let allFileContents = await processFileContents(
+    filePaths,
+    projectPath,
+    (filepath, content) => {
+      let fileExtension = filepath.split(".").pop() || "";
+      return fileMarkdownTemplate
+        .formatString({
+          fileExtension,
+          filepath,
+          content,
+        })
+        .trim();
+    }
   );
+
   return `
 ## File Structure
+
 \`\`\`
-${filePaths.join("\n")}
+${filePaths.join("\n\n")}
 \`\`\`
 
 ## Files
 
-${allFileContents.join("\n\n")}`;
+${allFileContents.join("\n\n")}`.trim();
 }
+
+let fileMarkdownTemplate = defineTemplate(`
+{filepath}
+\`\`\`{fileExtension}
+{content}
+\`\`\`
+`);

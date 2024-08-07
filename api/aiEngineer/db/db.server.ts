@@ -9,7 +9,8 @@ export function ensureSchema(db: Database) {
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
       absolute_path TEXT NOT NULL,
-      summary TEXT NOT NULL
+      summary TEXT NOT NULL,
+      files TEXT NOT NULL
     )
   `);
   console.log("Schema ensured for code_projects table");
@@ -50,14 +51,14 @@ const updateProject = (input: CodeProjectDbItem) => {
     const validatedInput = CodeProjectDbItem.parse(input);
     const stmt = _db.prepare(`
       UPDATE code_projects
-      SET name = ?, absolute_path = ?, summary = ?
+      SET name = ?, absolute_path = ?, summary = ?, files = ?
       WHERE id = ?
     `);
     const result = stmt.run(
       validatedInput.name,
       validatedInput.absolute_path,
       validatedInput.summary,
-      validatedInput.id
+      JSON.stringify(validatedInput.files || [])
     );
     return getProjectById(validatedInput.id);
   } catch (error) {
@@ -71,15 +72,16 @@ const insertProject = (input: CodeProjectDbItem) => {
     const validatedInput = CodeProjectDbItem.parse(input);
 
     const stmt = _db.prepare(`
-      INSERT INTO code_projects (id, name, absolute_path, summary)
-      VALUES (?, ?, ?, ?)
+      INSERT INTO code_projects (id, name, absolute_path, summary, files)
+      VALUES (?, ?, ?, ?, ?)
     `);
 
     const result = stmt.run(
       validatedInput.id,
       validatedInput.name,
       validatedInput.absolute_path,
-      validatedInput.summary
+      validatedInput.summary,
+      JSON.stringify(validatedInput.files || [])
     );
 
     console.log(`Project inserted successfully: ${validatedInput.name}`);

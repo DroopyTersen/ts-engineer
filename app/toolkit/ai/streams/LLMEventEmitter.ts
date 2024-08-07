@@ -11,6 +11,14 @@ export type LLMEvent =
       data: JSONValue;
     }
   | {
+      type: "partial_data";
+      data: JSONValue;
+    }
+  | {
+      type: "data";
+      data: JSONValue;
+    }
+  | {
       type: "message";
       data: OpenAI.Chat.Completions.ChatCompletionAssistantMessageParam;
     }

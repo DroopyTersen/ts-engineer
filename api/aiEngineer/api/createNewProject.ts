@@ -22,6 +22,7 @@ export const createNewProject = (formData: FormData) => {
     name: userInput.name || defaultName,
     absolute_path: cleanedPath,
     summary: "",
+    files: [],
   };
   let existingProject = db.getProjectByAbsolutePath(project.absolute_path);
   if (existingProject) {
