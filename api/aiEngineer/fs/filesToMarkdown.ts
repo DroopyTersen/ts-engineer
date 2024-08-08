@@ -1,4 +1,3 @@
-import { defineTemplate } from "~/toolkit/utils/defineTemplate";
 import { processFileContents } from "./getFileContent";
 
 export async function filesToMarkdown(filePaths: string[], projectPath = "") {
@@ -7,13 +6,12 @@ export async function filesToMarkdown(filePaths: string[], projectPath = "") {
     projectPath,
     (filepath, content) => {
       let fileExtension = filepath.split(".").pop() || "";
-      return fileMarkdownTemplate
-        .formatString({
-          fileExtension,
-          filepath,
-          content,
-        })
-        .trim();
+      return `
+${filepath}
+\`\`\`${fileExtension}
+${content}
+\`\`\`
+`;
     }
   );
 
@@ -28,10 +26,3 @@ ${filePaths.join("\n\n")}
 
 ${allFileContents.join("\n\n")}`.trim();
 }
-
-let fileMarkdownTemplate = defineTemplate(`
-{filepath}
-\`\`\`{fileExtension}
-{content}
-\`\`\`
-`);

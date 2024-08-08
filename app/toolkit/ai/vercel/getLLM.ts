@@ -10,6 +10,7 @@ import {
 import { z } from "zod";
 import { Prettify } from "~/toolkit/utils/typescript.utils";
 import { LLMEventEmitter } from "../streams/LLMEventEmitter";
+import "./bunPolyfill";
 
 const MODEL_PROVIDERS = {
   deepseek: {
@@ -68,10 +69,16 @@ export const getLLM = <T extends ModelProvider>(
       return _generateData({ ...params, model: _model }, asyncOptions);
     },
     streamText: async (
-      params: GenerateTextParams,
+      params: StreamTextParams,
       asyncOptions?: AsyncOptions
     ) => {
       return _streamText({ ...params, model: _model }, asyncOptions);
+    },
+    runTools: async (
+      params: StreamTextParams & { maxLoops?: number },
+      asyncOptions?: AsyncOptions
+    ) => {
+      return _streamTextWithTools({ ...params, model: _model }, asyncOptions);
     },
     streamData: async <TSchema extends z.ZodType>(
       params: StreamDataParams<TSchema>,
@@ -216,6 +223,139 @@ const _streamData = async <TSchema extends z.ZodType>(
       }
     } catch (err: any) {
       console.error("🚀 | streamData err:", err);
+      emitter?.emit("error", err);
+      reject(err);
+    }
+  });
+};
+const _streamTextWithTools = async (
+  params: Parameters<typeof vercelStreamText>[0] & { maxLoops?: number },
+  asyncOptions?: AsyncOptions
+): Promise<StreamTextResult> => {
+  const { signal, emitter } = asyncOptions || {};
+  let messages = [...(params.messages || [])];
+  let loopCount = 0;
+  const maxLoops = params.maxLoops || 5;
+
+  const executeTools = async (toolCalls: any[]) => {
+    for (const toolCall of toolCalls) {
+      const tool = params.tools?.[toolCall.toolName];
+      if (tool && tool.execute) {
+        emitter?.emit("tool_call", {
+          id: toolCall.toolCallId,
+          name: toolCall.toolName,
+          args: toolCall.args,
+          timestamp: Date.now(),
+        });
+
+        try {
+          const result = await tool.execute(toolCall.args);
+          emitter?.emit("tool_result", {
+            toolCallId: toolCall.toolCallId,
+            toolName: toolCall.toolName,
+            result,
+            toolDefinitionId: "",
+          });
+
+          messages.push({
+            role: "tool",
+            content: [
+              {
+                type: "tool-result",
+                toolCallId: toolCall.toolCallId,
+                toolName: toolCall.toolName,
+                result,
+              },
+            ],
+          });
+        } catch (error: any) {
+          console.error(`Error executing tool ${toolCall.toolName}:`, error);
+          emitter?.emit("error", error);
+        }
+      }
+    }
+  };
+
+  return new Promise(async (resolve, reject) => {
+    emitter?.emit("llm_start", params);
+    try {
+      let finalContent = "";
+      const stream = await vercelStreamText({
+        ...params,
+        messages,
+        abortSignal: signal,
+        onFinish: async (result) => {
+          if (
+            result.toolCalls &&
+            result.toolCalls.length > 0 &&
+            loopCount < maxLoops
+          ) {
+            messages.push({
+              role: "assistant",
+              content: result.toolCalls.map((toolCall) => ({
+                type: "tool-call",
+                toolCallId: toolCall.toolCallId,
+                toolName: toolCall.toolName,
+                args: toolCall.args,
+              })),
+            });
+            if (result.toolResults) {
+              result.toolResults.forEach((r: any) => {
+                emitter?.emit("tool_result", {
+                  toolCallId: r.toolCallId,
+                  toolName: r.toolName,
+                  result: r.result,
+                  toolDefinitionId: r.toolName,
+                });
+              });
+              messages.push({
+                role: "tool",
+                content: result.toolResults as unknown as any[],
+              });
+            }
+            loopCount++;
+            // resolve(result);
+            // await executeTools(result.toolCalls);
+
+            // Recursive call with updated messages
+            const nextResult = await _streamTextWithTools(
+              { ...params, messages, maxLoops: maxLoops - 1 },
+              asyncOptions
+            );
+            resolve({
+              ...nextResult,
+              toolCalls: [
+                ...(result.toolCalls || []),
+                ...(nextResult.toolCalls || []),
+              ],
+              toolResults: [
+                ...(result.toolResults || []),
+                ...(nextResult.toolResults || []),
+              ],
+            });
+          } else {
+            emitter?.emit("llm_end", result);
+            emitter?.emit("final_content", finalContent);
+            resolve(result);
+          }
+        },
+      });
+
+      for await (const chunk of stream.fullStream) {
+        if (chunk.type === "text-delta") {
+          finalContent += chunk.textDelta;
+          emitter?.emit("content", chunk.textDelta);
+        } else if (chunk.type === "tool-call") {
+          emitter?.emit("tool_call", {
+            id: chunk.toolCallId,
+            name: chunk.toolName,
+            args: chunk.args,
+            timestamp: Date.now(),
+          });
+        }
+      }
+    } catch (err: any) {
+      console.error("🚀 | streamTextWithTools err:", err);
       emitter?.emit("error", err);
       reject(err);
     }

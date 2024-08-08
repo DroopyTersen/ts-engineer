@@ -3,19 +3,17 @@ import {
   streamCompletion,
 } from "~/toolkit/ai/openai/anthropic.sdk";
 import { LLMEventEmitter } from "~/toolkit/ai/streams/LLMEventEmitter";
-import { defineTemplate } from "~/toolkit/utils/defineTemplate";
 
 export async function summarizeProjectMarkdown(
   codebaseMarkdown: string,
   emitter?: LLMEventEmitter
 ) {
-  let prompt = summarizeProjectPrompt.formatString({
-    codebaseMarkdown,
-  });
+  let prompt = summarizeProjectPrompt(codebaseMarkdown);
 
   let anthropic = createAnthropicClient();
   let summary = await streamCompletion(
     anthropic,
+
     {
       messages: [
         {
@@ -28,6 +26,8 @@ export async function summarizeProjectMarkdown(
         },
       ],
       max_tokens: 4000,
+      tools: [],
+
       model: "claude-3-sonnet-20240229",
     },
     {
@@ -37,7 +37,7 @@ export async function summarizeProjectMarkdown(
   return summary.text;
 }
 
-const summarizeProjectPrompt = defineTemplate(`
+const summarizeProjectPrompt = (codebaseMarkdown: string) => `
   You are an expert senior software engineer with extensive experience in analyzing and summarizing codebases. Your task is to examine the given codebase and provide a comprehensive summary of the project using the specified output template. Approach this task with meticulous attention to detail and a deep understanding of software architecture and best practices.
   
   Guidelines for your analysis:
@@ -55,7 +55,7 @@ const summarizeProjectPrompt = defineTemplate(`
   - Clear and professional: Present information in a well-organized, easy-to-understand manner.
   
   Here is the full codebase:
-  {codebaseMarkdown}
+  ${codebaseMarkdown}
   
   Use the following template for your response:
   
@@ -69,4 +69,4 @@ const summarizeProjectPrompt = defineTemplate(`
   [Insert bulleted list of key technologies, specifying what each is used for]
   
   Remember to base your analysis solely on the provided codebase, avoiding assumptions or speculation about features or functionalities not explicitly present in the code.
-  `);
+`;
