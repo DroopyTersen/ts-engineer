@@ -1,3 +1,4 @@
+import { Glob } from "bun";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { createEventStreamDataStream } from "~/toolkit/ai/streams/createLLMEventStream";
@@ -6,6 +7,7 @@ import { documentProject } from "./aiEngineer/api/documentProjectFiles";
 import { getProject } from "./aiEngineer/api/getProject";
 import { getProjects } from "./aiEngineer/api/getProjects.api";
 import { summarizeProject } from "./aiEngineer/api/summarizeProject";
+import { updateProject } from "./aiEngineer/api/updateProject.api";
 import { filesToMarkdown } from "./aiEngineer/fs/filesToMarkdown";
 import { openProjectInCursor } from "./aiEngineer/fs/openProjectInCursor";
 const app = new Hono();
@@ -25,6 +27,15 @@ app.get("/projects", async (c) => {
   const projects = await getProjects();
   return c.json(projects);
 });
+
+app.get("/test", async (c) => {
+  let glob = "**/data/**";
+  let filepath = "data/movies/10144.json";
+  let g = new Glob(glob);
+  let matches = g.match(filepath);
+  return c.json({ matches, filepath, glob });
+});
+
 app.post("/projects/new", async (c) => {
   const formData = await c.req.formData();
   let newProject = createNewProject(formData);
@@ -37,7 +48,16 @@ app.get("/projects/:id", async (c) => {
   const project = await getProject(c.req.param("id"));
   return c.json(project);
 });
-export default app;
+app.get("/projects/:id/edit", async (c) => {
+  const project = await getProject(c.req.param("id"));
+  return c.json(project);
+});
+app.post("/projects/:id/edit", async (c) => {
+  const formData = await c.req.formData();
+  console.log("🚀 | app.post | edit project:", Object.fromEntries(formData));
+  let updatedProject = await updateProject(c.req.param("id"), formData);
+  return c.json(updatedProject);
+});
 
 app.get("/projects/:id/files", async (c) => {
   const project = await getProject(c.req.param("id"));
@@ -65,7 +85,9 @@ app.get("/projects/:id/markdown", async (c) => {
 app.post("/projects/:id/summarize", async (c) => {
   let dataStream = createEventStreamDataStream(c.req.raw.signal);
   let emitter = dataStream.createEventEmitter();
-  summarizeProject(c.req.param("id"), emitter);
+  summarizeProject(c.req.param("id"), emitter).finally(() =>
+    dataStream.close()
+  );
   return dataStream.toResponse();
 });
 
@@ -93,3 +115,5 @@ app.get("/projects/:id/open-in-cursor", async (c) => {
   await openProjectInCursor(project.absolute_path);
   return c.json({ message: "Project opened in Cursor" });
 });
+
+export default app;

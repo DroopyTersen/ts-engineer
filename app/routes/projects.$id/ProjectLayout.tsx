@@ -1,9 +1,11 @@
 import { Form, Link } from "@remix-run/react";
 import { CodeProject } from "api/aiEngineer/api/getProject";
+import { BsPencil } from "react-icons/bs";
 import { useApiUrl } from "~/root";
 import { ChevronRightIcon, SearchIcon } from "~/shadcn/components/icons";
+import { Button } from "~/shadcn/components/ui/button";
 import { Input } from "~/shadcn/components/ui/input";
-import { ScrollArea } from "~/shadcn/components/ui/scroll-area";
+import { FolderExplorer } from "~/toolkit/components/FileExplorer/FolderExplorer";
 import { OpenInCursorButton } from "./OpenInCursorButton";
 export function ProjectLayout({
   children,
@@ -28,7 +30,21 @@ export function ProjectLayout({
           </Link>
           <div className="flex items-center gap-2">
             <ChevronRightIcon className="h-4 w-4 text-muted-foreground" />
-            <h1 className="text-2xl font-bold">{project.name}</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl font-bold">{project.name}</h1>
+              <Link to="edit">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  asChild
+                  className="rounded-full"
+                >
+                  <Link to="edit">
+                    <BsPencil />
+                  </Link>
+                </Button>
+              </Link>
+            </div>
             <div className="flex flex-col ml-12">
               <OpenInCursorButton
                 projectId={project.id}
@@ -59,7 +75,14 @@ export function ProjectLayout({
           </Form>
         </div>
       </header>
-      <ScrollArea>{children}</ScrollArea>
+      <main className="w-full h-full grid grid-cols-[auto_1fr]">
+        <div className="bg-gray-100 overflow-y-auto max-h-[calc(100vh-70px)] px-4 py-4">
+          <FolderExplorer files={project.filepaths || []} />
+        </div>
+        <div className="overflow-y-auto max-h-[calc(100vh-100px)]">
+          {children}
+        </div>
+      </main>
     </div>
   );
 }

@@ -51,6 +51,8 @@ export const CodeProjectDbItem = z.object({
       }
       return [];
     }),
+  exclusions: z.string().default(""),
+  test_code_command: z.string().default("bun run build"),
 });
 
 export type CodeProjectDbItem = z.infer<typeof CodeProjectDbItem>;

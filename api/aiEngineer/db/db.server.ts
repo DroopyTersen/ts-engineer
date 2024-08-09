@@ -13,6 +13,21 @@ export function ensureSchema(db: Database) {
       files TEXT NOT NULL
     )
   `);
+
+  // Check if columns exist and add them if they don't
+  const columns = db.query("PRAGMA table_info(code_projects)").all();
+  const columnNames = columns.map((col: any) => col.name);
+
+  if (!columnNames.includes("exclusions")) {
+    db.run("ALTER TABLE code_projects ADD COLUMN exclusions TEXT DEFAULT ''");
+  }
+
+  if (!columnNames.includes("test_code_command")) {
+    db.run(
+      "ALTER TABLE code_projects ADD COLUMN test_code_command TEXT DEFAULT 'bun run build'"
+    );
+  }
+
   console.log("Schema ensured for code_projects table");
 }
 
@@ -51,14 +66,17 @@ const updateProject = (input: CodeProjectDbItem) => {
     const validatedInput = CodeProjectDbItem.parse(input);
     const stmt = _db.prepare(`
       UPDATE code_projects
-      SET name = ?, absolute_path = ?, summary = ?, files = ?
+      SET name = ?, absolute_path = ?, summary = ?, files = ?, exclusions = ?, test_code_command = ?
       WHERE id = ?
     `);
     const result = stmt.run(
       validatedInput.name,
       validatedInput.absolute_path,
       validatedInput.summary,
-      JSON.stringify(validatedInput.files || [])
+      JSON.stringify(validatedInput.files || []),
+      validatedInput.exclusions,
+      validatedInput.test_code_command,
+      validatedInput.id
     );
     return getProjectById(validatedInput.id);
   } catch (error) {
@@ -72,8 +90,8 @@ const insertProject = (input: CodeProjectDbItem) => {
     const validatedInput = CodeProjectDbItem.parse(input);
 
     const stmt = _db.prepare(`
-      INSERT INTO code_projects (id, name, absolute_path, summary, files)
-      VALUES (?, ?, ?, ?, ?)
+      INSERT INTO code_projects (id, name, absolute_path, summary, files, exclusions, test_code_command)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
     `);
 
     const result = stmt.run(
@@ -81,7 +99,9 @@ const insertProject = (input: CodeProjectDbItem) => {
       validatedInput.name,
       validatedInput.absolute_path,
       validatedInput.summary,
-      JSON.stringify(validatedInput.files || [])
+      JSON.stringify(validatedInput.files || []),
+      validatedInput.exclusions,
+      validatedInput.test_code_command
     );
 
     console.log(`Project inserted successfully: ${validatedInput.name}`);

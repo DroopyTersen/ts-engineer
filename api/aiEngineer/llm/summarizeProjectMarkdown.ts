@@ -1,19 +1,13 @@
-import {
-  createAnthropicClient,
-  streamCompletion,
-} from "~/toolkit/ai/openai/anthropic.sdk";
 import { LLMEventEmitter } from "~/toolkit/ai/streams/LLMEventEmitter";
+import { getLLM } from "~/toolkit/ai/vercel/getLLM";
 
 export async function summarizeProjectMarkdown(
   codebaseMarkdown: string,
   emitter?: LLMEventEmitter
 ) {
   let prompt = summarizeProjectPrompt(codebaseMarkdown);
-
-  let anthropic = createAnthropicClient();
-  let summary = await streamCompletion(
-    anthropic,
-
+  let llm = getLLM("deepseek", "deepseek-coder");
+  let result = await llm.streamText(
     {
       messages: [
         {
@@ -25,16 +19,13 @@ export async function summarizeProjectMarkdown(
           content: "Please summarize the project using the template provided.",
         },
       ],
-      max_tokens: 4000,
-      tools: [],
-
-      model: "claude-3-sonnet-20240229",
     },
     {
       emitter,
     }
   );
-  return summary.text;
+
+  return result.text;
 }
 
 const summarizeProjectPrompt = (codebaseMarkdown: string) => `

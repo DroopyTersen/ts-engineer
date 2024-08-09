@@ -1,5 +1,6 @@
 import { CodeProjectFile } from "@shared/db.schema";
 import { LLMEventEmitter } from "~/toolkit/ai/streams/LLMEventEmitter";
+import { getLLM } from "~/toolkit/ai/vercel/getLLM";
 import { AsyncQueue } from "~/toolkit/data-structures/AsyncQueue";
 import { db } from "../db/db.server";
 import { getFileContent } from "../fs/getFileContent";
@@ -26,7 +27,9 @@ async function _documentCodeFile(
     };
   }
   // Use an LLM to summarize/document the file
-  let documentation = await documentCodeFile(fileContent, projectPath);
+  let documentation = await documentCodeFile(fileContent, projectPath, {
+    llm: getLLM("deepseek", "deepseek-coder"),
+  });
   return {
     filepath,
     documentation: documentation || "No documentation found",
@@ -58,6 +61,8 @@ export const documentProject = async (
     absolute_path: project.absolute_path,
     summary: project.summary,
     files: files,
+    test_code_command: project.test_code_command,
+    exclusions: project.exclusions,
   });
   return files;
 };

@@ -29,7 +29,6 @@ export function createTreeStructure(files: string[]): FSNode[] {
       };
       currentLevel.push(node);
     }
-    console.log("🚀 | addNode | node:", node);
     if (!isFile) {
       addNode(parts.slice(1), node.children as FSNode[]);
     }

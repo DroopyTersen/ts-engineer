@@ -1,54 +1,14 @@
-import { LoaderFunctionArgs } from "@remix-run/node";
-import { Outlet, useLoaderData } from "@remix-run/react";
+import { useOutletContext } from "@remix-run/react";
 import { CodeProject } from "api/aiEngineer/api/getProject";
-import { useApiUrl } from "~/root";
-import { useLLMEventStream } from "~/toolkit/ai/ui/useLLMEventStream";
-import { proxyApiRequestAsJson } from "~/toolkit/http/proxyApiRequest";
-import { ProjectLayout } from "./ProjectLayout";
 
-// export const action = async ({ request }: ActionFunctionArgs) => {
-//   let resp = await proxyApiRequest(request);
-//   return resp;
-// };
-
-export const loader = async ({ params, request }: LoaderFunctionArgs) => {
-  const project = await proxyApiRequestAsJson<CodeProject>(request);
-  return {
-    project,
-  };
-};
 export default function ProjectDetailsRoute() {
-  let data = useLoaderData<typeof loader>();
-  let project = data?.project;
-
-  if (!project) {
-    return <div>Project not found</div>;
-  }
+  let project = useOutletContext<{ project: CodeProject }>()?.project;
   return (
-    <ProjectLayout project={project}>
-      <Outlet context={{ project }} />
-    </ProjectLayout>
+    <div className="max-w-3xl mx-auto mt-8">
+      <h1 className="text-4xl font-bold">{project.name}</h1>
+      <ProjectStats project={project} />
+    </div>
   );
-}
-
-function useProjectCodeMap(project: CodeProject) {
-  let apiUrl = useApiUrl();
-
-  let { actions, status, isStreaming, message } = useLLMEventStream({
-    bodyInput: {},
-    apiPath: apiUrl + `/projects/${project.id}/code-map`,
-  });
-
-  return {
-    isStreaming,
-    codeMap: isStreaming
-      ? message?.content || ""
-      : message?.content ||
-        project?.files
-          .map((f) => `${f.filepath}\n${f.documentation}`)
-          .join("\n\n") ||
-        "",
-  };
 }
 
 export function ProjectStats({ project }: { project: CodeProject }) {

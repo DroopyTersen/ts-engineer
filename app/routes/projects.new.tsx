@@ -67,6 +67,19 @@ export default function NewProject() {
                 absolute path will be used.
               </p>
             </div>
+            <div className="grid gap-3 mt-6">
+              <Label htmlFor="test_code_command">Verification Command</Label>
+              <Input
+                type="text"
+                id="test_code_command"
+                name="test_code_command"
+                placeholder="bun run build"
+              />
+              <p className="text-sm text-gray-500">
+                The CLI command to verify the project's code is okay after the
+                AI makes updates.
+              </p>
+            </div>
             <div className="mt-6 flex justify-between gap-2">
               <Button variant="secondary" asChild className="w-40">
                 <Link to="/projects">Cancel</Link>

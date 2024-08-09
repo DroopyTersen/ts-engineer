@@ -2,9 +2,11 @@ import { z } from "zod";
 import { validateSchema } from "~/toolkit/remix/validateSchema";
 import { generateId } from "~/toolkit/utils/generateId";
 import { db } from "../db/db.server";
+import { DEFAULT_EXCLUSIONS } from "../fs/getProjectFiles";
 const CreateNewProjectInput = z.object({
   name: z.string().optional(),
   absolutePath: z.string(),
+  test_code_command: z.string().optional().default("bun run build"),
 });
 
 export const createNewProject = (formData: FormData) => {
@@ -23,6 +25,8 @@ export const createNewProject = (formData: FormData) => {
     absolute_path: cleanedPath,
     summary: "",
     files: [],
+    exclusions: DEFAULT_EXCLUSIONS.join("\n"),
+    test_code_command: userInput.test_code_command,
   };
   let existingProject = db.getProjectByAbsolutePath(project.absolute_path);
   if (existingProject) {

@@ -9,7 +9,10 @@ export const summarizeProject = async (
   emitter?: LLMEventEmitter
 ) => {
   let project = await getProject(projectId);
-  let codebaseMarkdown = await filesToMarkdown(project.filepaths);
+  let codebaseMarkdown = await filesToMarkdown(
+    project.filepaths,
+    project.absolute_path
+  );
   let summary = await summarizeProjectMarkdown(codebaseMarkdown, emitter);
   await db.updateProject({
     id: project.id,
@@ -17,6 +20,8 @@ export const summarizeProject = async (
     absolute_path: project.absolute_path,
     files: project.files,
     summary: summary,
+    exclusions: project.exclusions,
+    test_code_command: project.test_code_command,
   });
   return summary;
 };

@@ -1,7 +1,7 @@
 import { filterFilePaths } from "./filterFilePaths";
 import { createProjectGit } from "./gitCommands";
 // Array of file extensions to exclude from processing
-const DEFAULT_EXCLUSIONS: string[] = [
+export const DEFAULT_EXCLUSIONS: string[] = [
   "**/*.lockb",
   "**/*.png",
   "**/*.webp",
@@ -16,6 +16,9 @@ const DEFAULT_EXCLUSIONS: string[] = [
   "**/package-lock.json",
   "**/.gitignore",
   "**/.vscode/**",
+  "**/data/**",
+  "**/.DS_Store",
+  "**/public/**",
 ];
 
 export async function getProjectFiles(
@@ -25,10 +28,14 @@ export async function getProjectFiles(
   console.log("🚀 | getProjectFiles | absolutePath:", absolutePath);
   let git = createProjectGit(absolutePath);
   let mergedOptions = {
-    excludes: DEFAULT_EXCLUSIONS,
     ...options,
+    excludes:
+      options?.excludes && options?.excludes?.length > 0
+        ? options?.excludes
+        : DEFAULT_EXCLUSIONS,
   };
   let files = await git.listFiles();
+  console.log("🚀 | files!!!!!:", files.length);
 
   files = files.filter((file) => {
     const type = Bun.file(file).type;
