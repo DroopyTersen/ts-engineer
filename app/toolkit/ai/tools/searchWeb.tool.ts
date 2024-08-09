@@ -23,6 +23,12 @@ export const SearchWebInput = z.object({
       
       Example: 'discussions,videos' returns only query, discussions, and videos responses.`
     ),
+  site: z
+    .string()
+    .optional()
+    .describe(
+      "Limits search results to a specific website domain. For example you could pass: 'brave.com' or 'remix.run' or 'bun.sh' or 'apnews.com'"
+    ),
 });
 export type SearchWebInput = z.infer<typeof SearchWebInput>;
 

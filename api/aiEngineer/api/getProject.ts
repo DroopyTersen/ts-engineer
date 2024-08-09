@@ -1,9 +1,10 @@
-import { CodeProject } from "@shared/db.schema";
 import { countTokens, estimateTokenCost } from "~/toolkit/ai/utils/token.utils";
+import { AsyncReturnType } from "~/toolkit/utils/typescript.utils";
 import { db } from "../db/db.server";
 import { filesToMarkdown } from "../fs/filesToMarkdown";
 import { getProjectFiles } from "../fs/getProjectFiles";
-export async function getProject(id: string): Promise<CodeProject> {
+
+export async function getProject(id: string) {
   const project = await db.getProjectById(id);
   if (!project) {
     throw new Error("Project not found");
@@ -26,3 +27,5 @@ export async function getProject(id: string): Promise<CodeProject> {
     filepaths,
   };
 }
+
+export type CodeProject = AsyncReturnType<typeof getProject>;

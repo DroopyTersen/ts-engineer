@@ -16,12 +16,12 @@ export const loader = async () => {
 
 export default function App() {
   return (
-    <html data-theme="light">
+    <html data-theme="light" className="h-full">
       <head>
         <Meta />
         <Links />
       </head>
-      <body>
+      <body className="h-full">
         <Outlet />
 
         <Scripts />

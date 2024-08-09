@@ -4,8 +4,10 @@ import { createEventStreamDataStream } from "~/toolkit/ai/streams/createLLMEvent
 import { createNewProject } from "./aiEngineer/api/createNewProject";
 import { documentProject } from "./aiEngineer/api/documentProjectFiles";
 import { getProject } from "./aiEngineer/api/getProject";
+import { getProjects } from "./aiEngineer/api/getProjects.api";
 import { summarizeProject } from "./aiEngineer/api/summarizeProject";
 import { filesToMarkdown } from "./aiEngineer/fs/filesToMarkdown";
+import { openProjectInCursor } from "./aiEngineer/fs/openProjectInCursor";
 const app = new Hono();
 // Add CORS middleware
 app.use(
@@ -19,6 +21,10 @@ app.use(
     credentials: true,
   })
 );
+app.get("/projects", async (c) => {
+  const projects = await getProjects();
+  return c.json(projects);
+});
 app.post("/projects/new", async (c) => {
   const formData = await c.req.formData();
   let newProject = createNewProject(formData);
@@ -80,4 +86,10 @@ app.post("/projects/:id/code-map", async (c) => {
       .map((file) => `${file.filepath}\n${file.documentation}`)
       .join("\n\n")
   );
+});
+
+app.get("/projects/:id/open-in-cursor", async (c) => {
+  const project = await getProject(c.req.param("id"));
+  await openProjectInCursor(project.absolute_path);
+  return c.json({ message: "Project opened in Cursor" });
 });

@@ -1,45 +1,9 @@
 import { Link } from "@remix-run/react";
 import { BsFolderFill as FolderIcon } from "react-icons/bs";
+import { ChevronDownIcon, ChevronRightIcon } from "~/shadcn/components/icons";
 import { Button } from "~/shadcn/components/ui/button";
 import { Checkbox } from "~/shadcn/components/ui/checkbox";
 import { FSNode } from "./createTreeStructure";
-function ChevronDownIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="m6 9 6 6 6-6" />
-    </svg>
-  );
-}
-
-function ChevronRightIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="m9 18 6-6-6-6" />
-    </svg>
-  );
-}
 
 export const TreeItem = ({
   item,

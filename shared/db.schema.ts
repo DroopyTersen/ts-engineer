@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { Prettify } from "~/toolkit/utils/typescript.utils";
 
 export const CodeProjectFile = z.object({
   filepath: z.string(),
@@ -55,19 +54,3 @@ export const CodeProjectDbItem = z.object({
 });
 
 export type CodeProjectDbItem = z.infer<typeof CodeProjectDbItem>;
-
-export const CodeProject = z.object({
-  id: z.string(),
-  name: z.string(),
-  absolute_path: z.string(),
-  summary: z.string().default(""),
-  filepaths: z.array(z.string()),
-  files: z.array(CodeProjectFile),
-  usageEstimate: z
-    .object({
-      tokens: z.number().optional(),
-      cost: z.number().optional(),
-    })
-    .optional(),
-});
-export type CodeProject = Prettify<z.infer<typeof CodeProject>>;
