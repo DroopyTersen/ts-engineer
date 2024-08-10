@@ -1,10 +1,16 @@
 import { LoaderFunctionArgs } from "@remix-run/node";
 import { Outlet, useLoaderData } from "@remix-run/react";
 import { CodeProject } from "api/aiEngineer/api/getProject";
-import { useApiUrl } from "~/root";
-import { useLLMEventStream } from "~/toolkit/ai/ui/useLLMEventStream";
+import { useState } from "react";
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from "~/shadcn/components/ui/resizable";
+import { ScrollArea } from "~/shadcn/components/ui/scroll-area";
+import { FolderExplorer } from "~/toolkit/components/FileExplorer/FolderExplorer";
 import { proxyApiRequestAsJson } from "~/toolkit/http/proxyApiRequest";
-import { ProjectLayout } from "./ProjectLayout";
+import { ProjectHeader } from "./ProjectHeader";
 
 // export const action = async ({ request }: ActionFunctionArgs) => {
 //   let resp = await proxyApiRequest(request);
@@ -20,35 +26,35 @@ export const loader = async ({ params, request }: LoaderFunctionArgs) => {
 export default function ProjectDetailsRoute() {
   let data = useLoaderData<typeof loader>();
   let project = data?.project;
+  let [selectedFiles, setSelectedFiles] = useState<string[]>(
+    data.project?.filepaths || []
+  );
 
   if (!project) {
     return <div>Project not found</div>;
   }
   return (
-    <ProjectLayout project={project}>
-      <Outlet context={{ project }} />
-    </ProjectLayout>
+    <div className="grid grid-rows-[70px_1fr] h-screen">
+      <ProjectHeader project={project} />
+      <ResizablePanelGroup direction="horizontal" className="w-full h-full">
+        <ResizablePanel defaultSize={20} minSize={15}>
+          <div className="px-4 py-4">{selectedFiles.length} Selected Files</div>
+          <ScrollArea type="auto" className="bg-gray-100 h-full px-4 py-4">
+            <FolderExplorer
+              files={project.filepaths || []}
+              onSelection={setSelectedFiles}
+            />
+          </ScrollArea>
+        </ResizablePanel>
+        <ResizableHandle withHandle />
+        <ResizablePanel>
+          <div className="overflow-y-auto h-full">
+            <Outlet context={{ project, selectedFiles }} />
+          </div>
+        </ResizablePanel>
+      </ResizablePanelGroup>
+    </div>
   );
-}
-
-function useProjectCodeMap(project: CodeProject) {
-  let apiUrl = useApiUrl();
-
-  let { actions, status, isStreaming, message } = useLLMEventStream({
-    bodyInput: {},
-    apiPath: apiUrl + `/projects/${project.id}/code-map`,
-  });
-
-  return {
-    isStreaming,
-    codeMap: isStreaming
-      ? message?.content || ""
-      : message?.content ||
-        project?.files
-          .map((f) => `${f.filepath}\n${f.documentation}`)
-          .join("\n\n") ||
-        "",
-  };
 }
 
 export function ProjectStats({ project }: { project: CodeProject }) {

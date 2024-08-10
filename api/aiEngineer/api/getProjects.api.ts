@@ -21,6 +21,16 @@ export const getProjects = async () => {
       };
     })
   );
+  // Sort projects by lastUpdate.updatedAt in descending order
+  projects.sort((a, b) => {
+    const dateA = a.lastUpdate?.updatedAt
+      ? new Date(a.lastUpdate.updatedAt)
+      : new Date(0);
+    const dateB = b.lastUpdate?.updatedAt
+      ? new Date(b.lastUpdate.updatedAt)
+      : new Date(0);
+    return dateB.getTime() - dateA.getTime();
+  });
 
   return projects;
 };

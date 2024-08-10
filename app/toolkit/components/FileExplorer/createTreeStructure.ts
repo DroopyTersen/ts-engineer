@@ -10,7 +10,11 @@ export type FSNode = {
 export function createTreeStructure(files: string[]): FSNode[] {
   const root: FSNode[] = [];
 
-  function addNode(parts: string[], currentLevel: FSNode[]): void {
+  function addNode(
+    parts: string[],
+    currentLevel: FSNode[],
+    depth: number
+  ): void {
     if (parts.length === 0) return;
     const part = parts[0];
     const isFile = parts.length === 1;
@@ -23,19 +27,19 @@ export function createTreeStructure(files: string[]): FSNode[] {
         id,
         name: part,
         type: isFile ? "file" : "folder",
-        isExpanded: !isFile,
-        isSelected: false,
+        isExpanded: depth === 0, // Only expand first level folders
+        isSelected: true,
         children: isFile ? undefined : [],
       };
       currentLevel.push(node);
     }
     if (!isFile) {
-      addNode(parts.slice(1), node.children as FSNode[]);
+      addNode(parts.slice(1), node.children as FSNode[], depth + 1);
     }
   }
 
   files.forEach((filePath) => {
-    addNode(filePath.split("/"), root);
+    addNode(filePath.split("/"), root, 0);
   });
 
   // Sort function to put folders first, then files
@@ -52,4 +56,20 @@ export function createTreeStructure(files: string[]): FSNode[] {
   };
 
   return sortNodes(root);
+}
+
+export function getSelectedFiles(tree: FSNode[]): string[] {
+  const selectedFiles: string[] = [];
+
+  function traverse(node: FSNode) {
+    if (node.type === "file" && node.isSelected) {
+      selectedFiles.push(node.id);
+    }
+    if (node.children) {
+      node.children.forEach(traverse);
+    }
+  }
+
+  tree.forEach(traverse);
+  return selectedFiles;
 }

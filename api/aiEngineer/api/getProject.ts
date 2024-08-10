@@ -13,16 +13,8 @@ export async function getProject(id: string) {
     "🚀 | getProject | project.absolute_path:",
     project.absolute_path
   );
-  let exclusions = project.exclusions
-    .split("\n")
-    .map((s) => s.trim())
-    .filter(Boolean);
-  if (exclusions.length === 0) {
-    exclusions = DEFAULT_EXCLUSIONS;
-  }
-  let filepaths = await getProjectFiles(project.absolute_path, {
-    excludes: exclusions,
-  });
+
+  let filepaths = await getProjectFiles(project);
   let markdown = await filesToMarkdown(filepaths, project.absolute_path);
   let estimatedTokens = countTokens(markdown);
 

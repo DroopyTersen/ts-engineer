@@ -9,7 +9,6 @@ import { proxyApiRequestAsJson } from "~/toolkit/http/proxyApiRequest";
 import { ProjectsTable } from "./ProjectsTable";
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const projects = await proxyApiRequestAsJson<ProjectListItem[]>(request);
-  console.log("🚀 | loader | projects:", projects);
   return {
     projects,
   };

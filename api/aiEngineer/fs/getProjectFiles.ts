@@ -19,21 +19,22 @@ export const DEFAULT_EXCLUSIONS: string[] = [
   "**/data/**",
   "**/.DS_Store",
   "**/public/**",
+  "**/*.patch",
 ];
 
-export async function getProjectFiles(
-  absolutePath: string,
-  options?: { includes?: string[]; excludes?: string[] }
-) {
-  console.log("🚀 | getProjectFiles | absolutePath:", absolutePath);
-  let git = createProjectGit(absolutePath);
-  let mergedOptions = {
-    ...options,
-    excludes:
-      options?.excludes && options?.excludes?.length > 0
-        ? options?.excludes
-        : DEFAULT_EXCLUSIONS,
-  };
+export async function getProjectFiles({
+  absolute_path,
+  exclusions = DEFAULT_EXCLUSIONS.join("\n"),
+}: {
+  absolute_path: string;
+  exclusions?: string;
+}) {
+  console.log("🚀 | getProjectFiles | absolutePath:", absolute_path);
+  let git = createProjectGit(absolute_path);
+  let excludes = exclusions
+    .split("\n")
+    .map((s) => s.trim())
+    .filter(Boolean);
   let files = await git.listFiles();
   console.log("🚀 | files!!!!!:", files.length);
 
@@ -43,11 +44,7 @@ export async function getProjectFiles(
   });
 
   // Filter out undesired files
-  files = filterFilePaths(
-    files,
-    mergedOptions.includes,
-    mergedOptions.excludes
-  );
+  files = filterFilePaths(files, [], excludes);
 
   return files;
 }

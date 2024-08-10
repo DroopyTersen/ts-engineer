@@ -5,11 +5,12 @@ export async function filesToMarkdown(filePaths: string[], projectPath = "") {
     filePaths,
     projectPath,
     (filepath, content) => {
+      let first300Lines = content.split("\n").slice(0, 300).join("\n");
       let fileExtension = filepath.split(".").pop() || "";
       return `
 ${filepath}
 \`\`\`${fileExtension}
-${content}
+${first300Lines}
 \`\`\`
 `;
     }

@@ -1,26 +1,41 @@
-import { useState } from "react";
-import { createTreeStructure, FSNode } from "./createTreeStructure";
+import { useCallback, useState } from "react";
+import {
+  createTreeStructure,
+  FSNode,
+  getSelectedFiles,
+} from "./createTreeStructure";
 import { TreeItem } from "./TreeItem";
 
-export function FolderExplorer({ files }: { files: string[] }) {
+export function FolderExplorer({
+  files,
+  onSelection,
+}: {
+  files: string[];
+  onSelection: (selectedFiles: string[]) => void;
+}) {
   const [treeData, setTreeData] = useState<FSNode[]>(() =>
     createTreeStructure(files)
   );
 
-  const toggleSelect = (item: FSNode) => {
-    setTreeData((prevData) => {
-      const newData = updateTreeData(
-        prevData,
-        item.id,
-        (node) => ({
-          ...node,
-          isSelected: !node.isSelected,
-        }),
-        item.type === "folder"
-      );
-      return updateParentFolders(newData);
-    });
-  };
+  const toggleSelect = useCallback(
+    (item: FSNode) => {
+      setTreeData((prevData) => {
+        const newData = updateTreeData(
+          prevData,
+          item.id,
+          (node) => ({
+            ...node,
+            isSelected: !node.isSelected,
+          }),
+          item.type === "folder"
+        );
+        const updatedData = updateParentFolders(newData);
+        onSelection(getSelectedFiles(updatedData));
+        return updatedData;
+      });
+    },
+    [onSelection]
+  );
 
   const toggleExpanded = (item: FSNode) => {
     setTreeData((prevData) =>
@@ -32,8 +47,8 @@ export function FolderExplorer({ files }: { files: string[] }) {
   };
 
   return (
-    <div className="">
-      <h2 className="text-lg font-semibold mb-4">File Explorer</h2>
+    <div className="text-sm">
+      {/* <h2 className="text-lg font-semibold mb-4">File Explorer</h2> */}
       <Tree
         nodes={treeData}
         onSelect={toggleSelect}
@@ -59,7 +74,7 @@ function Tree({
           <TreeItem item={item} onSelect={onSelect} onFolderExpand={onExpand} />
           {item.type === "folder" && item.children && (
             <div
-              className={`tree-item-children pl-5 ${
+              className={`tree-item-children pl-4 ${
                 item.isExpanded ? "block" : "hidden"
               }`}
             >
