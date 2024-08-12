@@ -1,7 +1,12 @@
 export const proxyApiRequest = (request: Request, path?: string) => {
-  path = path || new URL(request.url).pathname;
-  let endpoint = process.env.API_URL + path;
-  console.log("🚀 | proxyApiRequest | endpoint:", endpoint);
+  const url = new URL(request.url);
+  path = path || url.pathname;
+  let endpoint = new URL(path, process.env.API_URL);
+
+  // Copy over query parameters
+  endpoint.search = url.search;
+
+  console.log("🚀 | proxyApiRequest | endpoint:", endpoint.toString());
   let clonedRequest = new Request(endpoint, request);
   return fetch(clonedRequest);
 };

@@ -1,6 +1,7 @@
 import { Glob } from "bun";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
+import { codeToHtml } from "shiki";
 import { createEventStreamDataStream } from "~/toolkit/ai/streams/createLLMEventStream";
 import { createNewProject } from "./aiEngineer/api/createNewProject";
 import { documentProject } from "./aiEngineer/api/documentProjectFiles";
@@ -9,7 +10,9 @@ import { getProjects } from "./aiEngineer/api/getProjects.api";
 import { summarizeProject } from "./aiEngineer/api/summarizeProject";
 import { updateProject } from "./aiEngineer/api/updateProject.api";
 import { filesToMarkdown } from "./aiEngineer/fs/filesToMarkdown";
+import { getFileContent } from "./aiEngineer/fs/getFileContent";
 import { openProjectInCursor } from "./aiEngineer/fs/openProjectInCursor";
+
 const app = new Hono();
 // Add CORS middleware
 app.use(
@@ -116,4 +119,36 @@ app.get("/projects/:id/open-in-cursor", async (c) => {
   return c.json({ message: "Project opened in Cursor" });
 });
 
+app.post("/projects/:id/selection-usage", async (c) => {
+  const { selectedFiles } = await c.req.json();
+  let project = await getProject(c.req.param("id"), selectedFiles);
+
+  return c.json({
+    usageEstimate: project.usageEstimate,
+    selectedFiles: selectedFiles,
+  });
+});
+
+app.get("/projects/:id/file-viewer", async (c) => {
+  let filepath = c.req.query("file");
+  if (!filepath) {
+    return c.json(
+      { error: "?file=<filepath> query param required" },
+      { status: 400 }
+    );
+  }
+  let project = await getProject(c.req.param("id"));
+  try {
+    let fileContents = await getFileContent(filepath, project.absolute_path);
+    let fileExtension =
+      filepath.split(".").pop()?.replace(".", "") || "plaintext";
+    let html = await codeToHtml(fileContents, {
+      lang: fileExtension,
+      theme: "slack-dark",
+    });
+    return c.html(html);
+  } catch (error) {
+    return c.json({ error: "File not found" }, { status: 404 });
+  }
+});
 export default app;

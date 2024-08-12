@@ -36,15 +36,15 @@ export async function getProjectFiles({
     .map((s) => s.trim())
     .filter(Boolean);
   let files = await git.listFiles();
-  console.log("🚀 | files!!!!!:", files.length);
 
   files = files.filter((file) => {
     const type = Bun.file(file).type;
-    return !type.includes("image");
+    return !type.includes("image") && !file.endsWith(".lockb");
   });
 
   // Filter out undesired files
   files = filterFilePaths(files, [], excludes);
+  console.log("🚀 | files!!!!!:", files.length);
 
   return files;
 }

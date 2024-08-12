@@ -4,9 +4,11 @@ import { BsPencil } from "react-icons/bs";
 import { ChevronRightIcon, SearchIcon } from "~/shadcn/components/icons";
 import { Button } from "~/shadcn/components/ui/button";
 import { Input } from "~/shadcn/components/ui/input";
+import { formatNumber } from "~/toolkit/utils/formatNumber";
 import { OpenInCursorButton } from "./OpenInCursorButton";
 
 export function ProjectHeader({ project }: { project: CodeProject }) {
+  console.log("🚀 | ProjectHeader | project:", project);
   return (
     <header className="bg-background w-full flex items-center justify-between px-4 md:px-6 h-16 shadow">
       <div className="flex items-center gap-4">
@@ -41,7 +43,7 @@ export function ProjectHeader({ project }: { project: CodeProject }) {
             <span className="font-mono text-sm pl-2">
               {project.filepaths?.length || 0} files •{" "}
               {project.usageEstimate?.tokens
-                ? `${(project.usageEstimate.tokens / 1000).toFixed(1)}k tokens`
+                ? `${formatNumber(project.usageEstimate.tokens)} tokens`
                 : ""}
             </span>
           </div>

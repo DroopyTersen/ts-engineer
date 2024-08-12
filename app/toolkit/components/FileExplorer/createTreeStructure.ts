@@ -5,6 +5,7 @@ export type FSNode = {
   isExpanded: boolean;
   isSelected: boolean;
   children?: FSNode[];
+  fullPath: string;
 };
 
 export function createTreeStructure(files: string[]): FSNode[] {
@@ -13,33 +14,35 @@ export function createTreeStructure(files: string[]): FSNode[] {
   function addNode(
     parts: string[],
     currentLevel: FSNode[],
-    depth: number
+    depth: number,
+    parentPath: string
   ): void {
     if (parts.length === 0) return;
     const part = parts[0];
     const isFile = parts.length === 1;
-    const id = isFile ? part : parts.join("/");
+    const fullPath = parentPath ? `${parentPath}/${part}` : part;
 
     let node = currentLevel.find((n) => n.name === part);
 
     if (!node) {
       node = {
-        id,
+        id: fullPath,
         name: part,
         type: isFile ? "file" : "folder",
         isExpanded: depth === 0, // Only expand first level folders
         isSelected: true,
         children: isFile ? undefined : [],
+        fullPath: fullPath,
       };
       currentLevel.push(node);
     }
     if (!isFile) {
-      addNode(parts.slice(1), node.children as FSNode[], depth + 1);
+      addNode(parts.slice(1), node.children as FSNode[], depth + 1, fullPath);
     }
   }
 
   files.forEach((filePath) => {
-    addNode(filePath.split("/"), root, 0);
+    addNode(filePath.split("/"), root, 0, "");
   });
 
   // Sort function to put folders first, then files

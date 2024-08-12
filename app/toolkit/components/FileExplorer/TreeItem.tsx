@@ -1,7 +1,9 @@
-import { Link } from "@remix-run/react";
+import { Link, useSearchParams } from "@remix-run/react";
 import { BsFolderFill as FolderIcon } from "react-icons/bs";
 import { ChevronDownIcon, ChevronRightIcon } from "~/shadcn/components/icons";
 import { Checkbox } from "~/shadcn/components/ui/checkbox";
+import { cn } from "~/shadcn/utils";
+import { useRouteData } from "~/toolkit/remix/useRouteData";
 import { FSNode } from "./createTreeStructure";
 
 export const TreeItem = ({
@@ -13,11 +15,17 @@ export const TreeItem = ({
   onSelect: (item: FSNode) => void;
   onFolderExpand: (item: FSNode) => void;
 }) => {
+  let [searchParams, setSearchParams] = useSearchParams();
+  let activeFile = searchParams.get("file");
+  let isActive = activeFile === item.fullPath;
   return (
     <div
-      className={`flex items-center gap-2 px-2 py-1 h-8 ${
-        item.isSelected ? "bg-gray-100 text-accent-foreground" : ""
-      }`}
+      className={cn(
+        `flex items-center gap-2 px-2 py-1 h-8 ${
+          item.isSelected ? "bg-gray-100 text-accent-foreground" : ""
+        }`,
+        isActive && "font-bold"
+      )}
     >
       {/* <LevelIndicator level={level} /> */}
       <Checkbox
@@ -63,11 +71,17 @@ const FolderContent = ({
   </>
 );
 
-const FileContent = ({ item }: { item: FSNode }) => (
-  <>
-    {/* <FileIcon className="w-0 h-4 opacity-0" /> */}
-    <Link to="" className="pl-0 hover:underline">
-      {item.name}
-    </Link>
-  </>
-);
+const FileContent = ({ item }: { item: FSNode }) => {
+  let projectId = (useRouteData((r) => r?.data?.project) as any)?.id;
+  return (
+    <>
+      <Link
+        prefetch="intent"
+        to={`/projects/${projectId}/file-viewer?file=${item.fullPath}`}
+        className={`pl-0 hover:underline`}
+      >
+        {item.name}
+      </Link>
+    </>
+  );
+};

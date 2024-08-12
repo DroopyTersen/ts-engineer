@@ -1,5 +1,4 @@
 import { createAnthropic } from "@ai-sdk/anthropic";
-import { createAzure } from "@ai-sdk/azure";
 import { createOpenAI } from "@ai-sdk/openai";
 import {
   generateObject as vercelGenerateObject,
@@ -8,7 +7,7 @@ import {
   streamText as vercelStreamText,
 } from "ai";
 import { z } from "zod";
-import { Prettify } from "~/toolkit/utils/typescript.utils";
+import { AsyncReturnType, Prettify } from "~/toolkit/utils/typescript.utils";
 import { LLMEventEmitter } from "../streams/LLMEventEmitter";
 import "./bunPolyfill";
 
@@ -33,13 +32,6 @@ const MODEL_PROVIDERS = {
       apiKey: process.env.ANTHROPIC_API_KEY!,
     }),
   },
-  azure: {
-    // https://AZURE_OPENAI_INSTANCE.openai.azure.com/openai/deployments/MODEL_NAME/chat/completions?api-version=2024-06-01
-    create: createAzure({
-      resourceName: process.env.AZURE_OPENAI_INSTANCE!, // Azure resource name
-      apiKey: process.env.AZURE_OPENAI_API_KEY!,
-    }),
-  },
 };
 
 export type ModelProvider = keyof typeof MODEL_PROVIDERS;
@@ -62,7 +54,7 @@ export const getLLM = <T extends ModelProvider>(
     ) => {
       return _generateText({ ...params, model: _model }, asyncOptions);
     },
-    generateData: async <TSchema extends z.ZodType>(
+    generateData: async <TSchema extends z.ZodTypeAny>(
       params: GenerateDataParams<TSchema>,
       asyncOptions?: AsyncOptions
     ) => {
@@ -88,7 +80,7 @@ export const getLLM = <T extends ModelProvider>(
     },
   };
 };
-getLLM("azure", "");
+
 export type AsyncOptions = {
   signal?: AbortSignal;
   emitter?: LLMEventEmitter;
@@ -97,8 +89,10 @@ export type GenerateTextParams = Prettify<
   Omit<Parameters<typeof vercelGenerateText>[0], "model">
 >;
 
-export type GenerateDataParams<T extends z.ZodType> = Prettify<
-  Omit<Parameters<typeof vercelGenerateObject>[0], "model"> & { schema: T }
+export type GenerateDataParams<T extends z.ZodTypeAny> = Prettify<
+  Omit<Parameters<typeof vercelGenerateObject>[0], "model" | "schema"> & {
+    schema: T;
+  }
 >;
 
 export type StreamTextParams = Prettify<
@@ -125,20 +119,30 @@ const _generateText = async (
   return result;
 };
 
-const _generateData = async <T extends z.ZodType>(
-  params: Parameters<typeof vercelGenerateObject>[0] & { schema: T },
+export type VercelChatParams =
+  | Parameters<typeof vercelGenerateObject>[0]
+  | Parameters<typeof vercelStreamText>[0]
+  | Parameters<typeof vercelStreamObject>[0]
+  | Parameters<typeof vercelGenerateText>[0];
+
+export const _generateData = async <TSchema extends z.ZodTypeAny>(
+  params: Omit<Parameters<typeof vercelGenerateObject>[0], "schema"> & {
+    schema: TSchema;
+  },
   asyncOptions?: AsyncOptions
 ) => {
   const { signal, emitter } = asyncOptions || {};
   emitter?.emit("llm_start", params);
-
-  let result = await vercelGenerateObject<T>({
+  let { rawResponse, ...result } = await vercelGenerateObject({
     ...params,
     abortSignal: signal,
   });
   emitter?.emit("llm_end", result);
 
-  return result;
+  return result as Omit<
+    AsyncReturnType<typeof vercelGenerateObject>,
+    "object"
+  > & { object: z.infer<TSchema> };
 };
 
 type StreamTextResult = NonNullable<
