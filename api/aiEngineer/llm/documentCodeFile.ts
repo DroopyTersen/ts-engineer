@@ -13,33 +13,24 @@ export const documentCodeFile = async (
   }
 ) => {
   let systemPrompt = createSystemPrompt();
+  let userPrompt = `
+Filepath: ${filepath}
+\`\`\`
+${fileContents}
+\`\`\`
+      `.trim();
+
   let result = await llm.streamText(
     {
       maxTokens: 1000,
-      temperature: 0.3,
-      messages: [
-        {
-          role: "system",
-          content: systemPrompt,
-        },
-        {
-          role: "user",
-          content: `Filepath: ${filepath}
-      \`\`\`
-      ${fileContents}
-      \`\`\`
-      `,
-        },
-      ],
+      temperature: 0.2,
+      system: systemPrompt,
+      prompt: userPrompt,
     },
+
     {
       emitter,
     }
-  );
-  console.log(
-    "🚀 | documentCodeFile | usage:",
-    llm._model.modelId,
-    result.usage
   );
   return result.text;
 };

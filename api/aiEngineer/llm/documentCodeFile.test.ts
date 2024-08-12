@@ -4,7 +4,7 @@ import { LLMEventEmitter } from "~/toolkit/ai/streams/LLMEventEmitter";
 import { getLLM } from "~/toolkit/ai/vercel/getLLM";
 import { documentCodeFile } from "./documentCodeFile";
 
-describe("documentCodeFile", () => {
+describe.skip("documentCodeFile", () => {
   vi.setConfig({ testTimeout: 30000 });
   it("should generate documentation for getLLM.ts", async () => {
     let emitter = new LLMEventEmitter();

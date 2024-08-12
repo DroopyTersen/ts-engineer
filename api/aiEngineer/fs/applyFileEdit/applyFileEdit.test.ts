@@ -244,7 +244,7 @@ $primary-color: #007bff;
           },
           {
             type: "insert",
-            pattern: "}\\s*$",
+            pattern: "@mixin button-styles\\s*{[\\s\\S]*?}",
             content: "\n}",
             position: "after",
           },
