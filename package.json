@@ -18,22 +18,21 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jacobparis/underkill-stack.git"
+    "url": "git+https://github.com/DroopyTersen/ts-engineer.git"
   },
   "keywords": [
     "remix"
   ],
-  "author": "Jacob Paris",
+  "author": "Andrew Petersen",
   "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/jacobparis/underkill-stack/issues"
-  },
-  "homepage": "https://github.com/jacobparis/underkill-stack#readme",
+  "homepage": "https://github.com/DroopyTersen/ts-engineer",
   "dependencies": {
     "@ai-sdk/anthropic": "^0.0.38",
     "@ai-sdk/azure": "^0.0.21",
     "@ai-sdk/openai": "^0.0.43",
     "@anthropic-ai/sdk": "^0.25.0",
+    "@opentelemetry/auto-instrumentations-node": "^0.49.1",
+    "@opentelemetry/sdk-node": "^0.52.1",
     "@radix-ui/react-checkbox": "^1.1.1",
     "@radix-ui/react-label": "^2.1.0",
     "@radix-ui/react-scroll-area": "^1.1.0",
@@ -53,6 +52,7 @@
     "hono": "^4.5.3",
     "install": "^0.13.0",
     "isbot": "^4.4.0",
+    "langfuse-vercel": "^3.19.0",
     "lucide-react": "^0.424.0",
     "markdown-to-jsx": "^7.4.7",
     "openai": "^4.55.0",

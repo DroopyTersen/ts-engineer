@@ -1,6 +1,10 @@
 import OpenAI from "openai";
+import { VercelChatParams, VercelChatResult } from "../vercel/getLLM";
 import { JSONValue, ToolCall, ToolResult } from "./LLMDataStream";
 
+// This might be different depending on the LLM provider
+export type LLMStartData = VercelChatParams;
+export type LLMEndData = VercelChatResult;
 export type LLMEvent =
   | {
       type: "log";
@@ -31,8 +35,8 @@ export type LLMEvent =
       data: ToolResult;
     }
   | { type: "content"; data: string }
-  | { type: "llm_start"; data: any }
-  | { type: "llm_end"; data: any }
+  | { type: "llm_start"; data: LLMStartData }
+  | { type: "llm_end"; data: LLMEndData }
   | { type: "final_content"; data: string };
 
 // Helper type to extract the data type associated with a specific event type

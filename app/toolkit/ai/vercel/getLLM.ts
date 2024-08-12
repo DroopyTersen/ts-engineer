@@ -1,6 +1,7 @@
 import { createAnthropic } from "@ai-sdk/anthropic";
 import { createOpenAI } from "@ai-sdk/openai";
 import {
+  GenerateObjectResult,
   generateObject as vercelGenerateObject,
   generateText as vercelGenerateText,
   streamObject as vercelStreamObject,
@@ -125,6 +126,17 @@ export type VercelChatParams =
   | Parameters<typeof vercelStreamObject>[0]
   | Parameters<typeof vercelGenerateText>[0];
 
+export type VercelChatResult = Prettify<
+  Partial<
+    Omit<StreamDataResult, "rawResponse"> &
+      Omit<StreamTextResult, "rawResponse"> &
+      Omit<AsyncReturnType<typeof _generateData>, "rawResponse"> &
+      Omit<AsyncReturnType<typeof _generateText>, "rawResponse">
+  >
+>;
+
+export type VercelUsage = GenerateObjectResult<any>["usage"];
+
 export const _generateData = async <TSchema extends z.ZodTypeAny>(
   params: Omit<Parameters<typeof vercelGenerateObject>[0], "schema"> & {
     schema: TSchema;
@@ -232,6 +244,7 @@ const _streamData = async <TSchema extends z.ZodType>(
     }
   });
 };
+
 const _streamTextWithTools = async (
   params: Parameters<typeof vercelStreamText>[0] & { maxLoops?: number },
   asyncOptions?: AsyncOptions
@@ -241,44 +254,44 @@ const _streamTextWithTools = async (
   let loopCount = 0;
   const maxLoops = params.maxLoops || 5;
 
-  const executeTools = async (toolCalls: any[]) => {
-    for (const toolCall of toolCalls) {
-      const tool = params.tools?.[toolCall.toolName];
-      if (tool && tool.execute) {
-        emitter?.emit("tool_call", {
-          id: toolCall.toolCallId,
-          name: toolCall.toolName,
-          args: toolCall.args,
-          timestamp: Date.now(),
-        });
+  // const executeTools = async (toolCalls: any[]) => {
+  //   for (const toolCall of toolCalls) {
+  //     const tool = params.tools?.[toolCall.toolName];
+  //     if (tool && tool.execute) {
+  //       emitter?.emit("tool_call", {
+  //         id: toolCall.toolCallId,
+  //         name: toolCall.toolName,
+  //         args: toolCall.args,
+  //         timestamp: Date.now(),
+  //       });
 
-        try {
-          const result = await tool.execute(toolCall.args);
-          emitter?.emit("tool_result", {
-            toolCallId: toolCall.toolCallId,
-            toolName: toolCall.toolName,
-            result,
-            toolDefinitionId: "",
-          });
+  //       try {
+  //         const result = await tool.execute(toolCall.args);
+  //         emitter?.emit("tool_result", {
+  //           toolCallId: toolCall.toolCallId,
+  //           toolName: toolCall.toolName,
+  //           result,
+  //           toolDefinitionId: "",
+  //         });
 
-          messages.push({
-            role: "tool",
-            content: [
-              {
-                type: "tool-result",
-                toolCallId: toolCall.toolCallId,
-                toolName: toolCall.toolName,
-                result,
-              },
-            ],
-          });
-        } catch (error: any) {
-          console.error(`Error executing tool ${toolCall.toolName}:`, error);
-          emitter?.emit("error", error);
-        }
-      }
-    }
-  };
+  //         messages.push({
+  //           role: "tool",
+  //           content: [
+  //             {
+  //               type: "tool-result",
+  //               toolCallId: toolCall.toolCallId,
+  //               toolName: toolCall.toolName,
+  //               result,
+  //             },
+  //           ],
+  //         });
+  //       } catch (error: any) {
+  //         console.error(`Error executing tool ${toolCall.toolName}:`, error);
+  //         emitter?.emit("error", error);
+  //       }
+  //     }
+  //   }
+  // };
 
   return new Promise(async (resolve, reject) => {
     emitter?.emit("llm_start", params);

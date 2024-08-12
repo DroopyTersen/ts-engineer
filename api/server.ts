@@ -12,8 +12,10 @@ import { updateProject } from "./aiEngineer/api/updateProject.api";
 import { filesToMarkdown } from "./aiEngineer/fs/filesToMarkdown";
 import { getFileContent } from "./aiEngineer/fs/getFileContent";
 import { openProjectInCursor } from "./aiEngineer/fs/openProjectInCursor";
+import { telemetry } from "./telemetry/telemetry.server";
 
 const app = new Hono();
+
 // Add CORS middleware
 app.use(
   "/*",
@@ -26,6 +28,46 @@ app.use(
     credentials: true,
   })
 );
+
+const createReqSpan = (context: any) => {
+  let lastRoute =
+    context.req.matchedRoutes?.[context.req.matchedRoutes.length - 1];
+  let traceName = `${context.req.method} ${lastRoute.path}`;
+  let span = telemetry.createSpan(traceName);
+  return span;
+};
+app.use("/disabled-telemetry", async (c, next) => {
+  let lastRoute = c.req.matchedRoutes?.[c.req.matchedRoutes.length - 1];
+  let traceName = `${c.req.method} ${lastRoute.path}`;
+  let trace = telemetry.createTrace(traceName, {
+    input: {
+      url: c.req.url,
+      method: c.req.method,
+      query: c.req.query.toString(),
+    },
+    user: {
+      id: process.env.USER!,
+    },
+  });
+  let span = telemetry.createSpan(traceName, trace.id).start({});
+  (c.set as any)("trace", span);
+  await next();
+  span.end({});
+  const originalResponse = c.res.clone();
+
+  const contentType = originalResponse.headers.get("Content-Type");
+  let readBodyPromise =
+    contentType && contentType.includes("application/json")
+      ? originalResponse.json()
+      : originalResponse.text();
+  readBodyPromise.then((body) => {
+    trace.end({
+      status: originalResponse.status,
+      body: body,
+    });
+  });
+});
+
 app.get("/projects", async (c) => {
   const projects = await getProjects();
   return c.json(projects);
@@ -48,7 +90,13 @@ app.post("/projects/new", async (c) => {
 });
 
 app.get("/projects/:id", async (c) => {
-  const project = await getProject(c.req.param("id"));
+  let trace = createReqSpan(c).start({
+    projectId: c.req.param("id"),
+  });
+  const project = await getProject(c.req.param("id"), undefined, {
+    traceId: trace.id,
+  });
+  trace.end(project);
   return c.json(project);
 });
 app.get("/projects/:id/edit", async (c) => {
