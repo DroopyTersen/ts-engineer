@@ -29,7 +29,6 @@ export async function getProjectFiles({
   absolute_path: string;
   exclusions?: string;
 }) {
-  console.log("🚀 | getProjectFiles | absolutePath:", absolute_path);
   let git = createProjectGit(absolute_path);
   let excludes = exclusions
     .split("\n")
@@ -44,7 +43,6 @@ export async function getProjectFiles({
 
   // Filter out undesired files
   files = filterFilePaths(files, [], excludes);
-  console.log("🚀 | files!!!!!:", files.length);
 
   return files;
 }

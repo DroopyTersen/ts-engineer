@@ -9,11 +9,6 @@ export async function getProject(id: string, selectedFiles: string[] = []) {
   if (!project) {
     throw new Error("Project not found");
   }
-  console.log(
-    "🚀 | getProject | project.absolute_path:",
-    project.absolute_path
-  );
-
   let filepaths = await getProjectFiles(project);
   let markdown = await filesToMarkdown(
     selectedFiles?.length ? selectedFiles : filepaths,

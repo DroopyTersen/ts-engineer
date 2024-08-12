@@ -37,16 +37,17 @@ Given a project summary and file structure, along with a specific coding task, y
 2. Identify key areas of the codebase that are relevant to the task.
 3. Formulate clear, concise questions that will provide valuable insights for completing the task.
 4. Focus on questions about:
-  - Routing
+  - Routing and navigation (file based routing? route path setup?)
   - Database interactions and data models (if applicable)
   - Styling & Component libraries
   - Existing similar implementations
   - Dependencies and packages
+  - Other examples of similar implementations
   - Design patterns
   - Architectural styles and overall structure
 5. Ensure each question is specific, actionable, and directly related to the task at hand.
 6. Present the questions in a list format
-7. Aim for a minimum of 2 and a maximum of 6 questions, depending on the complexity of the task and codebase.
+7. Aim for a minimum of 2 and a maximum of 8 questions, depending on the complexity of the task and codebase.
 8. Base your questions on the provided project summary and file structure. For example, tailor your questions to the tech stack provided in the project summary.
 
 Your output should consist solely of the list of questions, without any additional commentary or explanations. Each question should be clear, concise, and designed to elicit information that will significantly aid in completing the coding task efficiently and effectively.
@@ -57,15 +58,10 @@ Code Task: Wire up the enabled checkbox on the assistant tools screen
 Questions:
 1. Location of assistant tools screen component?
 2. Database schema for assistant tools?
+3. Are there any other examples doings something similar?
 3. Files containing assistant tools data access logic?
 4. UI library for checkboxes and form elements?
 5. Form submission patterns in use?
-
-Location of assistant tools screen component?
-Database schema for assistant tools?
-Files containing assistant tools data access logic?
-UI library for checkboxes and form elements?
-Form submission patterns in use?
 
 Code Task: Update the scraper to move away from TMDB and use Watchmode API instead
 Questions:
