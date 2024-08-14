@@ -1,4 +1,4 @@
-import { useOutletContext } from "@remix-run/react";
+import { Link, useOutletContext } from "@remix-run/react";
 import { CodeProject } from "api/aiEngineer/api/getProject";
 
 export default function ProjectDetailsRoute() {
@@ -38,6 +38,25 @@ export function ProjectStats({ project }: { project: CodeProject }) {
           {project.usageEstimate?.tokens
             ? `${(project.usageEstimate.tokens / 1000).toFixed(1)}k`
             : ""}
+        </dd>
+        <dd className="mt-1 text-sm leading-6 text-gray-700 sm:mt-2  font-mono">
+          <table>
+            {project.largestFiles.map((file) => (
+              <tr key={file.filepath}>
+                <td className="pr-4">
+                  <Link
+                    className="hover:underline font-sans text-sm font-medium"
+                    to={`/projects/${project.id}/file-viewer?file=${file.filepath}`}
+                  >
+                    {file.filename}
+                  </Link>
+                </td>
+                <td className="text-right">
+                  {Number(file.tokens.toFixed(0)).toLocaleString()}
+                </td>
+              </tr>
+            ))}
+          </table>
         </dd>
       </div>
       <div className="border-t border-gray-100 px-4 py-6 sm:col-span-1 sm:px-0">

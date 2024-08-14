@@ -1,6 +1,5 @@
 import { z } from "zod";
 import { validateSchema } from "~/toolkit/remix/validateSchema";
-import { db } from "../db/db.server";
 
 const UpdateProjectInput = z.object({
   name: z.string().optional(),
@@ -14,7 +13,7 @@ const UpdateProjectInput = z.object({
 export const updateProject = async (projectId: string, formData: FormData) => {
   const userInput = validateSchema(formData, UpdateProjectInput);
 
-  const existingProject = await db.getProjectById(projectId);
+  const existingProject = await await getDb().getProjectById(projectId);
   if (!existingProject) {
     throw new Error("Project not found");
   }
@@ -25,5 +24,5 @@ export const updateProject = async (projectId: string, formData: FormData) => {
     exclusions: userInput.exclusions.filter((s) => s.trim() !== "").join("\n"),
   };
 
-  return db.updateProject(updatedProject);
+  return await getDb().updateProject(updatedProject);
 };

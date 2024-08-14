@@ -1,5 +1,4 @@
 import { rankFilesForContext } from "./api/rankFilesForContext";
-import { db } from "./db/db.server";
 import { processFileContents } from "./fs/getFileContent";
 import { getProjectFiles } from "./fs/getProjectFiles";
 
@@ -19,7 +18,7 @@ const main = async () => {
 main();
 
 async function showLargestFiles(projectId: string) {
-  let project = await db.getProjectById(projectId);
+  let project = await await getDb().getProjectById(projectId);
   let filesList = await getProjectFiles(project);
   let filesWithSizeInfo = await processFileContents(
     filesList,

@@ -1,5 +1,4 @@
 import { LLMEventEmitter } from "~/toolkit/ai/streams/LLMEventEmitter";
-import { db } from "../db/db.server";
 import { filesToMarkdown } from "../fs/filesToMarkdown";
 import { summarizeProjectMarkdown } from "../llm/summarizeProjectMarkdown";
 import { getProject } from "./getProject";
@@ -14,7 +13,7 @@ export const summarizeProject = async (
     project.absolute_path
   );
   let summary = await summarizeProjectMarkdown(codebaseMarkdown, emitter);
-  await db.updateProject({
+  await await getDb().updateProject({
     id: project.id,
     name: project.name,
     absolute_path: project.absolute_path,

@@ -3,13 +3,14 @@ import { AsyncReturnType } from "~/toolkit/utils/typescript.utils";
 import { db } from "../db/db.server";
 import { filesToMarkdown } from "../fs/filesToMarkdown";
 import { DEFAULT_EXCLUSIONS, getProjectFiles } from "../fs/getProjectFiles";
+import { sortFilesByLargest } from "../fs/sortFilesByLargest";
 
 export async function getProject(
   id: string,
   selectedFiles: string[] = [],
   config?: { traceId?: string }
 ) {
-  const project = await db.getProjectById(id);
+  const project = await await db.getProjectById(id);
   if (!project) {
     throw new Error("Project not found");
   }
@@ -19,6 +20,9 @@ export async function getProject(
   }
 
   let markdown = await filesToMarkdown(filepaths, project.absolute_path);
+  let largestFiles = (
+    await sortFilesByLargest(filepaths, project.absolute_path)
+  ).slice(0, 10);
 
   // The accuracte countTokens takes too long (10ms at least usuallly)
   let estimatedTokens = project.summary.length + markdown.length / 4;
@@ -30,6 +34,7 @@ export async function getProject(
 
   return {
     ...project,
+    largestFiles,
     exclusions: project.exclusions || DEFAULT_EXCLUSIONS.join("\n"),
     usageEstimate,
     filepaths,

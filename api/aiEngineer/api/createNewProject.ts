@@ -9,7 +9,7 @@ const CreateNewProjectInput = z.object({
   test_code_command: z.string().optional().default("bun run build"),
 });
 
-export const createNewProject = (formData: FormData) => {
+export const createNewProject = async (formData: FormData) => {
   const userInput = validateSchema(formData, CreateNewProjectInput);
   console.log("🚀 | createNewProject | userInput:", userInput);
 
@@ -28,10 +28,13 @@ export const createNewProject = (formData: FormData) => {
     exclusions: DEFAULT_EXCLUSIONS.join("\n"),
     test_code_command: userInput.test_code_command,
   };
-  let existingProject = db.getProjectByAbsolutePath(project.absolute_path);
+  let existingProject = await db.getProjectByAbsolutePath(
+    project.absolute_path
+  );
+  console.log("🚀 | createNewProject | existingProject:", existingProject);
   if (existingProject) {
     return existingProject;
   }
 
-  return db.insertProject(project);
+  return await db.insertProject(project);
 };

@@ -1,4 +1,5 @@
 import { Langfuse } from "langfuse";
+import { createSingleton } from "~/toolkit/utils/createSingleton.server";
 import { ConsoleTelemetry } from "./ConsoleTelemetry";
 import { LangfuseTelemetry } from "./LangfuseTelemetry";
 import { LLMTelemetry } from "./LLMTelemetry";
@@ -25,8 +26,9 @@ const initTelemetry = (): LLMTelemetry => {
     publicKey,
     baseUrl,
   });
+
   console.log("🚀 | initTelemetry | langfuse:", langfuse.baseUrl);
   return new LangfuseTelemetry(langfuse);
 };
 
-export const telemetry = initTelemetry();
+export const telemetry = createSingleton("telemetry", initTelemetry);

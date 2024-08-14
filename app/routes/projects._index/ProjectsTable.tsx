@@ -1,7 +1,9 @@
 import { Link } from "@remix-run/react";
 import { ProjectListItem } from "api/aiEngineer/api/getProjects.api";
 import dayjs from "dayjs";
+import { useState } from "react";
 import { IoWarningOutline } from "react-icons/io5";
+import { useApiUrl } from "~/root";
 import { Button } from "~/shadcn/components/ui/button";
 import {
   Table,
@@ -14,6 +16,13 @@ import {
 import { OpenInCursorButton } from "../projects.$id/OpenInCursorButton";
 
 export function ProjectsTable({ projects }: { projects: ProjectListItem[] }) {
+  let apiUrl = useApiUrl();
+  let [indexingProjectId, setIndexingProjectId] = useState("");
+  const indexProject = async (projectId: string) => {
+    setIndexingProjectId(projectId);
+    await fetch(apiUrl + `/projects/${projectId}/reindex`);
+    setIndexingProjectId("");
+  };
   return (
     <Table className="text-base">
       <TableHeader>
@@ -80,8 +89,13 @@ export function ProjectsTable({ projects }: { projects: ProjectListItem[] }) {
                 <Button variant={"outline"} size="sm" asChild>
                   <Link to={`/projects/${project.id}/edit`}>Edit</Link>
                 </Button>
-                <Button variant="outline" size="sm">
-                  ReIndex
+                <Button
+                  disabled={!!indexingProjectId}
+                  onClick={() => indexProject(project.id)}
+                  variant="outline"
+                  size="sm"
+                >
+                  {indexingProjectId === project.id ? "Indexing..." : "Reindex"}
                 </Button>
               </div>
             </TableCell>

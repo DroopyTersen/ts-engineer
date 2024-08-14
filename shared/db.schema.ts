@@ -17,42 +17,25 @@ export const CodeProjectDbItem = z.object({
     .describe(
       "An overview of the app/project. What does it do? what is the tech stack? etc..."
     ),
-  files: z
-    .union([
-      z
-        .string()
-        .describe("JSON string representing an array of file information"),
-      z.array(CodeProjectFile),
-    ])
-    .transform((input) => {
-      if (Array.isArray(input)) {
-        return input;
-      }
-      if (typeof input === "string") {
-        try {
-          const parsedFiles = JSON.parse(input);
-          if (!Array.isArray(parsedFiles)) {
-            throw new Error("Parsed files is not an array");
-          }
-          return parsedFiles
-            .map((file) => CodeProjectFile.safeParse(file))
-            .filter(
-              (
-                result
-              ): result is z.SafeParseSuccess<
-                z.infer<typeof CodeProjectFile>
-              > => result.success
-            )
-            .map((result) => result.data);
-        } catch (error) {
-          console.error("Error parsing files JSON:", error);
-          return [];
-        }
-      }
-      return [];
-    }),
   exclusions: z.string().default(""),
   test_code_command: z.string().default("bun run build"),
 });
 
 export type CodeProjectDbItem = z.infer<typeof CodeProjectDbItem>;
+
+export const FileSearchResultSchema = z.object({
+  id: z.string(),
+  filepath: z.string(),
+  project_id: z.string().nullable(),
+  summary: z.string().nullable(),
+  documentation: z.string().nullable(),
+  content: z.string().nullable(),
+  updated_at: z
+    .union([z.string(), z.date()])
+    .transform((val) => (typeof val === "string" ? new Date(val) : val)),
+  extension: z.string().nullable(),
+  num_chars: z.number().nullable(),
+  filename: z.string().nullable(),
+  similarity: z.number().optional(), // similarity is only present in search_files_with_embedding
+  rank: z.number().optional(), // rank is only present in search_files
+});

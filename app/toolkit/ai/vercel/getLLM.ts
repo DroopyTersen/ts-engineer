@@ -12,7 +12,7 @@ import { AsyncReturnType, Prettify } from "~/toolkit/utils/typescript.utils";
 import { LLMEventEmitter } from "../streams/LLMEventEmitter";
 import "./bunPolyfill";
 
-const MODEL_PROVIDERS = {
+export const MODEL_PROVIDERS = {
   deepseek: {
     create: createOpenAI({
       baseURL: "https://api.deepseek.com",

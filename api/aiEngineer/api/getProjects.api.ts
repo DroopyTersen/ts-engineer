@@ -3,7 +3,7 @@ import { db } from "../db/db.server";
 import { createProjectGit } from "../fs/gitCommands";
 
 export const getProjects = async () => {
-  let dbProjects = db.getProjects();
+  let dbProjects = await await db.getProjects();
   let projects = await Promise.all(
     dbProjects.map(async (project) => {
       let git = createProjectGit(project.absolute_path);
@@ -11,9 +11,8 @@ export const getProjects = async () => {
         git.getStatus(),
         git.getLastModifiedFile(),
       ]);
-      let { files, ...rest } = project;
       return {
-        ...rest,
+        ...project,
         lastUpdate,
         branch: gitStatus.activeBranch,
         unstagedChangesCount: gitStatus.unstaged.length,
