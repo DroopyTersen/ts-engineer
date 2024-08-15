@@ -3,10 +3,15 @@ import { z } from "zod";
 import { embedTexts } from "~/toolkit/ai/openai/openai.sdk";
 import { getDb } from "./pglite/pglite.server";
 
+export type SearchFilesCriteria = {
+  projectId?: string;
+  filepath?: string;
+  extension?: string;
+};
 /** Hybrid search for files by embedding and keyword */
 const searchFiles = async (
   searchText: string,
-  criteria?: { projectId?: string; filepath?: string; extension?: string }
+  criteria?: SearchFilesCriteria
 ) => {
   let [embeddingResults, keywordResults] = await Promise.all([
     searchFilesWithEmbedding(searchText, criteria),
@@ -33,7 +38,7 @@ const searchFiles = async (
 /** Search files by embedding */
 async function searchFilesWithEmbedding(
   searchText: string,
-  criteria?: { projectId?: string; filepath?: string; extension?: string }
+  criteria?: SearchFilesCriteria
 ) {
   // Generate the embedding for the given text
   const embedding = await embedTexts([searchText]);
@@ -46,6 +51,7 @@ async function searchFilesWithEmbedding(
     SELECT *
     FROM search_files_with_embedding(
       ${embeddingStr},
+      10,
       ${criteria?.projectId ? `'${criteria.projectId}'` : "NULL"},
       ${criteria?.filepath ? `'${criteria.filepath}'` : "NULL"},
       ${criteria?.extension ? `'${criteria.extension}'` : "NULL"}
@@ -58,10 +64,9 @@ async function searchFilesWithEmbedding(
 }
 
 /** Search files by keyword */
-/** Search files by keyword */
 async function searchFilesByKeyword(
   searchText: string,
-  criteria?: { projectId?: string; filepath?: string; extension?: string }
+  criteria?: SearchFilesCriteria
 ) {
   try {
     // Construct the SQL query with optional metadata filters

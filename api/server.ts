@@ -11,6 +11,7 @@ import { indexProject } from "./aiEngineer/api/indexProject";
 import { summarizeProject } from "./aiEngineer/api/summarizeProject";
 import { updateProject } from "./aiEngineer/api/updateProject.api";
 import { db } from "./aiEngineer/db/db.server";
+import { SearchFilesCriteria } from "./aiEngineer/db/files.db";
 import { initDb } from "./aiEngineer/db/pglite/pglite.server";
 import { filesToMarkdown } from "./aiEngineer/fs/filesToMarkdown";
 import { getFileContent } from "./aiEngineer/fs/getFileContent";
@@ -166,7 +167,8 @@ app.post("/projects/:id/code-map", async (c) => {
 
 app.get("/projects/:id/open-in-cursor", async (c) => {
   const project = await getProject(c.req.param("id"));
-  await openProjectInCursor(project.absolute_path);
+  let filepath = c.req.query("filepath")?.trim();
+  await openProjectInCursor(project.absolute_path, filepath);
   return c.json({ message: "Project opened in Cursor" });
 });
 
@@ -205,8 +207,18 @@ app.get("/projects/:id/file-viewer", async (c) => {
 
 app.get("/search", async (c) => {
   let query = c.req.query("query");
+  let criteria: SearchFilesCriteria = {};
+  if (c.req.query("projectId")) {
+    criteria.projectId = c.req.query("projectId");
+  }
+  if (c.req.query("filepath")) {
+    criteria.filepath = c.req.query("filepath");
+  }
+  if (c.req.query("extension")) {
+    criteria.extension = c.req.query("extension");
+  }
   console.log("🚀 | app.get | query:", query);
-  let results = await db.searchFilesByKeyword(query || "");
+  let results = await db.searchFiles(query || "", criteria);
   return c.json(results);
 });
 export default app;

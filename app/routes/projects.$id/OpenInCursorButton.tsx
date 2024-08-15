@@ -7,14 +7,20 @@ export const OpenInCursorButton = ({
   projectId,
   absolutePath,
   className,
+  children,
+  filepath,
 }: {
   projectId: string;
   absolutePath: string;
+  filepath?: string;
   className?: string;
+  children?: React.ReactNode;
 }) => {
   let apiUrl = useApiUrl();
   const openProject = async () => {
-    await fetch(`${apiUrl}/projects/${projectId}/open-in-cursor`);
+    await fetch(
+      `${apiUrl}/projects/${projectId}/open-in-cursor?filepath=${filepath}`
+    );
   };
   return (
     <TooltipWrapper tooltip={<p>Open in Cursor</p>}>
@@ -26,8 +32,12 @@ export const OpenInCursorButton = ({
           className
         )}
       >
-        <span className="font-mono">{absolutePath}</span>
-        <HiOutlineExternalLink className="h-4 w-4" />
+        {children || (
+          <>
+            <span className="font-mono">{absolutePath}</span>
+            <HiOutlineExternalLink className="h-4 w-4" />
+          </>
+        )}
       </button>
     </TooltipWrapper>
   );
