@@ -6,6 +6,7 @@ import {
   useParams,
 } from "@remix-run/react";
 import { CodeProject } from "api/aiEngineer/api/getProject";
+import { useEffect, useRef, useState } from "react";
 import { BsX } from "react-icons/bs";
 import { HiOutlineExternalLink } from "react-icons/hi";
 import { useApiUrl } from "~/root";
@@ -16,7 +17,6 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
   let url = new URL(request.url);
   let apiResp = await proxyApiRequest(request);
   let codeHtml = await apiResp.text();
-  console.log("🚀 | loader | codeHtml:", codeHtml);
   let filepath = url.searchParams.get("file");
   return {
     filepath,
@@ -29,21 +29,20 @@ export default function FileViewer() {
   let { id } = useParams();
   let { project } = useOutletContext<{ project: CodeProject }>();
   let { filepath, codeHtml } = useLoaderData<typeof loader>();
-  // let [codeHtml, setCodeHtml] = useState("");
-  // let [searchParams, setSearchParams] = useSearchParams();
-  // let filepath = searchParams.get("file");
+  let [numLines, setNumLines] = useState(0);
+  const lineNumbers = useRef<HTMLDivElement>(null);
 
-  // let { filepath } = useLoaderData<typeof loader>();
-
-  // useEffect(() => {
-  //   if (!filepath) return;
-  //   jsonRequest(`${apiUrl}/projects/${id}/file-viewer?file=${filepath}`).then(
-  //     (result) => {
-  //       console.log("🚀 | useEffect | result:", result);
-  //       setCodeHtml(result.html);
-  //     }
-  //   );
-  // }, [apiUrl, filepath]);
+  useEffect(() => {
+    if (codeHtml) {
+      let preTag = document.createElement("pre");
+      preTag.innerHTML = codeHtml;
+      let code = preTag.innerText;
+      console.log("🚀 | useEffect | code:", code);
+      const lineCount = code.split("\n").length;
+      console.log("🚀 | useEffect | lineCount:", lineCount);
+      setNumLines(lineCount);
+    }
+  }, [codeHtml]);
 
   return (
     <div className="bg-[#222] text-gray-100 h-full">
@@ -68,10 +67,26 @@ export default function FileViewer() {
           <HiOutlineExternalLink className="h-4 w-4 ml-1" />
         </OpenInCursorButton>
       </div>
-      <div
-        className="text-sm [&>pre]:p-4 [&>pre]:pl-6 leading-4"
-        dangerouslySetInnerHTML={{ __html: codeHtml }}
-      />
+      <div className="flex">
+        <div
+          className="text-gray-500 text-right pt-4 select-none text-xs font-mono bg-[#222]"
+          style={{
+            minWidth: "3em",
+            userSelect: "none",
+            paddingTop: "18px",
+          }}
+        >
+          {Array.from({ length: numLines }).map((_, i) => (
+            <div className="h-[17.48px] text-right" key={i}>
+              {i + 1}
+            </div>
+          ))}
+        </div>
+        <div
+          className="text-sm [&>pre]:p-4 flex-grow overflow-x-auto"
+          dangerouslySetInnerHTML={{ __html: codeHtml }}
+        />
+      </div>
     </div>
   );
 }

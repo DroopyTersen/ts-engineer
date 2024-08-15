@@ -6,3 +6,9 @@ pre code {
   font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
   font-size: 0.85em;
 }
+pre {
+  line-height: 17px;
+}
+span.line {
+  height: 16px;
+}
