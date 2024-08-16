@@ -5,11 +5,12 @@ import { wait } from "~/toolkit/utils/wait";
 
 export async function summarizeProjectMarkdown(
   codebaseMarkdown: string,
+  projectFiles: string[],
   emitter?: LLMEventEmitter
 ) {
   const systemMessage = {
     role: "system" as const,
-    content: summarizeProjectPrompt(codebaseMarkdown),
+    content: summarizeProjectPrompt(codebaseMarkdown, projectFiles.join("\n")),
   };
   let llm = getLLM("deepseek", "deepseek-coder");
 
@@ -22,7 +23,6 @@ export async function summarizeProjectMarkdown(
     sectionMessages.map(async (message, index) => {
       let _innerEmitter = new LLMEventEmitter();
       _innerEmitter.on("content", (delta) => {
-        console.log("🚀 | _innerEmitter.on | delta:", delta);
         emitter?.emit("data", {
           type: "section",
           index,
@@ -47,7 +47,10 @@ export async function summarizeProjectMarkdown(
   return allResults.join("\n\n");
 }
 
-const summarizeProjectPrompt = (codebaseMarkdown: string) => `
+const summarizeProjectPrompt = (
+  codebaseMarkdown: string,
+  projectFiles: string
+) => `
 You are an expert senior software engineer with extensive experience in analyzing and summarizing codebases. Your task is to examine the given codebase and provide a comprehensive summary of the project using the specified output template. Approach this task with meticulous attention to detail and a deep understanding of software architecture and best practices.
 
 Thoroughly review all files, directories, and documentation within the codebase.
@@ -59,6 +62,10 @@ Your summary should be:
 - Clear and professional: Present information in a well-organized, easy-to-understand manner.
 - Concise - prioritze what would be critical for a new developer to know about the codebase.
 
+Here is are the project files:
+<files>
+${projectFiles}
+</files>
 Here is the full codebase
 <codebase>
 ${codebaseMarkdown}
@@ -85,20 +92,21 @@ Very important - be succinct and to the point. This should be a very quick intro
     
 Provide a table of technologies, ordered by which would be most critical to know to work on this codebase.
 
-Provide the following columns in the Tech Stack table,
+Provide the following columns in the Tech Stack table.
 - Name - bolded
-- What is it? try to be as concise as possilbe
+- What is it? try to be as concise as possible
 
 This section should help new developers quickly understand what they need to be familiar with to work on the project. Only include technologies that are critical to know about the project, it doesn't need to be a full list of everything. Limit it to no more than 12 technologies. 
 
+First think about your list of technologies based primarily on the project's dependencies file (ex: package.json or requirements.txt). 
 
-Only show the technologies that a developer would need to know about to work on the project. So tiny utility libraries that are self explanatory don't need to be included.
+Never mention a library that is not listed in the dependencies. of the project. Don't list a technology twice!
 
-Never mention a library that is not listed in the dependencies. of the project.
+If you know the website for a technology, provide the link to that.
 
-For npm packages, provide the technology name as link to the NPM package in this format: [Friendly Name](https://www.npmjs.com/package/EXACT_NAME_OF_PACKAGE_FROM_PACKAGE_JSON)
+For npm packages, provide the technology name as link to the NPM package in this format: [Friendly Name](https://www.npmjs.com/package/EXACT_NAME_OF_PACKAGE_FROM_PACKAGE_JSON). 
 
-After providing the table there is no need for other commentary. Remember stop after about 12 technologies.`,
+After providing the table there is no need for other commentary. Remember stop after about 12 technologies. The table should never be more than 12 rows. Only provide the one table, and don't repeat anything.`,
   },
   {
     title: "Project Structure",
@@ -107,13 +115,13 @@ After providing the table there is no need for other commentary. Remember stop a
 Provide a table showing the paths of key folders and their purposes. Provide a column for:
 - Path - the path to the folder. prefix with "/"
 - Purpose : very concise explanation about what can be found in that folder.
-- Special Conventions : If applicable, describe any naming conventions or organizational patterns that are specific to this folder. Basically, guidance for what goes in here, and how the files should be named, and organized. If there is nothing specific to this folder, and it follows project level conventions, you can leave this blank.
 
 Guidelines for the table:
 -Choose the most important folders to discuss (no more than 10). 
 -Only show folders, configuration files will be described somewhere else.
 
-If applicable provide a table of naming conventions for filenames and folders.
+
+If applicable provide a table of naming conventions for filenames and folders. The table should have the following columns, Convention, Examples. Try to address things like:
 - how are folder names formatted? how are they cased (camel, kebab, snake,etc...)? give an example of a folder from the project that matches this convention.
 - how are file names formatted? how are they cased? give an example of a file from the project that matches this convention.
 - Don't make anything up, only provide guidance based on consistent conventions already established in the codebase. Only document things that you've confirmed are consistently true based files and folders in the codebase.
@@ -128,7 +136,6 @@ Include:
 1. Instructions for installing dependencies
 2. Configuration of environment variables or settings files
 3. Commands to build and run the project locally
-4. Any additional setup steps (e.g., database initialization)
 
 Guidelines to follow when providing instructions:
 - Ensure the instructions are clear enough for a new developer to follow without prior knowledge of the project.

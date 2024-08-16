@@ -31,6 +31,7 @@ export async function getProject(
     tokens: estimatedTokens + 1000, // Input + Output tokens
     cost: estimateTokenCost(estimatedTokens, 1000),
   };
+  project.summary = project.summary.trim();
 
   return {
     ...project,

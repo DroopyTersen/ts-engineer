@@ -12,3 +12,8 @@ pre {
 span.line {
   height: 16px;
 }
+
+.prose :where(pre:has(.mermaid)):not(:where([class~="not-prose"] *)) {
+  background-color: transparent;
+  /* Add any other styles you want to reset or modify */
+}

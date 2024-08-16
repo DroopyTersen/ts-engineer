@@ -56,6 +56,7 @@
     "langfuse-vercel": "^3.19.0",
     "lucide-react": "^0.424.0",
     "markdown-to-jsx": "^7.4.7",
+    "mermaid": "^10.9.1",
     "openai": "^4.55.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",

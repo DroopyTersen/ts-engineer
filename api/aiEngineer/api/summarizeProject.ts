@@ -13,7 +13,11 @@ export const summarizeProject = async (
     project.filepaths,
     project.absolute_path
   );
-  let summary = await summarizeProjectMarkdown(codebaseMarkdown, emitter);
+  let summary = await summarizeProjectMarkdown(
+    codebaseMarkdown,
+    project.filepaths,
+    emitter
+  );
   await await db.updateProject({
     id: project.id,
     name: project.name,

@@ -1,7 +1,6 @@
 import { ActionFunctionArgs, json, redirect } from "@remix-run/node";
 import { Form, Link, useOutletContext } from "@remix-run/react";
 import { CodeProject } from "api/aiEngineer/api/getProject";
-import Markdown from "markdown-to-jsx";
 import { useState } from "react";
 import { useApiUrl } from "~/root";
 import { Button } from "~/shadcn/components/ui/button";
@@ -11,6 +10,7 @@ import { Switch } from "~/shadcn/components/ui/switch";
 import { Textarea } from "~/shadcn/components/ui/textarea";
 import { cn } from "~/shadcn/utils";
 import { useEventStream } from "~/toolkit/ai/ui/useEventStream";
+import { Markdown } from "~/toolkit/components/Markdown/Markdown";
 import { proxyApiRequest } from "~/toolkit/http/proxyApiRequest";
 
 export const action = async ({ request, params }: ActionFunctionArgs) => {
@@ -26,7 +26,7 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
 
 export default function EditProject() {
   const { project } = useOutletContext<{ project: CodeProject }>();
-  let { summarize, summary, isStreaming, streamId } =
+  let { summarize, summary, isStreaming, streamId, setSummary } =
     useProjectSummary(project);
   const [isPreview, setIsPreview] = useState(false);
 
@@ -66,6 +66,7 @@ export default function EditProject() {
               />
             </div>
           </div>
+          <input type="hidden" name="summary" value={summary} />
           {isStreaming ? (
             <div className="prose prose-sm mt-2 border p-4 rounded-md max-w-4xl">
               <Markdown>{summary}</Markdown>
@@ -77,10 +78,9 @@ export default function EditProject() {
           ) : (
             <Textarea
               key={streamId || "summary"}
-              id="summary"
-              name="summary"
-              defaultValue={summary}
               rows={12}
+              value={summary}
+              onChange={(e) => setSummary(e.target.value)}
             />
           )}
           <Button
@@ -139,6 +139,7 @@ function useProjectSummary(project: CodeProject) {
   let apiUrl = useApiUrl();
   let apiPath = apiUrl + `/projects/${project.id}/summarize`;
   let [sections, setSections] = useState<{ [index: string]: string }>({});
+  let [summaryValue, setSummaryValue] = useState(project.summary);
   let { generate, cancel, ...eventStream } = useEventStream<{
     messages: Array<{ role: string; content: string }>;
   }>(apiPath, (event) => {
@@ -161,8 +162,9 @@ function useProjectSummary(project: CodeProject) {
     let body = {
       messages: [{ role: "user", content: "Please summarize this project" }],
     };
-    generate(body);
+    await generate(body);
   };
+
   let isStreaming = eventStream.status === "loading";
   // TODO: process the sections in order to create a big string
   // Process sections to create a single summary string
@@ -175,8 +177,9 @@ function useProjectSummary(project: CodeProject) {
     streamId: eventStream.id,
     summarize,
     isStreaming,
+    setSummary: setSummaryValue,
     summary: isStreaming
       ? streamingSummary || ""
-      : streamingSummary || project?.summary || "",
+      : summaryValue || streamingSummary || project?.summary || "",
   };
 }
