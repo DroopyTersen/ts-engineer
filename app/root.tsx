@@ -18,6 +18,7 @@ export default function App() {
   return (
     <html data-theme="light" className="h-full">
       <head>
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
         <Meta />
         <Links />
       </head>

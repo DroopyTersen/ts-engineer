@@ -10,7 +10,7 @@ import { Label } from "~/shadcn/components/ui/label";
 import { Switch } from "~/shadcn/components/ui/switch";
 import { Textarea } from "~/shadcn/components/ui/textarea";
 import { cn } from "~/shadcn/utils";
-import { useLLMEventStream } from "~/toolkit/ai/ui/useLLMEventStream";
+import { useEventStream } from "~/toolkit/ai/ui/useEventStream";
 import { proxyApiRequest } from "~/toolkit/http/proxyApiRequest";
 
 export const action = async ({ request, params }: ActionFunctionArgs) => {
@@ -137,27 +137,46 @@ export default function EditProject() {
 
 function useProjectSummary(project: CodeProject) {
   let apiUrl = useApiUrl();
-  let {
-    actions,
-    status,
-    isStreaming,
-    message,
-    id: streamId,
-  } = useLLMEventStream({
-    bodyInput: {},
-    apiPath: apiUrl + `/projects/${project.id}/summarize`,
+  let apiPath = apiUrl + `/projects/${project.id}/summarize`;
+  let [sections, setSections] = useState<{ [index: string]: string }>({});
+  let { generate, cancel, ...eventStream } = useEventStream<{
+    messages: Array<{ role: string; content: string }>;
+  }>(apiPath, (event) => {
+    try {
+      if (event.event === "data") {
+        let message = event.data as { index: number; delta: string };
+        let key = message.index + "";
+        setSections((prev) => {
+          return {
+            ...prev,
+            [key]: (prev[key] || "") + message.delta,
+          };
+        });
+      }
+    } catch (err) {
+      console.error("🚀 | useLLMEventsChat | err:", err);
+    }
   });
-
   let summarize = async () => {
-    actions.submit("Please summarize this project");
+    let body = {
+      messages: [{ role: "user", content: "Please summarize this project" }],
+    };
+    generate(body);
   };
+  let isStreaming = eventStream.status === "loading";
+  // TODO: process the sections in order to create a big string
+  // Process sections to create a single summary string
+  let streamingSummary = Object.entries(sections)
+    .sort(([a], [b]) => parseInt(a) - parseInt(b))
+    .map(([_, content]) => content)
+    .join("\n\n");
 
   return {
-    streamId,
+    streamId: eventStream.id,
     summarize,
     isStreaming,
     summary: isStreaming
-      ? message?.content || ""
-      : message?.content || project?.summary || "",
+      ? streamingSummary || ""
+      : streamingSummary || project?.summary || "",
   };
 }

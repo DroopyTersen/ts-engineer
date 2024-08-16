@@ -19,7 +19,10 @@ export default function ProjectsRoute() {
     <div className="grid grid-rows-[70px_1fr] h-screen">
       <header className="bg-background w-full flex items-center justify-between px-4 md:px-6 h-16 shadow">
         <div className="flex items-center gap-4">
-          <span className="text-sm font-medium">AI Code</span>
+          {/* <span className="text-sm font-medium">AI Code</span> */}
+          <Link to="/">
+            <img src="/logo.svg" alt="AI Code" className="h-12 w-12" />
+          </Link>
           <div className="flex items-center gap-2">
             <ChevronRightIcon className="h-4 w-4 text-muted-foreground" />
             <h1 className="text-2xl font-bold">Projects</h1>

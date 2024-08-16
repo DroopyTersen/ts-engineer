@@ -31,7 +31,6 @@ const getProjectById = async (id: string) => {
     "SELECT * FROM code_projects WHERE id = $1",
     [id]
   );
-  console.log("🚀 | getProjectById | rows:", rows);
   return CodeProjectDbItem.parse(rows[0]);
 };
 

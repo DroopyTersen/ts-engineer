@@ -2,11 +2,11 @@ import fs from "fs/promises";
 import { describe, expect, it, vi } from "vitest";
 import { LLMEventEmitter } from "~/toolkit/ai/streams/LLMEventEmitter";
 import { getLLM } from "~/toolkit/ai/vercel/getLLM";
-import { documentCodeFile } from "./documentCodeFile";
+import { summarizeCodeFile } from "./summarizeCodeFile";
 
-describe.skip("llm.documentCodeFile", () => {
+describe.skip("summarizeCodeFile", () => {
   vi.setConfig({ testTimeout: 30000 });
-  it("should generate documentation for getLLM.ts", async () => {
+  it("should generate summarization for getLLM.ts", async () => {
     let emitter = new LLMEventEmitter();
     emitter.on("content", console.log);
     // Arrange
@@ -16,18 +16,18 @@ describe.skip("llm.documentCodeFile", () => {
     expect(fileContents.length).toBeGreaterThan(10);
     // Act
     const [deepseekResult, gpt4miniResult] = await Promise.all([
-      documentCodeFile(filepath, fileContents, {
+      summarizeCodeFile(filepath, fileContents, {
         llm: getLLM("deepseek", "deepseek-coder"),
         // emitter,
       }),
-      documentCodeFile(filepath, fileContents, {
+      summarizeCodeFile(filepath, fileContents, {
         llm: getLLM("openai", "gpt-4o-mini"),
         // emitter,
       }),
     ]);
 
-    console.log("🚀 | documentCodeFile | deepseekResult:", deepseekResult);
-    console.log("🚀 | documentCodeFile | gpt4miniResult:", gpt4miniResult);
+    console.log("🚀 | summarizeCodeFile | deepseekResult:", deepseekResult);
+    console.log("🚀 | summarizeCodeFile | gpt4miniResult:", gpt4miniResult);
 
     // Assertions for deepseekResult
     expect(deepseekResult).toBeDefined();

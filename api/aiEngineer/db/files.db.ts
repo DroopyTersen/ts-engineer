@@ -1,21 +1,23 @@
-import { FileSearchResultSchema } from "@shared/db.schema";
+import { FileDbItem, FileSearchResultItem } from "@shared/db.schema";
 import { z } from "zod";
 import { embedTexts } from "~/toolkit/ai/openai/openai.sdk";
+import { AsyncReturnType } from "~/toolkit/utils/typescript.utils";
 import { getDb } from "./pglite/pglite.server";
 
 export type SearchFilesCriteria = {
+  query: string;
   projectId?: string;
   filepath?: string;
   extension?: string;
+  limit?: number;
 };
+
+export type SearchFilesResponse = AsyncReturnType<typeof searchFiles>;
 /** Hybrid search for files by embedding and keyword */
-const searchFiles = async (
-  searchText: string,
-  criteria?: SearchFilesCriteria
-) => {
+const searchFiles = async (criteria: SearchFilesCriteria) => {
   let [embeddingResults, keywordResults] = await Promise.all([
-    searchFilesWithEmbedding(searchText, criteria),
-    searchFilesByKeyword(searchText, criteria),
+    searchFilesWithEmbedding(criteria),
+    searchFilesByKeyword(criteria),
   ]);
   let rankedIds = rankFusion(
     embeddingResults.map((r) => r.id + ""),
@@ -29,19 +31,31 @@ const searchFiles = async (
   });
 
   return {
+    criteria,
     results: fusedResults,
     embeddingResults,
     keywordResults,
   };
 };
 
+const getFileByFilepath = async (projectId: string, filepath: string) => {
+  projectId = projectId.toUpperCase();
+  const { rows } = await getDb().query(
+    "SELECT * FROM files WHERE project_id = $1 AND filepath = $2",
+    [projectId, filepath]
+  );
+  try {
+    return FileDbItem.parse(rows?.[0]);
+  } catch (err) {
+    console.log("🚀 | getFileByFilepath | err:", err, projectId, filepath);
+    return null;
+  }
+};
+
 /** Search files by embedding */
-async function searchFilesWithEmbedding(
-  searchText: string,
-  criteria?: SearchFilesCriteria
-) {
+async function searchFilesWithEmbedding(criteria: SearchFilesCriteria) {
   // Generate the embedding for the given text
-  const embedding = await embedTexts([searchText]);
+  const embedding = await embedTexts([criteria.query]);
 
   // Convert the embedding array to a string format suitable for SQL
   const embeddingStr = `'[${embedding.join(",")}]'::vector(1024)`;
@@ -51,7 +65,7 @@ async function searchFilesWithEmbedding(
     SELECT *
     FROM search_files_with_embedding(
       ${embeddingStr},
-      10,
+      ${criteria.limit || 10},
       ${criteria?.projectId ? `'${criteria.projectId}'` : "NULL"},
       ${criteria?.filepath ? `'${criteria.filepath}'` : "NULL"},
       ${criteria?.extension ? `'${criteria.extension}'` : "NULL"}
@@ -60,14 +74,11 @@ async function searchFilesWithEmbedding(
 
   // Execute the query
   const { rows } = await getDb().query(query);
-  return z.array(FileSearchResultSchema).parse(rows);
+  return z.array(FileSearchResultItem).parse(rows);
 }
 
 /** Search files by keyword */
-async function searchFilesByKeyword(
-  searchText: string,
-  criteria?: SearchFilesCriteria
-) {
+async function searchFilesByKeyword(criteria: SearchFilesCriteria) {
   try {
     // Construct the SQL query with optional metadata filters
     const query = `
@@ -77,7 +88,7 @@ async function searchFilesByKeyword(
 
     // Prepare the parameters
     const params = [
-      searchText,
+      criteria.query,
       10, // max_items, you might want to make this configurable
       criteria?.projectId || null,
       criteria?.filepath || null,
@@ -90,7 +101,7 @@ async function searchFilesByKeyword(
     const { rows } = await getDb().query(query, params);
 
     console.log("Query executed successfully. Rows returned:", rows);
-    return z.array(FileSearchResultSchema).parse(rows);
+    return z.array(FileSearchResultItem).parse(rows);
   } catch (error) {
     console.error("Error in keyword search:", error);
     if (error instanceof Error) {
@@ -256,4 +267,5 @@ export const filesDb = {
   searchFilesByKeyword,
   deleteProjectFiles,
   saveProjectFile,
+  getFileByFilepath,
 };

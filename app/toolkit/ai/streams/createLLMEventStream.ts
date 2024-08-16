@@ -1,4 +1,5 @@
 import {
+  JSONValue,
   LLMDataStream,
   StreamMessage,
   ToolCall,
@@ -57,12 +58,17 @@ export function createEventStreamDataStream(
     send({ type: "tool_result", data: toolResult });
   };
 
+  const sendData = (data: JSONValue) => {
+    send({ type: "data", data });
+  };
+
   const createEventEmitter = () => {
     let emitter = new LLMEventEmitter();
     emitter.on("content", sendText);
     emitter.on("tool_call", sendToolCall);
     emitter.on("tool_result", sendToolResult);
     emitter.on("error", sendError);
+    emitter.on("data", sendData);
     return emitter;
   };
 
@@ -82,6 +88,7 @@ export function createEventStreamDataStream(
     sendToolCall,
     sendToolResult,
     sendError,
+    sendData,
     createEventEmitter,
   };
 }

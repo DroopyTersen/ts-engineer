@@ -12,6 +12,11 @@ export function ProjectHeader({ project }: { project: CodeProject }) {
   return (
     <header className="bg-background w-full flex items-center justify-between px-4 md:px-6 h-16 shadow">
       <div className="flex items-center gap-4">
+        <Link to="/">
+          <img src="/logo.svg" alt="AI Code" className="h-12 w-12" />
+        </Link>
+        <ChevronRightIcon className="h-4 w-4 text-muted-foreground" />
+
         <Link
           to="/projects"
           className="text-sm font-medium hover:underline underline-offset-4"

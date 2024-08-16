@@ -60,7 +60,6 @@ export class LangfuseTelemetry implements LLMTelemetry {
       id,
       parentId,
       start: (input: JSONValue, extraData?: TelemetryData) => {
-        console.log("🚀 | createSpan | parentId:", parentId);
         _span = (
           this.activeObservables.get(parentId || "") || this.langfuse
         ).span({

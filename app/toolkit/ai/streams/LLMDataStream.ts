@@ -35,6 +35,7 @@ export interface LLMDataStream {
   sendToolCall: (toolCall: ToolCall) => void;
   sendToolResult: (toolResult: ToolResult) => void;
   sendError: (error: any) => void;
+  sendData: (data: JSONValue) => void;
 }
 
 type StreamMessageType = LooseAutocomplete<LLMEvent["type"]>;
@@ -57,6 +58,7 @@ export const parseLLMEvents = (events: LLMEvent[]) => {
   let toolCalls: ToolCall[] = [];
   let toolResults: ToolResult[] = [];
   let logs: string[] = [];
+  let data: JSONValue[] = [];
   for (let i = 0; i < events.length; i++) {
     let event = events[i];
     if (event.type === "content") {
@@ -67,6 +69,8 @@ export const parseLLMEvents = (events: LLMEvent[]) => {
       toolResults.push(event.data);
     } else if (event.type === "log") {
       logs.push(event.data);
+    } else if (event.type === "data") {
+      data.push(event.data);
     }
   }
   let toolCallIds = [
@@ -91,5 +95,6 @@ export const parseLLMEvents = (events: LLMEvent[]) => {
     toolResults,
     toolUses,
     logs,
+    data,
   };
 };

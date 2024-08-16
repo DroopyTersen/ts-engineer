@@ -207,7 +207,12 @@ app.get("/projects/:id/file-viewer", async (c) => {
 
 app.get("/search", async (c) => {
   let query = c.req.query("query");
-  let criteria: SearchFilesCriteria = {};
+  if (!query) {
+    return c.json({ error: "missing query" }, { status: 400 });
+  }
+  let criteria: SearchFilesCriteria = {
+    query,
+  };
   if (c.req.query("projectId")) {
     criteria.projectId = c.req.query("projectId");
   }
@@ -218,7 +223,7 @@ app.get("/search", async (c) => {
     criteria.extension = c.req.query("extension");
   }
   console.log("🚀 | app.get | query:", query);
-  let results = await db.searchFiles(query || "", criteria);
+  let results = await db.searchFiles(criteria);
   return c.json(results);
 });
 export default app;

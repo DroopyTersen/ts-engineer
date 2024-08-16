@@ -1,9 +1,10 @@
 import { getLLM } from "~/toolkit/ai/vercel/getLLM";
+import { wait } from "~/toolkit/utils/wait";
 import { getFileContent } from "../fs/getFileContent";
 import { generateStepBackQuestions } from "../llm/generateStepBackQuestions";
 import { scoreFileRelevancy } from "../llm/scoreFileRelevancy";
 import { getProject } from "./getProject";
-const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
 export const rankFilesForContext = async (input: {
   codeTask: string;
   projectId: string;

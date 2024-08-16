@@ -23,7 +23,7 @@ export const CodeProjectDbItem = z.object({
 
 export type CodeProjectDbItem = z.infer<typeof CodeProjectDbItem>;
 
-export const FileSearchResultSchema = z.object({
+export const FileDbItem = z.object({
   id: z.string(),
   filepath: z.string(),
   project_id: z.string().nullable(),
@@ -36,6 +36,12 @@ export const FileSearchResultSchema = z.object({
   extension: z.string().nullable(),
   num_chars: z.number().nullable(),
   filename: z.string().nullable(),
+});
+
+export type FileDbItem = z.infer<typeof FileDbItem>;
+
+export const FileSearchResultItem = FileDbItem.extend({
   similarity: z.number().optional(), // similarity is only present in search_files_with_embedding
   rank: z.number().optional(), // rank is only present in search_files
 });
+export type FileSearchResultItem = z.infer<typeof FileSearchResultItem>;
