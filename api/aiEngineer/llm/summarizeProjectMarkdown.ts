@@ -51,7 +51,7 @@ const summarizeProjectPrompt = (
   codebaseMarkdown: string,
   projectFiles: string
 ) => `
-You are an expert senior software engineer with extensive experience in analyzing and summarizing codebases. Your task is to examine the given codebase and provide a comprehensive summary of the project using the specified output template. Approach this task with meticulous attention to detail and a deep understanding of software architecture and best practices.
+You are an expert senior software engineer with extensive experience in analyzing and summarizing codebases. Your task is to examine the given codebase and provide a comprehensive summary of the project using the specified output template, that can be placed in the project's README.md file. Approach this task with meticulous attention to detail and a deep understanding of software architecture and best practices.
 
 Thoroughly review all files, directories, and documentation within the codebase.
 
@@ -71,7 +71,7 @@ Here is the full codebase
 ${codebaseMarkdown}
 </codebase>
 
-Remember to base your analysis solely on the provided codebase, avoiding assumptions or speculation about features or functionalities not explicitly present in the code. Always prefer to use formatted text whenever possible (tables, bullets, bolds etc..). 
+Remember to base your analysis solely on the provided codebase, avoiding assumptions or speculation about features or functionalities not explicitly present in the code. Always prefer to use formatted text whenever possible (tables, bullets, bolds etc..), write in the style of a README.md file. 
 `;
 
 const projectSummarySections = [
@@ -241,7 +241,7 @@ N/A
   {
     title: "User Interface",
     template: `### Screens
-For projects with a user interface, describe the main screens or routes. Provice a table of the main screens/routes. Name, Route, Purpose.
+For projects with a user interface, describe the main screens or routes. Provice a table of the main screens/routes. Name, Route (provide both the route path, and the filename where that route is implemented), Purpose
 
 ### Routing
 For web applications or apps, explain the routing mechanism. otherwise say N/A
