@@ -14,7 +14,7 @@
     "build": "remix vite:build",
     "prestart:app": "bun run build",
     "start:app": "remix-serve build/server/index.js",
-    "test": "vitest"
+    "test": "bun test"
   },
   "repository": {
     "type": "git",

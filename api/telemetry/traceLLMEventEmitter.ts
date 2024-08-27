@@ -46,6 +46,7 @@ export const traceLLMEventEmitter = ({
   });
 
   emitter.on("llm_end", (result) => {
+    console.log("🚀 | emitter.on | result:", result);
     llmSpan?.end?.(result);
   });
 

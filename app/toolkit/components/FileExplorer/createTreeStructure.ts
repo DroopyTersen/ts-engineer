@@ -30,7 +30,7 @@ export function createTreeStructure(files: string[]): FSNode[] {
         name: part,
         type: isFile ? "file" : "folder",
         isExpanded: depth === 0, // Only expand first level folders
-        isSelected: true,
+        isSelected: false,
         children: isFile ? undefined : [],
         fullPath: fullPath,
       };

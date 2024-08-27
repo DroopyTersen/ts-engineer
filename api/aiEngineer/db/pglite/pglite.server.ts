@@ -6,8 +6,8 @@ import { join } from "path";
 import { createSingleton } from "~/toolkit/utils/createSingleton.server";
 
 let _pg: PGlite;
-export const initDb = (dataDir?: string) => {
-  _pg = createSingleton("pg", () => {
+export const initDb = async (dataDir?: string) => {
+  _pg = await createSingleton("pg", async () => {
     let pg = new PGlite({
       dataDir: dataDir,
       extensions: {
@@ -15,9 +15,10 @@ export const initDb = (dataDir?: string) => {
       },
     });
 
-    applyMigrations(pg);
+    await applyMigrations(pg);
     return pg;
   });
+  return _pg;
 };
 
 export const getDb = () => {

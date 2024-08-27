@@ -73,6 +73,7 @@ export default function EditProject() {
             </div>
           ) : isPreview ? (
             <div className="prose prose-sm mt-2 border p-4 rounded-md max-w-4xl">
+              <input type="hidden" name="summary" value={summary} />
               <Markdown>{summary}</Markdown>
             </div>
           ) : (

@@ -3,6 +3,7 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { codeToHtml } from "shiki";
 import { createEventStreamDataStream } from "~/toolkit/ai/streams/createLLMEventStream";
+import { writeSpecifications } from "./aiEngineer/api/codeTask/writeSpecifications";
 import { createNewProject } from "./aiEngineer/api/createNewProject";
 import { documentProject } from "./aiEngineer/api/documentProjectFiles";
 import { getProject } from "./aiEngineer/api/getProject";
@@ -48,6 +49,7 @@ const createReqSpan = (context: any) => {
       id: process.env.USER!,
     },
   });
+
   let span = telemetry.createSpan(traceName, trace.id);
   return span;
 };
@@ -154,6 +156,24 @@ app.post("/projects/:id/summarize", async (c) => {
   return dataStream.toResponse();
 });
 
+app.post("/projects/:id/codeTasks/:codeTaskId/specifications", async (c) => {
+  let dataStream = createEventStreamDataStream(c.req.raw.signal);
+  let emitter = dataStream.createEventEmitter();
+  let projectId = c.req.param("id");
+  let codeTaskId = c.req.param("codeTaskId");
+  let args = await c.req.json();
+  writeSpecifications(
+    {
+      projectId,
+      codeTaskId,
+      ...args,
+    },
+    {
+      emitter,
+    }
+  ).finally(() => dataStream.close());
+  return dataStream.toResponse();
+});
 app.post("/projects/:id/code-map", async (c) => {
   let dataStream = createEventStreamDataStream(c.req.raw.signal);
   let emitter = dataStream.createEventEmitter();

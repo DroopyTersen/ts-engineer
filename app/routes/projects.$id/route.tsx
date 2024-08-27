@@ -9,11 +9,14 @@ import {
   ResizablePanelGroup,
 } from "~/shadcn/components/ui/resizable";
 import { ScrollArea } from "~/shadcn/components/ui/scroll-area";
-import { FolderExplorer } from "~/toolkit/components/FileExplorer/FolderExplorer";
+
+import { FileExplorer } from "~/toolkit/components/FileExplorer/FileExplorer";
 import { jsonRequest } from "~/toolkit/http/fetch.utils";
 import { proxyApiRequestAsJson } from "~/toolkit/http/proxyApiRequest";
+import { useIsHydrated } from "~/toolkit/remix/useIsHydrated";
 import { formatNumber } from "~/toolkit/utils/formatNumber";
 import { ProjectHeader } from "./ProjectHeader";
+import { ProjectTabs } from "./ProjectTabs";
 
 // export const action = async ({ request }: ActionFunctionArgs) => {
 //   let resp = await proxyApiRequest(request);
@@ -52,7 +55,10 @@ export default function ProjectDetailsRoute() {
   let project = data?.project;
   const { selectedFiles, setSelectedFiles, tokenCount } =
     useSelectedFiles(project);
-
+  let isHydrated = useIsHydrated();
+  if (!isHydrated) {
+    return null;
+  }
   if (!project) {
     return <div>Project not found</div>;
   }
@@ -61,12 +67,12 @@ export default function ProjectDetailsRoute() {
       <ProjectHeader project={project} />
       <ResizablePanelGroup direction="horizontal" className="w-full h-full">
         <ResizablePanel defaultSize={20} minSize={15}>
-          <div className="px-4 py-4">
-            {selectedFiles.length} Selected Files{" "}
-            {formatNumber(tokenCount || 0)} tokens
-          </div>
           <ScrollArea type="auto" className=" h-full px-4 py-4">
-            <FolderExplorer
+            <div className="px-4 sticky top-0 bg-white z-10">
+              {selectedFiles.length} Selected Files{" "}
+              {formatNumber(tokenCount || 0)} tokens
+            </div>
+            <FileExplorer
               files={project.filepaths || []}
               onSelection={setSelectedFiles}
             />
@@ -75,6 +81,7 @@ export default function ProjectDetailsRoute() {
         <ResizableHandle withHandle />
         <ResizablePanel>
           <div className="overflow-y-auto h-full">
+            <ProjectTabs projectId={project.id} />
             <Outlet context={{ project, selectedFiles }} />
           </div>
         </ResizablePanel>

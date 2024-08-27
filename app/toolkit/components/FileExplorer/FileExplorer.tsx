@@ -6,7 +6,7 @@ import {
 } from "./createTreeStructure";
 import { TreeItem } from "./TreeItem";
 
-export function FolderExplorer({
+export function FileExplorer({
   files,
   onSelection,
 }: {

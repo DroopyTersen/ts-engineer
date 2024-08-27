@@ -45,7 +45,9 @@ export const getLLM = <T extends ModelProvider>(
     ? keyof (typeof MODEL_PROVIDERS)["deepseek"]["models"]
     : Parameters<(typeof MODEL_PROVIDERS)[T]["create"]>[0]
 ) => {
-  let _model = MODEL_PROVIDERS[provider].create(modelName as string);
+  let _model = MODEL_PROVIDERS[provider].create(modelName as string, {
+    cacheControl: true,
+  });
 
   return {
     _model,
@@ -377,4 +379,22 @@ const _streamTextWithTools = async (
       reject(err);
     }
   });
+};
+
+export type LLMMessageTextContent = {
+  type: "text";
+  text: string;
+};
+
+export const getCachedMessageContent = (content: string) => {
+  return {
+    type: "text" as const,
+    text: content,
+    experimental_providerMetadata: {
+      anthropic: { cacheControl: { type: "ephemeral" } },
+    },
+  } as {
+    type: "text";
+    text: string;
+  };
 };

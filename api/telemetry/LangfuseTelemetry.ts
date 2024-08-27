@@ -49,6 +49,9 @@ export class LangfuseTelemetry implements LLMTelemetry {
         return trace;
       },
     };
+
+    this.langfuse.flush();
+
     return trace;
   }
 
@@ -125,6 +128,7 @@ export class LangfuseTelemetry implements LLMTelemetry {
             : undefined,
         });
         this.activeObservables.delete(_generation.id);
+        this.langfuse.flush();
       },
     };
     return llmSpan;

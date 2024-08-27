@@ -1,7 +1,7 @@
 import { LLMEventEmitter } from "~/toolkit/ai/streams/LLMEventEmitter";
 import { db } from "../db/db.server";
-import { filesToMarkdown } from "../fs/filesToMarkdown";
-import { summarizeProjectMarkdown } from "../llm/summarizeProjectMarkdown";
+import { formatFileStructure, getFileContents } from "../fs/filesToMarkdown";
+import { summarizeProjectMarkdown } from "../llm/summary/generateProjectSummary";
 import { getProject } from "./getProject";
 
 export const summarizeProject = async (
@@ -9,14 +9,22 @@ export const summarizeProject = async (
   emitter?: LLMEventEmitter
 ) => {
   let project = await getProject(projectId);
-  let codebaseMarkdown = await filesToMarkdown(
+  const fileStructure = formatFileStructure(project.filepaths);
+  const fileContents = await getFileContents(
     project.filepaths,
-    project.absolute_path
+    project.absolute_path,
+    100_000
   );
   let summary = await summarizeProjectMarkdown(
-    codebaseMarkdown,
-    project.filepaths,
-    emitter
+    {
+      title: project.name,
+      summary: project.summary,
+      fileStructure,
+      fileContents,
+    },
+    {
+      emitter,
+    }
   );
   await await db.updateProject({
     id: project.id,

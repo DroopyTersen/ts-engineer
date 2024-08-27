@@ -8,7 +8,6 @@ import { formatNumber } from "~/toolkit/utils/formatNumber";
 import { OpenInCursorButton } from "./OpenInCursorButton";
 
 export function ProjectHeader({ project }: { project: CodeProject }) {
-  console.log("🚀 | ProjectHeader | project:", project);
   return (
     <header className="bg-background w-full flex items-center justify-between px-4 md:px-6 h-16 shadow">
       <div className="flex items-center gap-4">
@@ -27,18 +26,11 @@ export function ProjectHeader({ project }: { project: CodeProject }) {
           <ChevronRightIcon className="h-4 w-4 text-muted-foreground" />
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-bold">{project.name}</h1>
-            <Link to="edit">
-              <Button
-                variant="ghost"
-                size="sm"
-                asChild
-                className="rounded-full"
-              >
-                <Link to="edit">
-                  <BsPencil />
-                </Link>
-              </Button>
-            </Link>
+            <Button variant="ghost" size="sm" className="rounded-full" asChild>
+              <Link to="edit">
+                <BsPencil />
+              </Link>
+            </Button>
           </div>
           <div className="flex flex-col ml-12">
             <OpenInCursorButton

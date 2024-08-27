@@ -1,6 +1,6 @@
 import MarkdownToJSX from "markdown-to-jsx";
 import mermaid from "mermaid";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 // // Initialize Mermaid with global options for a dark theme
 // mermaid.initialize({
@@ -19,24 +19,40 @@ import { useEffect, useRef } from "react";
 // Custom component to render Mermaid diagrams
 const MermaidDiagram = ({ children }: { children: string }) => {
   const ref = useRef<HTMLDivElement>(null);
+  const [diagramId] = useState(
+    () => `mermaid-${Math.random().toString(36).substr(2, 9)}`
+  );
+  const [isValid, setIsValid] = useState(true);
 
   useEffect(() => {
-    if (ref.current) {
-      mermaid.init(undefined, ref.current);
-    }
+    const validateAndRender = async () => {
+      try {
+        // Validate the Mermaid syntax
+        await mermaid.parse(children);
+        setIsValid(true);
+
+        if (ref.current) {
+          await mermaid.run({
+            nodes: [ref.current],
+            suppressErrors: true,
+          });
+        }
+      } catch (error) {
+        console.error("Mermaid diagram is invalid:", error);
+        setIsValid(false);
+      }
+    };
+
+    // Add a small delay to ensure the DOM is ready
+    setTimeout(validateAndRender, 0);
   }, [children]);
 
+  if (!isValid) {
+    return null;
+  }
+
   return (
-    <div
-      ref={ref}
-      className="mermaid not-prose"
-      // style={{
-      //   backgroundColor: "#f00",
-      //   color: "#f8f8f2",
-      //   padding: "10px",
-      //   borderRadius: "5px",
-      // }}
-    >
+    <div ref={ref} id={diagramId} className="mermaid not-prose">
       {children}
     </div>
   );

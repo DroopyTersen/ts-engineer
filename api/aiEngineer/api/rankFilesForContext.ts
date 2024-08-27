@@ -23,9 +23,7 @@ export const rankFilesForContext = async (input: {
       llm: getLLM("deepseek", "deepseek-coder"),
     }
   );
-  console.log("🚀 | questions:", questions);
-  console.timeEnd("generateStepBackQuestions");
-  console.time("scoreFileRelevancy");
+  console.log("🚀 | step back questions:", questions);
   let fileStructure = files.join("\n");
   let processFile = async (filepath: string, index: number) => {
     await wait(10 * index);
@@ -49,5 +47,8 @@ export const rankFilesForContext = async (input: {
   let results = await Promise.all(files.map(processFile));
   results.sort((a, b) => b.score - a.score);
   console.timeEnd("scoreFileRelevancy");
-  return results;
+  return {
+    results,
+    questions,
+  };
 };
