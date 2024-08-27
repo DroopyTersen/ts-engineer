@@ -54,15 +54,16 @@ export const writeSpecifications = async (
       })
     : null;
 
-  const relevantFilePaths = await getRelevantFiles({
-    userInput: validatedInput.input,
-    project,
-    selectedFiles:
-      validatedInput.selectedFiles ||
-      existingCodeTask?.selected_files ||
-      project.filepaths,
-    parentObservableId: relevantFilesSpan?.id,
-  });
+  const { filepaths: relevantFilePaths, stepBackQuestions } =
+    await getRelevantFiles({
+      userInput: validatedInput.input,
+      project,
+      selectedFiles:
+        validatedInput.selectedFiles ||
+        existingCodeTask?.selected_files ||
+        project.filepaths,
+      parentObservableId: relevantFilesSpan?.id,
+    });
 
   relevantFilesSpan?.end({
     relevantFilePaths,
@@ -80,7 +81,7 @@ export const writeSpecifications = async (
     emitter,
   });
   // Prepare context for spec writing
-  const { title, specifications } = await generateSpecifications(
+  let { title, specifications } = await generateSpecifications(
     {
       projectContext: {
         absolutePath: project.absolute_path,
@@ -123,7 +124,11 @@ export const writeSpecifications = async (
       file_changes: null,
     });
   }
-
+  if (stepBackQuestions.length > 0) {
+    specifications = `\n<stepback_questions>\n${stepBackQuestions.join(
+      "\n"
+    )}\n</stepback_questions>\n\n${specifications}`;
+  }
   return {
     specifications,
     title,
@@ -150,6 +155,7 @@ export const getRelevantFiles = async ({
   parentObservableId?: string;
 }) => {
   let filepathsForContext = [];
+  let stepBackQuestions: string[] = [];
   // if the user selected the files, use them unless there are too many
   if (selectedFiles && selectedFiles.length > 0 && selectedFiles.length < 30) {
     filepathsForContext = selectedFiles;
@@ -163,19 +169,21 @@ export const getRelevantFiles = async ({
         telemetry: telemetry,
         parentObservableId: parentObservableId,
       });
-    let questions = await generateStepBackQuestions(
+    stepBackQuestions = await generateStepBackQuestions(
       {
         codeTask: userInput,
         files: project.filepaths,
       },
       {
-        llm: getLLM("deepseek", "deepseek-coder"),
+        // llm: getLLM("deepseek", "deepseek-coder"),
+        llm: getLLM("openai", "gpt-4o-mini"),
         emitter,
       }
     );
-    console.log("🚀 | step back questions:", questions.join("\n"));
+    console.log("🚀 | step back questions:", stepBackQuestions.join("\n"));
     let rankedFiles = await rankFilesForContext({
-      codeTask: userInput + "\n\nStep back questions:\n" + questions.join("\n"),
+      codeTask:
+        userInput + "\n\nStep back questions:\n" + stepBackQuestions.join("\n"),
       project,
       selectedFiles: selectedFiles,
     });
@@ -184,5 +192,8 @@ export const getRelevantFiles = async ({
       .map((r) => r.filepath);
   }
   console.log("🚀 | filepathsForContext:", filepathsForContext.join("\n"));
-  return filepathsForContext;
+  return {
+    filepaths: filepathsForContext,
+    stepBackQuestions: stepBackQuestions,
+  };
 };

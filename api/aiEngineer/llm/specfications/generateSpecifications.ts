@@ -129,9 +129,9 @@ const createSystemPrompt = (taskType: string) => {
   5. Create specification: Using the gathered information, create a clear and actionable specification. Focus on essential details that will help developers understand and implement the task efficiently.
 
 ## Response Format
-- First provide your thought process in <thought> tags.
+First provide your thought process in <thought> tags. In <thought> tags, provide your reasoning for why you are reading the files you are reading, what you are looking for, and any key insights you have gained.
   
-When ready, provide important filepaths in a <files> tag, one filepath per line. Then finally, provide the final specification in markdown format. Remember, the goal is to transform raw, unstructured ideas into well-structured backlog items, not to solve the problem or implement a solution. Ensure that project objectives are clearly defined and effectively communicated.
+Then finally, provide the final specification in markdown format. Remember, the goal is to transform raw, unstructured ideas into well-structured backlog items, not to solve the problem or implement a solution. Ensure that project objectives are clearly defined and effectively communicated.
   `;
 };
 
