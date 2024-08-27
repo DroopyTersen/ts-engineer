@@ -107,13 +107,7 @@ app.post("/projects/new", async (c) => {
 });
 
 app.get("/projects/:id", async (c) => {
-  let trace = createReqSpan(c).start({
-    projectId: c.req.param("id"),
-  });
-  const project = await getProject(c.req.param("id"), undefined, {
-    traceId: trace.id,
-  });
-  trace.end(project);
+  const project = await getProject(c.req.param("id"));
   return c.json(project);
 });
 app.get("/projects/:id/edit", async (c) => {

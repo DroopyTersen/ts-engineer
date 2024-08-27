@@ -8,7 +8,10 @@ import { getLLM, LLM } from "~/toolkit/ai/vercel/getLLM";
 import { classifyCodeTask } from "../../llm/specfications/classifyCodeTask";
 
 import { db } from "api/aiEngineer/db/db.server";
+import { generateStepBackQuestions } from "api/aiEngineer/llm/generateStepBackQuestions";
 import { generateSpecifications } from "api/aiEngineer/llm/specfications/generateSpecifications";
+import { telemetry } from "api/telemetry/telemetry.server";
+import { traceLLMEventEmitter } from "api/telemetry/traceLLMEventEmitter";
 import { getProject } from "../getProject";
 import { rankFilesForContext } from "../rankFilesForContext";
 
@@ -29,7 +32,9 @@ export const writeSpecifications = async (
   {
     llm,
     emitter,
+    traceId,
   }: {
+    traceId?: string;
     llm?: LLM;
     emitter?: LLMEventEmitter;
   }
@@ -38,6 +43,17 @@ export const writeSpecifications = async (
   const project = await getProject(validatedInput.projectId);
   let existingCodeTask = await db.getCodeTaskById(validatedInput.codeTaskId);
 
+  let relevantFilesSpan = traceId
+    ? telemetry.createSpan("getRelevantFiles", traceId).start({
+        userInput: validatedInput.input,
+        project,
+        selectedFiles:
+          validatedInput.selectedFiles ||
+          existingCodeTask?.selected_files ||
+          project.filepaths,
+      })
+    : null;
+
   const relevantFilePaths = await getRelevantFiles({
     userInput: validatedInput.input,
     project,
@@ -45,12 +61,16 @@ export const writeSpecifications = async (
       validatedInput.selectedFiles ||
       existingCodeTask?.selected_files ||
       project.filepaths,
+    parentObservableId: relevantFilesSpan?.id,
   });
 
+  relevantFilesSpan?.end({
+    relevantFilePaths,
+  });
   let fileContents = await getFileContents(
     relevantFilePaths,
     project.absolute_path,
-    40_000
+    20_000
   );
   const fileStructure = formatFileStructure(project.filepaths);
   llm = llm || getLLM("anthropic", "claude-3-5-sonnet-20240620");
@@ -60,7 +80,7 @@ export const writeSpecifications = async (
     emitter,
   });
   // Prepare context for spec writing
-  const specifications = await generateSpecifications(
+  const { title, specifications } = await generateSpecifications(
     {
       projectContext: {
         absolutePath: project.absolute_path,
@@ -91,11 +111,11 @@ export const writeSpecifications = async (
       specifications
     );
   } else {
-    // Create new code task
+    console.log("🚀 | title:", title);
     codeTask = await db.createNewCodeTask({
       id: validatedInput.codeTaskId,
       project_id: validatedInput.projectId,
-      title: taskType, // Use taskType as the title for now
+      title: `${taskType}: ${title}`,
       input: validatedInput.input,
       specifications,
       selected_files: relevantFilePaths,
@@ -106,6 +126,7 @@ export const writeSpecifications = async (
 
   return {
     specifications,
+    title,
     codeTaskId: codeTask.id,
   };
 };
@@ -115,15 +136,18 @@ export const getRelevantFiles = async ({
   selectedFiles,
   project,
   minScore = 3,
+  parentObservableId,
 }: {
   userInput: string;
   project: {
     id: string;
     absolute_path: string;
+    summary?: string;
+    filepaths: string[];
   };
   selectedFiles?: string[];
-  maxTokens?: number;
   minScore?: number;
+  parentObservableId?: string;
 }) => {
   let filepathsForContext = [];
   // if the user selected the files, use them unless there are too many
@@ -132,9 +156,27 @@ export const getRelevantFiles = async ({
   } else {
     // use an LLM to rank which files are most relevant
     console.log("🚀 | ranking files for context...");
+    let emitter = new LLMEventEmitter();
+    parentObservableId &&
+      traceLLMEventEmitter({
+        emitter,
+        telemetry: telemetry,
+        parentObservableId: parentObservableId,
+      });
+    let questions = await generateStepBackQuestions(
+      {
+        codeTask: userInput,
+        files: project.filepaths,
+      },
+      {
+        llm: getLLM("deepseek", "deepseek-coder"),
+        emitter,
+      }
+    );
+    console.log("🚀 | step back questions:", questions.join("\n"));
     let rankedFiles = await rankFilesForContext({
-      codeTask: userInput,
-      projectId: project.id,
+      codeTask: userInput + "\n\nStep back questions:\n" + questions.join("\n"),
+      project,
       selectedFiles: selectedFiles,
     });
     filepathsForContext = rankedFiles.results

@@ -3,8 +3,11 @@ import { VercelChatParams, VercelChatResult } from "../vercel/getLLM";
 import { JSONValue, ToolCall, ToolResult } from "./LLMDataStream";
 
 // This might be different depending on the LLM provider
-export type LLMStartData = VercelChatParams;
-export type LLMEndData = VercelChatResult;
+export type LLMStartData = VercelChatParams & {
+  requestId: string;
+  label?: string;
+};
+export type LLMEndData = VercelChatResult & { requestId: string };
 export type LLMEvent =
   | {
       type: "log";

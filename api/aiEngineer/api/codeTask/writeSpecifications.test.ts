@@ -4,6 +4,7 @@ import { traceLLMEventEmitter } from "api/telemetry/traceLLMEventEmitter";
 import { afterAll, beforeAll, describe, expect, it } from "bun:test";
 import { LLMEventEmitter } from "~/toolkit/ai/streams/LLMEventEmitter";
 import { getLLM } from "~/toolkit/ai/vercel/getLLM";
+import { wait } from "~/toolkit/utils/wait";
 import { createNewProject } from "../createNewProject";
 import {
   writeSpecifications,
@@ -42,17 +43,18 @@ describe("writeSpecifications", () => {
     // Arrange
     const input: WriteSpecificationsInput = {
       codeTaskId: "task123",
-      input: CODE_TASKS.AddCodeTasksDB,
+      input: CODE_TASKS.AddChat,
       projectId: projectId,
     };
     let trace = telemetry.createTrace("writeSpecifications", {
       input,
+      sessionId: input.codeTaskId,
       user: {
         id: "bun:test",
       },
     });
     let claude = getLLM("anthropic", "claude-3-5-sonnet-20240620");
-    let deepseek = getLLM("deepseek", "deepseek-coder");
+    let gpt4omini = getLLM("openai", "gpt-4o-mini");
     let emitter = new LLMEventEmitter();
     // emitter.on("content", (delta) => {
     //   console.log(delta);
@@ -60,13 +62,14 @@ describe("writeSpecifications", () => {
     traceLLMEventEmitter({
       emitter,
       telemetry: telemetry,
-      parentObserverableId: "",
+      parentObservableId: trace.id,
     });
 
     // Act
     const result = await writeSpecifications(input, {
-      llm: claude,
+      llm: gpt4omini,
       emitter,
+      traceId: trace.id,
     });
     console.log("🚀 | result:", result.specifications);
     // Assert
@@ -74,6 +77,9 @@ describe("writeSpecifications", () => {
     expect(result.specifications).toBeDefined();
     expect(typeof result.specifications).toBe("string");
     expect(result.specifications.length).toBeGreaterThan(0);
+
+    trace.end(result.specifications);
+    await wait(1000);
     // Add more specific assertions based on the expected structure of the specifications
   }, 90000); // Increase timeout to 30 seconds for LLM processing
 

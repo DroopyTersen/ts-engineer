@@ -86,17 +86,23 @@ export class LangfuseTelemetry implements LLMTelemetry {
       },
       end: (output: JSONValue, extraData?: TelemetryData) => {
         _span.end({ output, ...extraData });
-        this.activeObservables.delete(_span.id);
-        this.langfuse.flush();
+        let id = _span.id;
+        this.langfuse.flushAsync().then(() => {
+          this.activeObservables.delete(id);
+        });
       },
     };
 
     return span;
   }
 
-  createLLMSpan(name: string, parentId?: string): TelemetryLLMSpan {
+  createLLMSpan(
+    name: string,
+    parentId?: string,
+    oberservableId?: string
+  ): TelemetryLLMSpan {
     let _generation: LangfuseGenerationClient;
-    let id = generateTraceId(name);
+    let id = oberservableId || generateTraceId(name);
     let llmSpan = {
       id,
       parentId,
@@ -118,17 +124,29 @@ export class LangfuseTelemetry implements LLMTelemetry {
         return llmSpan;
       },
       end: (result: LLMEndData, extraData?: TelemetryData) => {
+        console.log("🚀 | createLLMSpan: end", result, _generation.id);
         _generation.end({
+          modelParameters: {
+            cachedTokens:
+              (result.experimental_providerMetadata?.anthropic
+                ?.cacheReadInputTokens as number) || 0,
+          },
           output: result.object || result.text,
           usage: result?.usage
             ? {
-                input: result.usage?.promptTokens,
+                input:
+                  result.usage?.promptTokens +
+                  ((result.experimental_providerMetadata as any)?.anthropic
+                    .cacheCreationInputTokens || 0),
                 output: result.usage?.completionTokens,
               }
             : undefined,
         });
-        this.activeObservables.delete(_generation.id);
+        let id = _generation.id;
         this.langfuse.flush();
+        this.langfuse.flushAsync().then(() => {
+          this.activeObservables.delete(id);
+        });
       },
     };
     return llmSpan;
@@ -150,10 +168,13 @@ const processLLMStartData = (params: LLMStartData): LangfuseGenerationInput => {
     modelParameters: {
       temperature: params.temperature,
       maxTokens: params.maxTokens,
-      tools:
-        "tools" in params ? JSON.stringify(params.tools, null, 2) : undefined,
+      seed: params.seed,
       toolChoice:
         "tools" in params ? JSON.stringify(params.toolChoice, null, 2) : "",
+    },
+    metadata: {
+      tools:
+        "tools" in params ? JSON.stringify(params.tools, null, 2) : undefined,
     },
   };
 };

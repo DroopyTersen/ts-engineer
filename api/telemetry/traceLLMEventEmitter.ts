@@ -5,22 +5,22 @@ import { LLMTelemetry, TelemetryLLMSpan, TelemetrySpan } from "./LLMTelemetry";
 export const traceLLMEventEmitter = ({
   emitter,
   telemetry,
-  parentObserverableId,
+  parentObservableId,
 }: {
   emitter: LLMEventEmitter;
   telemetry: LLMTelemetry;
-  parentObserverableId: string;
+  parentObservableId: string;
 }) => {
+  let activeSpans = new Map<string, TelemetryLLMSpan>();
   let toolCalls = new Map<string, TelemetrySpan>();
-  let llmSpan: TelemetryLLMSpan;
   emitter.on("llm_start", (params) => {
-    let label = "unknown";
+    let label = params.label || "";
     let lastMessage = params.messages?.[params.messages.length - 1];
     let lastMessageRole = lastMessage?.role;
 
-    if (lastMessageRole === "user") {
+    if (lastMessageRole === "user" && !label) {
       label = "User Input";
-    } else if (lastMessageRole === "tool") {
+    } else if (lastMessageRole === "tool" && !label) {
       label = "Tool Result";
       let toolCallId = (lastMessage?.content?.[0] as ToolCallPart)?.toolCallId;
       let toolCallMessage = params.messages?.find(
@@ -40,18 +40,26 @@ export const traceLLMEventEmitter = ({
       }
     }
 
-    llmSpan = telemetry
-      .createLLMSpan(label, parentObserverableId)
+    let llmSpan = telemetry
+      .createLLMSpan(label, parentObservableId, params.requestId)
       .start(params);
+    activeSpans.set(params.requestId, llmSpan);
   });
 
   emitter.on("llm_end", (result) => {
     console.log("🚀 | emitter.on | result:", result);
+    let llmSpan = activeSpans.get(result.requestId);
+    if (!llmSpan) {
+      console.error("LLM Span not found for requestId", result.requestId);
+    }
     llmSpan?.end?.(result);
   });
 
   emitter.on("tool_call", (toolCall) => {
-    let toolSpan = telemetry.createSpan(toolCall.name, parentObserverableId);
+    let toolSpan = telemetry.createSpan(
+      "Tool: " + toolCall.name,
+      parentObservableId
+    );
     toolSpan.start(toolCall);
     toolCalls.set(toolCall.id, toolSpan);
   });

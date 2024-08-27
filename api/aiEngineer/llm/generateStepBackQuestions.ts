@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { LLMEventEmitter } from "~/toolkit/ai/streams/LLMEventEmitter";
 import { getLLM, LLM } from "~/toolkit/ai/vercel/getLLM";
 
 export const generateStepBackQuestions = async (
@@ -9,6 +10,7 @@ export const generateStepBackQuestions = async (
   },
   options?: {
     llm?: LLM;
+    emitter?: LLMEventEmitter;
   }
 ) => {
   const { codeTask, files, projectSummary } = input;
@@ -16,14 +18,20 @@ export const generateStepBackQuestions = async (
 
   let systemPrompt = getSystemPrompt(fileStructure, projectSummary);
   let llm = options?.llm || getLLM("anthropic", "claude-3-5-sonnet-20240620");
-  let result = await llm.generateData({
-    schema: z.object({
-      questions: z.array(z.string()),
-    }),
-    system: systemPrompt,
-    prompt: codeTask,
-    temperature: 1,
-  });
+  let result = await llm.generateData(
+    {
+      label: "generateStepBackQuestions",
+      schema: z.object({
+        questions: z.array(z.string()),
+      }),
+      system: systemPrompt,
+      prompt: codeTask,
+      temperature: 1,
+    },
+    {
+      emitter: options?.emitter,
+    }
+  );
 
   return result?.object?.questions || [];
 };

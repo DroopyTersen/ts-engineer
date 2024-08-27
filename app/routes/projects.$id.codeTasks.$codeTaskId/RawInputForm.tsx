@@ -1,8 +1,8 @@
 import { Link } from "@remix-run/react";
 import { CodeTaskDbItem } from "api/aiEngineer/db/codeTasks.db";
+import { useState } from "react";
 import { Button } from "~/shadcn/components/ui/button";
-import { Label } from "~/shadcn/components/ui/label";
-import { Textarea } from "~/shadcn/components/ui/textarea";
+import { MarkdownTextarea } from "~/toolkit/components/MarkdownTextarea/MarkdownTextarea";
 
 export const RawInputForm = ({
   codeTask,
@@ -11,6 +11,7 @@ export const RawInputForm = ({
   codeTask: CodeTaskDbItem | null;
   onSubmit: (data: { input: string }) => void;
 }) => {
+  let [value, setValue] = useState(codeTask?.input || "");
   // Show the basic input form if there is no specifications yet
   if (!codeTask || !codeTask.specifications) {
     return (
@@ -23,21 +24,17 @@ export const RawInputForm = ({
           onSubmit({ input });
         }}
       >
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="exclusions" className="">
-            Coding Task
-          </Label>
-          <Textarea
-            id="input"
-            name="input"
-            defaultValue={codeTask?.input}
-            rows={8}
-            placeholder="Describe the coding task to be performed."
-          />
-          <p className="text-sm text-gray-500">
-            Describe the coding task to be performed...
-          </p>
-        </div>
+        <MarkdownTextarea
+          label="Code Task"
+          value={value}
+          onChanged={setValue}
+          name="input"
+          textareaProps={{
+            rows: 16,
+            placeholder: "Describe the coding task to be performed...",
+          }}
+          hint="Describe what you are trying to do. AI will then generate full specifications that you can edit."
+        />
         <div>
           <div className="mt-6 flex justify-end gap-2">
             <Button variant="secondary" asChild className="w-40">

@@ -1,6 +1,7 @@
 import MarkdownToJSX from "markdown-to-jsx";
 import mermaid from "mermaid";
 import { useEffect, useRef, useState } from "react";
+import { cn } from "~/shadcn/utils";
 
 // // Initialize Mermaid with global options for a dark theme
 // mermaid.initialize({
@@ -58,9 +59,20 @@ const MermaidDiagram = ({ children }: { children: string }) => {
   );
 };
 
-export const Markdown = ({ children }: { children: string }) => {
+export const Markdown = ({
+  children,
+  className,
+}: {
+  children: string;
+  className?: string;
+}) => {
   return (
-    <div className="prose prose-sm max-w-4xl [&_table_th]:text-left">
+    <div
+      className={cn(
+        "prose prose-sm max-w-4xl [&_table_th]:text-left [&>div>*]:mt-0",
+        className
+      )}
+    >
       <MarkdownToJSX
         options={{
           overrides: {

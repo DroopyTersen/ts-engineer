@@ -3,8 +3,8 @@ import { LLMEventEmitter } from "~/toolkit/ai/streams/LLMEventEmitter";
 import { LLM } from "~/toolkit/ai/vercel/getLLM";
 
 const CodeTaskTypeSchema = z.enum([
-  "bugFix",
-  "newFeature",
+  "bugfix",
+  "feature",
   "refactor",
   "documentation",
 ]);
@@ -30,6 +30,7 @@ export const classifyCodeTask = async (
       temperature: 0,
       system: systemPrompt,
       prompt: userPrompt,
+      label: "classifyCodeTask",
     },
     {
       emitter,
@@ -41,14 +42,14 @@ export const classifyCodeTask = async (
 };
 
 const createSystemPrompt = () => {
-  return `You are tasked with classifying a coding task into one of four categories: bugFix, newFeature, refactor, or documentation. The user will provide a description of a coding task, and you must determine which category it falls into based on the following examples:
+  return `You are tasked with classifying a coding task into one of four categories: bugfix, feature, refactor, or documentation. The user will provide a description of a coding task, and you must determine which category it falls into based on the following examples:
 
 Examples:
-1. bugFix:
+1. bugfix:
    - "Fix the login button that's not responding when clicked"
    - "Resolve the issue where the app crashes when uploading large files"
 
-2. newFeature:
+2. feature:
    - "Add a dark mode option to the user interface"
    - "Implement a search functionality for the product catalog"
 
@@ -62,5 +63,5 @@ Examples:
 
 Respond with ONLY the classification, without any additional explanation or text.
 
-When the User gives you a coding task your response should be one of these four words: bugFix, newFeature, refactor, or documentation.`;
+When the User gives you a coding task your response should be one of these four words: bugfix, feature, refactor, or documentation.`;
 };

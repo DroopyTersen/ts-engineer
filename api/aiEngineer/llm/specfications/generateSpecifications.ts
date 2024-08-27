@@ -68,6 +68,7 @@ export const generateSpecifications = async (
 
   const result = await llm.runTools(
     {
+      label: "generateSpecifications",
       maxTokens: 4000,
       temperature: 0.2,
       tools: {
@@ -88,18 +89,27 @@ export const generateSpecifications = async (
       emitter,
     }
   );
-  console.log(
-    "🚀 | generateSpecifications:",
-    result.experimental_providerMetadata
-  );
 
-  return result.text.trim();
+  return parseSpecifications(result.text.trim());
+};
+
+const parseSpecifications = (
+  specText: string
+): { title: string; specifications: string } => {
+  const titleRegex = /^\s*\*\*Title\*\*:\s*(.+)$/m;
+  const match = specText.match(titleRegex);
+  const title = match ? match[1].trim() : "Untitled";
+
+  // Remove the title from the specifications
+  const specifications = specText.replace(titleRegex, "").trim();
+
+  return { title, specifications };
 };
 
 const createSystemPrompt = (taskType: string) => {
   const taskDescriptions = {
     bugFix: "writing detailed bug specifications",
-    newFeature: "creating comprehensive new feature specifications",
+    feature: "creating comprehensive new feature specifications",
     refactor: "outlining clear refactoring specifications",
     documentation: "crafting thorough documentation specifications",
   };
@@ -126,8 +136,8 @@ When ready, provide important filepaths in a <files> tag, one filepath per line.
 };
 
 const createFinalPrompt = (codeTask: WriteSpecsInput["codeTask"]) => {
-  const templates = {
-    bugFix: `
+  const templates: Record<CodeTaskType, string> = {
+    bugfix: `
 **Title**: [Concise description of the bug]
 
 **Description**:
@@ -140,7 +150,7 @@ const createFinalPrompt = (codeTask: WriteSpecsInput["codeTask"]) => {
 
 **Additional context**: [Any screenshots, error messages, or relevant information]
 `,
-    newFeature: `
+    feature: `
 **Title**: [Brief description of the new feature]
 
 **Description**:

@@ -1,6 +1,7 @@
 import { createAnthropic } from "@ai-sdk/anthropic";
 import { createOpenAI } from "@ai-sdk/openai";
 import {
+  generateId,
   GenerateObjectResult,
   generateObject as vercelGenerateObject,
   generateText as vercelGenerateText,
@@ -89,35 +90,44 @@ export type AsyncOptions = {
   emitter?: LLMEventEmitter;
 };
 export type GenerateTextParams = Prettify<
-  Omit<Parameters<typeof vercelGenerateText>[0], "model">
+  Omit<Parameters<typeof vercelGenerateText>[0], "model"> & {
+    label?: string;
+  }
 >;
 
 export type GenerateDataParams<T extends z.ZodTypeAny> = Prettify<
   Omit<Parameters<typeof vercelGenerateObject>[0], "model" | "schema"> & {
     schema: T;
+    label?: string;
   }
 >;
 
 export type StreamTextParams = Prettify<
-  Omit<Parameters<typeof vercelStreamText>[0], "model">
+  Omit<Parameters<typeof vercelStreamText>[0], "model"> & {
+    label?: string;
+  }
 >;
 
 export type StreamDataParams<T extends z.ZodType> = Prettify<
-  Omit<Parameters<typeof vercelStreamObject>[0], "model"> & { schema: T }
+  Omit<Parameters<typeof vercelStreamObject>[0], "model"> & {
+    schema: T;
+    label?: string;
+  }
 >;
 
 const _generateText = async (
-  params: Parameters<typeof vercelGenerateText>[0],
+  params: Parameters<typeof vercelGenerateText>[0] & { label?: string },
   asyncOptions?: AsyncOptions
 ) => {
   const { signal, emitter } = asyncOptions || {};
-  emitter?.emit("llm_start", params);
+  let requestId = generateId(12);
+  emitter?.emit("llm_start", { requestId, ...params });
 
   let result = await vercelGenerateText({
     ...params,
     abortSignal: signal,
   });
-  emitter?.emit("llm_end", result);
+  emitter?.emit("llm_end", { requestId, ...result });
 
   return result;
 };
@@ -142,16 +152,21 @@ export type VercelUsage = GenerateObjectResult<any>["usage"];
 export const _generateData = async <TSchema extends z.ZodTypeAny>(
   params: Omit<Parameters<typeof vercelGenerateObject>[0], "schema"> & {
     schema: TSchema;
+    label?: string;
   },
   asyncOptions?: AsyncOptions
 ) => {
   const { signal, emitter } = asyncOptions || {};
-  emitter?.emit("llm_start", params);
+  let requestId = generateId(12);
+  emitter?.emit("llm_start", {
+    requestId,
+    ...params,
+  });
   let { rawResponse, ...result } = await vercelGenerateObject({
     ...params,
     abortSignal: signal,
   });
-  emitter?.emit("llm_end", result);
+  emitter?.emit("llm_end", { requestId, ...result });
 
   return result as Omit<
     AsyncReturnType<typeof vercelGenerateObject>,
@@ -166,13 +181,14 @@ type StreamTextResult = NonNullable<
   : never;
 
 const _streamText = async (
-  params: Parameters<typeof vercelStreamText>[0],
+  params: Parameters<typeof vercelStreamText>[0] & { label?: string },
   asyncOptions?: AsyncOptions
 ): Promise<StreamTextResult> => {
   const { signal, emitter } = asyncOptions || {};
+  let requestId = generateId(12);
 
   return new Promise(async (resolve, reject) => {
-    emitter?.emit("llm_start", params);
+    emitter?.emit("llm_start", { requestId, ...params });
     try {
       const stream = await vercelStreamText({
         abortSignal: signal,
@@ -188,7 +204,7 @@ const _streamText = async (
               });
             }
           }
-          emitter?.emit("llm_end", result);
+          emitter?.emit("llm_end", { requestId, ...result });
           resolve(result);
         },
       });
@@ -211,13 +227,17 @@ type StreamDataResult = NonNullable<
   : never;
 
 const _streamData = async <TSchema extends z.ZodType>(
-  params: Parameters<typeof vercelStreamObject>[0] & { schema: TSchema },
+  params: Parameters<typeof vercelStreamObject>[0] & {
+    schema: TSchema;
+    label?: string;
+  },
   asyncOptions?: AsyncOptions
 ): Promise<StreamDataResult> => {
   const { signal, emitter } = asyncOptions || {};
+  let requestId = generateId(12);
 
   return new Promise(async (resolve, reject) => {
-    emitter?.emit("llm_start", params);
+    emitter?.emit("llm_start", { requestId, ...params });
     try {
       const stream = await vercelStreamObject<z.infer<TSchema>>({
         abortSignal: signal,
@@ -226,7 +246,7 @@ const _streamData = async <TSchema extends z.ZodType>(
           if (result.object) {
             emitter?.emit("data", result.object);
           }
-          emitter?.emit("llm_end", result);
+          emitter?.emit("llm_end", { requestId, ...result });
           resolve(result);
         },
       });
@@ -255,48 +275,9 @@ const _streamTextWithTools = async (
   let messages = [...(params.messages || [])];
   let loopCount = 0;
   const maxLoops = params.maxLoops || 5;
-
-  // const executeTools = async (toolCalls: any[]) => {
-  //   for (const toolCall of toolCalls) {
-  //     const tool = params.tools?.[toolCall.toolName];
-  //     if (tool && tool.execute) {
-  //       emitter?.emit("tool_call", {
-  //         id: toolCall.toolCallId,
-  //         name: toolCall.toolName,
-  //         args: toolCall.args,
-  //         timestamp: Date.now(),
-  //       });
-
-  //       try {
-  //         const result = await tool.execute(toolCall.args);
-  //         emitter?.emit("tool_result", {
-  //           toolCallId: toolCall.toolCallId,
-  //           toolName: toolCall.toolName,
-  //           result,
-  //           toolDefinitionId: "",
-  //         });
-
-  //         messages.push({
-  //           role: "tool",
-  //           content: [
-  //             {
-  //               type: "tool-result",
-  //               toolCallId: toolCall.toolCallId,
-  //               toolName: toolCall.toolName,
-  //               result,
-  //             },
-  //           ],
-  //         });
-  //       } catch (error: any) {
-  //         console.error(`Error executing tool ${toolCall.toolName}:`, error);
-  //         emitter?.emit("error", error);
-  //       }
-  //     }
-  //   }
-  // };
-
+  let requestId = generateId(12);
   return new Promise(async (resolve, reject) => {
-    emitter?.emit("llm_start", params);
+    emitter?.emit("llm_start", { requestId, ...params });
     try {
       let finalContent = "";
       const stream = await vercelStreamText({
@@ -353,7 +334,7 @@ const _streamTextWithTools = async (
               ],
             });
           } else {
-            emitter?.emit("llm_end", result);
+            emitter?.emit("llm_end", { requestId, ...result });
             emitter?.emit("final_content", finalContent);
             resolve(result);
           }

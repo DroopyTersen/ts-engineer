@@ -5,7 +5,6 @@ import { getLLM, LLM } from "~/toolkit/ai/vercel/getLLM";
 export const scoreFileRelevancy = async (
   input: {
     codeTask: string;
-    questions: string[];
     fileStructure?: string;
     projectSummary?: string;
     file: {
@@ -38,16 +37,14 @@ export const scoreFileRelevancy = async (
       .generateData({
         maxRetries: 0,
         system: systemPrompt,
-        prompt: `CodeTask: ${input.codeTask}\n\t${input.questions.join(
-          "\n\t"
-        )}`,
+        prompt: `CodeTask: \n${input.codeTask}}`,
         schema: z.object({
           score: z.number().int().min(0).max(4),
         }),
         abortSignal: controller.signal,
       })
       .catch((err) => {
-        console.error(input.file.filepath, err);
+        // console.error(input.file.filepath, err);
         return {
           object: {
             score: -1,

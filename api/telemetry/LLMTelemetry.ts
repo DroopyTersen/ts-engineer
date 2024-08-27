@@ -47,5 +47,9 @@ export type TelemetryLLMSpan = {
 export interface LLMTelemetry {
   createTrace: (name: string, input: TelemetryTraceInput) => TelemetryTrace;
   createSpan: (name: string, parentId?: string) => TelemetrySpan;
-  createLLMSpan: (name: string, parentId?: string) => TelemetryLLMSpan;
+  createLLMSpan: (
+    name: string,
+    parentId?: string,
+    observableId?: string
+  ) => TelemetryLLMSpan;
 }
