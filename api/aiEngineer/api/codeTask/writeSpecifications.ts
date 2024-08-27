@@ -7,6 +7,7 @@ import { LLMEventEmitter } from "~/toolkit/ai/streams/LLMEventEmitter";
 import { getLLM, LLM } from "~/toolkit/ai/vercel/getLLM";
 import { classifyCodeTask } from "../../llm/specfications/classifyCodeTask";
 
+import { db } from "api/aiEngineer/db/db.server";
 import { generateSpecifications } from "api/aiEngineer/llm/specfications/generateSpecifications";
 import { getProject } from "../getProject";
 import { rankFilesForContext } from "../rankFilesForContext";
@@ -35,12 +36,22 @@ export const writeSpecifications = async (
 ) => {
   const validatedInput = WriteSpecificationsInput.parse(rawInput);
   const project = await getProject(validatedInput.projectId);
+  let existingCodeTask = await db.getCodeTaskById(validatedInput.codeTaskId);
 
-  const fileContents = await getRelevantFilesContents({
+  const relevantFilePaths = await getRelevantFiles({
     userInput: validatedInput.input,
     project,
-    selectedFiles: project.filepaths,
+    selectedFiles:
+      validatedInput.selectedFiles ||
+      existingCodeTask?.selected_files ||
+      project.filepaths,
   });
+
+  let fileContents = await getFileContents(
+    relevantFilePaths,
+    project.absolute_path,
+    40_000
+  );
   const fileStructure = formatFileStructure(project.filepaths);
   llm = llm || getLLM("anthropic", "claude-3-5-sonnet-20240620");
   // Classify the code task
@@ -71,16 +82,38 @@ export const writeSpecifications = async (
     }
   );
 
+  // Save the code task to the database
+  let codeTask;
+  if (existingCodeTask) {
+    // Update existing code task
+    codeTask = await db.updateSpecifications(
+      validatedInput.codeTaskId,
+      specifications
+    );
+  } else {
+    // Create new code task
+    codeTask = await db.createNewCodeTask({
+      id: validatedInput.codeTaskId,
+      project_id: validatedInput.projectId,
+      title: taskType, // Use taskType as the title for now
+      input: validatedInput.input,
+      specifications,
+      selected_files: relevantFilePaths,
+      plan: null,
+      file_changes: null,
+    });
+  }
+
   return {
     specifications,
+    codeTaskId: codeTask.id,
   };
 };
 
-export const getRelevantFilesContents = async ({
+export const getRelevantFiles = async ({
   userInput,
   selectedFiles,
   project,
-  maxTokens = 40_000,
   minScore = 3,
 }: {
   userInput: string;
@@ -109,5 +142,5 @@ export const getRelevantFilesContents = async ({
       .map((r) => r.filepath);
   }
   console.log("🚀 | filepathsForContext:", filepathsForContext.join("\n"));
-  return getFileContents(filepathsForContext, project.absolute_path, maxTokens);
+  return filepathsForContext;
 };

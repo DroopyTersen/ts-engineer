@@ -156,6 +156,17 @@ app.post("/projects/:id/summarize", async (c) => {
   return dataStream.toResponse();
 });
 
+app.get("/projects/:id/codeTasks", async (c) => {
+  let codeTasks = await db.getRecentCodeTasks(c.req.param("id"));
+  return c.json(codeTasks);
+});
+app.get("/projects/:id/codeTasks/:codeTaskId", async (c) => {
+  let codeTask = await db
+    .getCodeTaskById(c.req.param("codeTaskId"))
+    .catch((err) => null);
+  return c.json(codeTask);
+});
+
 app.post("/projects/:id/codeTasks/:codeTaskId/specifications", async (c) => {
   let dataStream = createEventStreamDataStream(c.req.raw.signal);
   let emitter = dataStream.createEventEmitter();
