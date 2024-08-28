@@ -1,4 +1,5 @@
 import { createReadFilesTool } from "api/aiEngineer/tools/readFiles.tool";
+import { createSearchCodeSnippetsTool } from "api/aiEngineer/tools/searchCodeSnippets.tool";
 import { LLMEventEmitter } from "~/toolkit/ai/streams/LLMEventEmitter";
 import { getCachedMessageContent, LLM } from "~/toolkit/ai/vercel/getLLM";
 import { CodeTaskType } from "./classifyCodeTask";
@@ -73,6 +74,9 @@ export const generateSpecifications = async (
       temperature: 0.2,
       tools: {
         readFileContents: createReadFilesTool(projectContext.absolutePath),
+        searchCodeSnippets: createSearchCodeSnippetsTool(
+          projectContext.absolutePath
+        ),
       },
       messages: [
         { role: "system", content: systemPrompt },
@@ -122,14 +126,16 @@ const createSystemPrompt = (taskType: string) => {
   
   2. Identify relevant files: Based on the task, think about which files in the <file_structure> might be relevant. List these files and explain why they're important.
   
-  3. Read file contents: If any of the relevant files have not been provided already in the <file_contents>, Use the \`readFileContents\` tool to read the contents of the missing file. Pass an array of filepaths to this tool.
+  3. Search for relevant code: Use the \`searchCodeSnippets\` tool to find relevant code snippets related to the task. This can help you identify affected areas, understand current implementations, or find usage patterns. Use specific function names, variable names, or unique strings to narrow down your search.
   
-  4. Process information: Analyze the contents of the identified files and extract key information relevant to the task.
+  4. Read file contents: If any of the relevant files have not been provided already in the <file_contents>, Use the \`readFileContents\` tool to read the contents of the missing file. Pass an array of filepaths to this tool.
   
-  5. Create specification: Using the gathered information, create a clear and actionable specification. Focus on essential details that will help developers understand and implement the task efficiently.
+  5. Process information: Analyze the contents of the identified files and extracted code snippets, and extract key information relevant to the task.
+  
+  6. Create specification: Using the gathered information, create a clear and actionable specification. Focus on essential details that will help developers understand and implement the task efficiently.
 
 ## Response Format
-First provide your thought process in <thought> tags. In <thought> tags, provide your reasoning for why you are reading the files you are reading, what you are looking for, and any key insights you have gained.
+First provide your thought process in <thought> tags. In <thought> tags, provide your reasoning for why you are searching for specific code snippets or reading certain files, what you are looking for, and any key insights you have gained.
   
 Then finally, provide the final specification in markdown format. Remember, the goal is to transform raw, unstructured ideas into well-structured backlog items, not to solve the problem or implement a solution. Ensure that project objectives are clearly defined and effectively communicated.
   `;

@@ -1,5 +1,3 @@
-import { createAnthropic } from "@ai-sdk/anthropic";
-import { createOpenAI } from "@ai-sdk/openai";
 import {
   generateId,
   GenerateObjectResult,
@@ -12,39 +10,13 @@ import { z } from "zod";
 import { AsyncReturnType, Prettify } from "~/toolkit/utils/typescript.utils";
 import { LLMEventEmitter } from "../streams/LLMEventEmitter";
 import "./bunPolyfill";
-
-export const MODEL_PROVIDERS = {
-  deepseek: {
-    create: createOpenAI({
-      baseURL: "https://api.deepseek.com",
-      apiKey: process.env.DEEPSEEK_API_KEY!,
-    }),
-    models: {
-      "deepseek-chat": "deepseek-chat",
-      "deepseek-coder": "deepseek-coder",
-    },
-  },
-  openai: {
-    create: createOpenAI({
-      apiKey: process.env.OPENAI_API_KEY!,
-    }),
-  },
-  anthropic: {
-    create: createAnthropic({
-      apiKey: process.env.ANTHROPIC_API_KEY!,
-    }),
-  },
-};
-
-export type ModelProvider = keyof typeof MODEL_PROVIDERS;
+import { MODEL_PROVIDERS, type ModelProvider } from "./modelProviders";
 
 export type LLM = ReturnType<typeof getLLM>;
 
 export const getLLM = <T extends ModelProvider>(
   provider: T,
-  modelName: T extends "deepseek"
-    ? keyof (typeof MODEL_PROVIDERS)["deepseek"]["models"]
-    : Parameters<(typeof MODEL_PROVIDERS)[T]["create"]>[0]
+  modelName: keyof (typeof MODEL_PROVIDERS)[T]["models"]
 ) => {
   let _model = MODEL_PROVIDERS[provider].create(modelName as string, {
     cacheControl: true,
@@ -96,7 +68,10 @@ export type GenerateTextParams = Prettify<
 >;
 
 export type GenerateDataParams<T extends z.ZodTypeAny> = Prettify<
-  Omit<Parameters<typeof vercelGenerateObject>[0], "model" | "schema"> & {
+  Omit<
+    Parameters<typeof vercelGenerateObject>[0],
+    "model" | "schema" | "output"
+  > & {
     schema: T;
     label?: string;
   }
@@ -109,7 +84,7 @@ export type StreamTextParams = Prettify<
 >;
 
 export type StreamDataParams<T extends z.ZodType> = Prettify<
-  Omit<Parameters<typeof vercelStreamObject>[0], "model"> & {
+  Omit<Parameters<typeof vercelStreamObject>[0], "model" | "output"> & {
     schema: T;
     label?: string;
   }
@@ -150,7 +125,10 @@ export type VercelChatResult = Prettify<
 export type VercelUsage = GenerateObjectResult<any>["usage"];
 
 export const _generateData = async <TSchema extends z.ZodTypeAny>(
-  params: Omit<Parameters<typeof vercelGenerateObject>[0], "schema"> & {
+  params: Omit<
+    Parameters<typeof vercelGenerateObject>[0],
+    "schema" | "output"
+  > & {
     schema: TSchema;
     label?: string;
   },
@@ -227,7 +205,10 @@ type StreamDataResult = NonNullable<
   : never;
 
 const _streamData = async <TSchema extends z.ZodType>(
-  params: Parameters<typeof vercelStreamObject>[0] & {
+  params: Omit<
+    Parameters<typeof vercelStreamObject>[0],
+    "schema" | "output"
+  > & {
     schema: TSchema;
     label?: string;
   },
@@ -241,6 +222,8 @@ const _streamData = async <TSchema extends z.ZodType>(
     try {
       const stream = await vercelStreamObject<z.infer<TSchema>>({
         abortSignal: signal,
+        // @ts-ignore
+        output: "object",
         ...params,
         onFinish: (result) => {
           if (result.object) {
