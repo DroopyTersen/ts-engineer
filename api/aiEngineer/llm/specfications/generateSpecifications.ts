@@ -16,7 +16,7 @@ type WriteSpecsInput = {
     input: string;
     taskType: CodeTaskType;
     specifications?: string;
-    followupInstructions?: string;
+    followUpInput?: string;
     stepBackQuestions?: string[];
   };
 };
@@ -217,12 +217,21 @@ Based on the provided information, create a detailed ${
 ${templates[codeTask.taskType as keyof typeof templates]?.trim()}
 </specifications>
 
-
 Ensure your response is in markdown format and follows this structure closely. Return the final specifications according to the provided template in the <specifications> tags.
 ${
-  codeTask.specifications && codeTask.followupInstructions
+  codeTask.specifications && codeTask.followUpInput
     ? `
-Previous specifications:\n${codeTask.specifications}\n\nFollowup instructions:\n${codeTask.followupInstructions}\n\nPlease update the previous specifications based on the followup instructions while maintaining the overall structure.
+Previous specifications:
+<previous_specifications>
+${codeTask.specifications}
+</previous_specifications>
+
+Follow-up input:
+<follow_up_input>
+${codeTask.followUpInput}
+</follow_up_input>
+
+Please update the previous specifications based on the follow-up input while maintaining the overall structure. Generate the updated specifications entirely! Don't be lazy!
 `
     : `Please help me write a specification for the following user input:\n${codeTask.input}`
 }

@@ -1,15 +1,17 @@
 import { Link } from "@remix-run/react";
 import { useEffect, useState } from "react";
 import { Button } from "~/shadcn/components/ui/button";
+import { Textarea } from "~/shadcn/components/ui/textarea";
 import { MarkdownTextarea } from "~/toolkit/components/MarkdownTextarea/MarkdownTextarea";
 import { useCodeTask } from "./useCodeTask";
 
 export const CodingPlanForm = ({
   codingPlanStream,
   codeTask,
+  actions,
 }: ReturnType<typeof useCodeTask>) => {
   let [codingPlan, setCodingPlan] = useState(codeTask?.plan || "");
-
+  let [followUpInput, setFollowUpInput] = useState("");
   useEffect(() => {
     if (!codingPlanStream.isStreaming && codingPlanStream?.message?.content) {
       setCodingPlan(codingPlanStream.message?.content || "");
@@ -38,6 +40,20 @@ export const CodingPlanForm = ({
             : "Review and edit the generated coding plan if needed."
         }
       />
+      <div className="space-y-2">
+        <Textarea
+          value={followUpInput}
+          onChange={(e) => setFollowUpInput(e.target.value)}
+          placeholder="Enter follow-up questions or additional information..."
+          className="h-24"
+        />
+        <Button
+          onClick={() => actions.regenerateCodingPlan(followUpInput)}
+          disabled={codingPlanStream.isStreaming || !followUpInput.trim()}
+        >
+          {codingPlanStream.isStreaming ? "Regenerating..." : "Regenerate Plan"}
+        </Button>
+      </div>
       <div>
         <div className="mt-6 flex justify-end gap-2">
           <Button variant="secondary" asChild className="w-40">

@@ -28,7 +28,8 @@ app.post("/:projectId/codeTasks/:codeTaskId/specifications", async (c) => {
     {
       projectId,
       codeTaskId,
-      ...args,
+      input: args.input,
+      followUpInput: args.followUpInput,
     },
     {
       emitter,
@@ -48,6 +49,7 @@ app.post("/:projectId/codeTasks/:codeTaskId/codingPlan", async (c) => {
       projectId,
       codeTaskId,
       specifications: args.input,
+      followUpInput: args.followUpInput,
     },
     {
       emitter,

@@ -1,6 +1,7 @@
 import { Link } from "@remix-run/react";
 import { useEffect, useState } from "react";
 import { Button } from "~/shadcn/components/ui/button";
+import { Textarea } from "~/shadcn/components/ui/textarea";
 import { MarkdownTextarea } from "~/toolkit/components/MarkdownTextarea/MarkdownTextarea";
 import { useCodeTask } from "./useCodeTask";
 
@@ -12,6 +13,8 @@ export const SpecificationsForm = ({
   let [specifications, setSpecifications] = useState(
     codeTask?.specifications || ""
   );
+  let [followUpInput, setFollowUpInput] = useState("");
+
   useEffect(() => {
     if (
       !specificationsStream.isStreaming &&
@@ -20,6 +23,7 @@ export const SpecificationsForm = ({
       setSpecifications(specificationsStream.message?.content || "");
     }
   }, [specificationsStream.isStreaming]);
+
   return (
     <form
       className="mt-4 max-w-xl"
@@ -50,6 +54,22 @@ export const SpecificationsForm = ({
             : "Review and edit the generated specifications if needed."
         }
       />
+      <div className="space-y-2 mt-4">
+        <Textarea
+          value={followUpInput}
+          onChange={(e) => setFollowUpInput(e.target.value)}
+          placeholder="Enter follow-up questions or additional information..."
+          className="h-24"
+        />
+        <Button
+          onClick={() => actions.regenerateSpecifications(followUpInput)}
+          disabled={specificationsStream.isStreaming || !followUpInput.trim()}
+        >
+          {specificationsStream.isStreaming
+            ? "Regenerating..."
+            : "Regenerate Specifications"}
+        </Button>
+      </div>
       <div>
         <div className="mt-6 flex justify-end gap-2">
           <Button variant="secondary" asChild className="w-50">

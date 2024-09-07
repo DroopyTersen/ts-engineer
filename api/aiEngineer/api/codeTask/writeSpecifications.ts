@@ -18,10 +18,9 @@ import { rankFilesForContext } from "../rankFilesForContext";
 export const WriteSpecificationsInput = z.object({
   codeTaskId: z.string(),
   input: z.string(),
+  followUpInput: z.string().optional(),
   specifications: z.string().optional(),
   projectId: z.string(),
-  // todo: wire this up to the llm call
-  followupInstructions: z.string().optional(),
   selectedFiles: z.array(z.string()).optional(),
 });
 
@@ -107,7 +106,7 @@ export const writeSpecifications = async (
       codeTask: {
         input: validatedInput.input,
         specifications: validatedInput.specifications,
-        followupInstructions: validatedInput.followupInstructions,
+        followUpInput: validatedInput.followUpInput,
         taskType,
         stepBackQuestions,
       },
