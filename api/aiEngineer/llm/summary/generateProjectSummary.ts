@@ -83,7 +83,7 @@ Your summary should be:
 - Clear and professional: Present information in a well-organized, easy-to-understand manner.
 - Concise - prioritze what would be critical for a new developer to know about the codebase.
 - Make sure to provide code snippets in full \`\`\` code blocks with a language tag.
-- Leverage Mermaid diagrams when asked. Try to use project specific details when labeling diagrams (whta kind of DB? what folder are the api server endpoints in? etc... ). Don't add any commentary or additional preamble to the diagrams. Just provide the diagram.
+- Leverage Mermaid diagrams when asked. Try to use project specific details when labeling diagrams (whta kind of DB? what folder are the api server endpoints in? etc... ). Don't add any commentary or additional preamble to the diagrams. Just provide the diagram. Always add a new line before and after the diagram's code block.
 - Avoid adding any commentary or additional preamble. We want this to be quickly digestible by developers. Keep it direct and to the point.
 - Don't add any Heading2 elements. The section title heading Tech Stack, Data Access, Project Structure, etc... will be rendered elsewhere. You should begin the response with the section content an skip the section title heading.
 
@@ -198,41 +198,16 @@ This will start a local dev server that will automatically refresh whenever you 
     title: "Architecture",
     template: `This section should give developers a clear understanding of how the different parts of the system work together and how data moves through the application. 
 
-Start by identifying the key elements of the application architecture (frontend/client, backend/server, database, identity provider, external Services/APIs, caching layer etc...). Try to be specific, identify project specific details. For example, don't just say "Database", say wwhat kind of DB it is. If possible diagram the architecture similar to this example, where each layer is a box, and important technologies are listed in the boxes:
-\`\`\`mermaid
-flowchart TB
-subgraph App["Frontend/Client (/app)"]
-    direction TB
-    A["React, Remix, Tailwind CSS"]
-end
+Start by identifying the key elements of the application architecture (frontend/client, backend/server, app, api, database, identity provider, external Services/APIs, caching layer etc...). Not every app will have all of these elements. Take your time and think carefully about what architecture you can derive from the provided source code.
 
-subgraph API["Backend/Server (/api)"]
-    direction TB
-    D["Bun, Hono, API Endpoints"]
-end
+- Try to be specific, identify project specific details. For example, don't just say "Database", say wwhat kind of DB it is. 
+- Try to also capture where and how these elements are hosted. Cloud provider? which one? which resources are colocated?
 
-subgraph DB["Database (/api/aiEngineer/db)"]
-    direction TB
-    G[PostgreSQL/PGLite]
-end
+Response Format:
+First provide a bulleted list of the key elements of the architecture. Explain what it is, where it is hosted and how it is connected to other elements.
 
-subgraph External["External Services/APIs"]
-    direction TB
-    H[OpenAI]
-    I[Anthropic]
-    J[Deepseek]
-    K[Langfuse]
-end
+Then diagram the architecture with Mermaid. Try to show a sophisticated enterprise architecture diagram, where things are organized into layers and cloud providers and network boundaries and different services are connected to each other.
 
-App --> API
-API --> DB
-API --> External
-\`\`\`
-
-
-Next, provide a Step-by-step walkthrough of a typical user request, from initiation to response
-- What happens clientside, what happens server side? when do we call a db? do we call an auth provider? etc... 
-- Use Mermaid sequence diagram to illustrate complex flows. Put mermaid diagrams in code blocks tagged with the 'mermaid' language. On the mermaid diagram, project specific's ex: what kind of DB is it? what folder are the api server endpoints in? etc... 
 `,
   },
 
@@ -280,10 +255,15 @@ For any code snippets, focus just on the important elements and put a comment li
   },
   {
     title: "Data Fetching",
-    template: `Explain how the UI connects to the backend for data reads and data writes (if applicable). How does data get on a the screen? Client side fetch? Server side and then server rendered?
-Use Mermaid sequence diagram to illustrate the flow with filenames as the actors/participants. Put mermaid diagrams in code blocks tagged with the 'mermaid' language. 
+    template: `Explain how the UI connects to the backend for data reads and data writes (if applicable). How does data get on a the screen? Client side fetch? Server side and then server rendered? What happens clientside, what happens server side? when do we call a db? do we call an auth provider? etc... 
 
-Here is an example mermaid sequence diagram.
+Provide a Step-by-step walkthrough of a typical user request, from initiation to response
+- The goal is to provide a clear understanding of how a specific request flows through the system.
+- Use Mermaid sequence diagram to illustrate complex flows. Put mermaid diagrams in code blocks tagged with the 'mermaid' language. On the mermaid diagram, project specific's ex: what kind of DB is it? what folder are the api server endpoints in? etc...
+
+Use Mermaid sequence diagram to illustrate the flow with filenames as the actors/participants. 
+
+Here is a really basic example mermaid sequence diagram.
 \`\`\`mermaid
 sequenceDiagram
     participant User

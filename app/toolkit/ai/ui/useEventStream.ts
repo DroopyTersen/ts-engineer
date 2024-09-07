@@ -10,11 +10,12 @@ let useStream = <TInputData>(
     abortController?: AbortController
   ) => Promise<any>
 ) => {
-  let [streamId, setStreamId] = useState("");
+  let [streamId, setStreamId] = useState(() => generateId("stream-init"));
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
   let { getAbortController, createAbortController } = useAbortController();
 
   let generate = async (input: TInputData) => {
+    console.log("🚀 | generate | input:", input);
     // Clean up any existing streams before starting a new one
     let abortController = createAbortController();
     setStatus("loading");
@@ -30,7 +31,6 @@ let useStream = <TInputData>(
       setStatus("error");
     });
 
-    setStreamId("");
     setStatus("idle");
     return;
   };
@@ -39,8 +39,8 @@ let useStream = <TInputData>(
     console.log("calling cancel!!!", abortController?.signal);
     abortController?.abort();
     setStatus("idle");
-    setStreamId("");
   };
+
   return {
     id: streamId,
     status,

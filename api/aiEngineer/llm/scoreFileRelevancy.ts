@@ -27,6 +27,7 @@ export const scoreFileRelevancy = async (
     input.fileStructure,
     input.projectSummary
   );
+  console.log("🚀 | systemPrompt:", systemPrompt);
   let llm = options?.llm || getLLM("deepseek", "deepseek-coder");
 
   const controller = new AbortController();

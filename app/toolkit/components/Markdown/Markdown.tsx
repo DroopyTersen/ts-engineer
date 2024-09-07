@@ -1,6 +1,7 @@
 import MarkdownToJSX from "markdown-to-jsx";
 import mermaid from "mermaid";
 import { useEffect, useRef, useState } from "react";
+import { codeToHtml } from "shiki";
 import { cn } from "~/shadcn/utils";
 
 // // Initialize Mermaid with global options for a dark theme
@@ -59,6 +60,36 @@ const MermaidDiagram = ({ children }: { children: string }) => {
   );
 };
 
+const SyntaxHighlightedCode = ({
+  className,
+  children,
+}: {
+  className?: string;
+  children: string;
+}) => {
+  const [highlightedCode, setHighlightedCode] = useState<string>("");
+  const language = className?.split("-")[1] || "plaintext";
+
+  useEffect(() => {
+    const highlightCode = async () => {
+      try {
+        const html = await codeToHtml(children, {
+          lang: language,
+          theme: "slack-dark",
+        });
+        setHighlightedCode(html);
+      } catch (error) {
+        console.error("Error highlighting code:", error);
+        setHighlightedCode(`<pre><code>${children}</code></pre>`);
+      }
+    };
+
+    highlightCode();
+  }, [children, language]);
+
+  return <div dangerouslySetInnerHTML={{ __html: highlightedCode }} />;
+};
+
 export const Markdown = ({
   children,
   className,
@@ -69,7 +100,7 @@ export const Markdown = ({
   return (
     <div
       className={cn(
-        "prose prose-sm max-w-4xl [&_table_th]:text-left [&>div>*]:mt-0",
+        "prose prose-sm max-w-4xl whitespace-pre-wrap [&_table_th]:text-left [&>div>*]:mt-0",
         className
       )}
     >
@@ -79,11 +110,15 @@ export const Markdown = ({
             code: {
               component: ({ className, children }) => {
                 const language = className?.split("-")[1];
-                return language === "mermaid" ? (
-                  <MermaidDiagram>{children}</MermaidDiagram>
-                ) : (
-                  <code className={className}>{children}</code>
-                );
+                if (language === "mermaid") {
+                  return <MermaidDiagram>{children}</MermaidDiagram>;
+                } else {
+                  return (
+                    <SyntaxHighlightedCode className={className}>
+                      {children}
+                    </SyntaxHighlightedCode>
+                  );
+                }
               },
             },
           },

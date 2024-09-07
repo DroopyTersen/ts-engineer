@@ -23,11 +23,12 @@ const createNewCodeTask = async (
   try {
     const { rows } = await getDb().query(
       `
-      INSERT INTO code_tasks (project_id, title, input, specifications, selected_files, plan, file_changes)
-      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      INSERT INTO code_tasks (id, project_id, title, input, specifications, selected_files, plan, file_changes)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
       RETURNING *
     `,
       [
+        input.id,
         input.project_id,
         input.title,
         input.input,
@@ -80,6 +81,16 @@ const getCodeTaskById = async (id: string) => {
   }
 };
 
+// Delete a code task
+const deleteCodeTask = async (id: string) => {
+  try {
+    await getDb().query("DELETE FROM code_tasks WHERE id = $1", [id]);
+  } catch (error) {
+    console.error("Error deleting code task:", error);
+    throw new Error("Failed to delete code task from database");
+  }
+};
+
 export const getRecentCodeTasks = async (projectId: string) => {
   const { rows } = await getDb().query(
     "SELECT * FROM code_tasks WHERE project_id = $1 ORDER BY created_at DESC LIMIT 10",
@@ -88,9 +99,42 @@ export const getRecentCodeTasks = async (projectId: string) => {
   return rows.map((row) => CodeTaskDbItem.parse(row));
 };
 
+export async function updateCodingPlan({
+  codeTaskId,
+  codingPlan,
+  specifications,
+}: {
+  codeTaskId: string;
+  codingPlan: string;
+  specifications: string;
+}) {
+  try {
+    const { rows } = await getDb().query(
+      `
+      UPDATE code_tasks
+      SET plan = $1, specifications = $2, updated_at = NOW()
+      WHERE id = $3
+      RETURNING *
+    `,
+      [codingPlan, specifications, codeTaskId]
+    );
+    return CodeTaskDbItem.parse(rows[0]);
+  } catch (error) {
+    console.error(
+      "Error updating code task coding plan and specifications:",
+      error
+    );
+    throw new Error(
+      "Failed to update code task coding plan and specifications in database"
+    );
+  }
+}
+
 export const codeTasksDb = {
   createNewCodeTask,
   updateSpecifications,
   getCodeTaskById,
   getRecentCodeTasks,
+  deleteCodeTask,
+  updateCodingPlan,
 };

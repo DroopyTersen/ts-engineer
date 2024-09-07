@@ -17,6 +17,7 @@ type WriteSpecsInput = {
     taskType: CodeTaskType;
     specifications?: string;
     followupInstructions?: string;
+    stepBackQuestions?: string[];
   };
 };
 
@@ -125,19 +126,22 @@ const createSystemPrompt = (taskType: string) => {
   1. Analyze the task: Carefully review the provided information and task description.
   
   2. Identify relevant files: Based on the task, think about which files in the <file_structure> might be relevant. List these files and explain why they're important.
+
   
-  3. Search for relevant code: Use the \`searchCodeSnippets\` tool to find relevant code snippets related to the task. This can help you identify affected areas, understand current implementations, or find usage patterns. Use specific function names, variable names, or unique strings to narrow down your search.
+  3. Read file contents: If any of the relevant files have not been provided already in the <file_contents>, Use the \`readFileContents\` tool to read the contents of the missing file. Pass an array of filepaths to this tool.
   
-  4. Read file contents: If any of the relevant files have not been provided already in the <file_contents>, Use the \`readFileContents\` tool to read the contents of the missing file. Pass an array of filepaths to this tool.
-  
+  4. Search for relevant code: After reading some files, if you have further questions about the codebase, use the \`searchCodeSnippets\` tool to find relevant code snippets related to the task. This can help you identify other files you may want to call readFileContents on. This can help you identify affected areas, understand current implementations, or find usage patterns. Use specific function names, variable names, or unique strings to narrow down your search.
+
   5. Process information: Analyze the contents of the identified files and extracted code snippets, and extract key information relevant to the task.
   
-  6. Create specification: Using the gathered information, create a clear and actionable specification. Focus on essential details that will help developers understand and implement the task efficiently.
+  6. Create specification: Using the gathered information, create a clear and actionable specification. Focus on essential details that will help developers understand and implement the task efficiently. Remember, the goal is a functional specification, NOT to create a technical spec. So things like acceptance criteria should be written so that they could be tested by an end user. AKA, update database schema is not a good acceptance criteria, because it is not testable by an end user.
+
+Remember, you can call \`readFileContents\` and \`searchCodeSnippets\` multiple times in your process. It is important to review the relevant and pertinent files in the codebase to understand how to best define the specifications for the coding task.
 
 ## Response Format
 First provide your thought process in <thought> tags. In <thought> tags, provide your reasoning for why you are searching for specific code snippets or reading certain files, what you are looking for, and any key insights you have gained.
   
-Then finally, provide the final specification in markdown format. Remember, the goal is to transform raw, unstructured ideas into well-structured backlog items, not to solve the problem or implement a solution. Ensure that project objectives are clearly defined and effectively communicated.
+Then finally, provide the final specification in markdown format. Remember, the goal is to transform raw, unstructured ideas into well-structured backlog items, that clearly communication functional requirements, not to solve the problem or implement a solution. Ensure that project objectives are clearly defined and concisely and effectively communicated.
   `;
 };
 
@@ -164,9 +168,9 @@ const createFinalPrompt = (codeTask: WriteSpecsInput["codeTask"]) => {
 - High-level description of the feature:
 
 **Acceptance Criteria**:
-- [ ] Criteria 1
-- [ ] Criteria 2
-- [ ] Criteria 3
+- Criteria 1
+- Criteria 2
+- Criteria 3
 
 **Additional context**: [Any mockups, or relevant information. Leave out technical details, that will come later. Focus on the requirements gathering an specifications.]
 `,
@@ -194,17 +198,27 @@ const createFinalPrompt = (codeTask: WriteSpecsInput["codeTask"]) => {
 `,
   };
 
-  return `Based on the provided information, create a detailed ${
+  return `
+<questions_to_consider_when_choosing_files>
+    ${
+      codeTask.stepBackQuestions && codeTask.stepBackQuestions.length > 0
+        ? `
+    ${codeTask.stepBackQuestions.map((question) => `- ${question}`).join("\n")}
+    `
+        : ""
+    } 
+</questions_to_consider_when_choosing_files>
+
+Based on the provided information, create a detailed ${
     codeTask.taskType
   } specification following this structure:
-
-<template>
-${templates[codeTask.taskType as keyof typeof templates]}
-</template>
-
-Ensure your response is in markdown format and follows this structure closely. Don't return the template tag, just the markdown.
+    
+<specifications>
+${templates[codeTask.taskType as keyof typeof templates]?.trim()}
+</specifications>
 
 
+Ensure your response is in markdown format and follows this structure closely. Return the final specifications according to the provided template in the <specifications> tags.
 ${
   codeTask.specifications && codeTask.followupInstructions
     ? `

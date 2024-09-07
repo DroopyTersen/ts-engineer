@@ -124,7 +124,6 @@ export class LangfuseTelemetry implements LLMTelemetry {
         return llmSpan;
       },
       end: (result: LLMEndData, extraData?: TelemetryData) => {
-        console.log("🚀 | createLLMSpan: end", result, _generation.id);
         _generation.end({
           modelParameters: {
             cachedTokens:

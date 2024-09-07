@@ -11,10 +11,15 @@ export const rankFilesForContext = async (input: {
 
   let fileStructure = input.project.filepaths.join("\n");
   let processFile = async (filepath: string, index: number) => {
-    await wait(10 * index);
+    await wait(50 * index);
     let fileContent = await getFileContent(
       filepath,
       input.project.absolute_path
+    );
+    console.log(
+      "🚀 | processFile | fileContent:",
+      filepath,
+      fileContent.slice(0, 100)
     );
     let score = await scoreFileRelevancy({
       file: {
@@ -24,8 +29,9 @@ export const rankFilesForContext = async (input: {
       codeTask: input.codeTask,
 
       fileStructure,
-      projectSummary: input.project?.summary?.substring(0, 10_000),
+      // projectSummary: input.project?.summary?.substring(0, 10_000),
     });
+    console.log("🚀 | processFile | score:", score, filepath);
     return {
       filepath,
       score,

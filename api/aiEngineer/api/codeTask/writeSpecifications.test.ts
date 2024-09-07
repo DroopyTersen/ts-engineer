@@ -11,7 +11,7 @@ import {
   WriteSpecificationsInput,
 } from "./writeSpecifications";
 
-describe.skip("writeSpecifications", () => {
+describe("writeSpecifications", () => {
   let projectId = "";
   const CODE_TASKS = {
     AddChat: "Add the ability to chat with your project",

@@ -16,7 +16,6 @@ export function ProjectTabs({ projectId }: ProjectTabsProps) {
     return tabIds.find((tabId) => targetPath.includes(tabId)) || "summary";
   });
   useEffect(() => {
-    console.log("🚀 | ProjectTabs | targetPath:", targetPath);
     setActiveTab(
       tabIds.find((tabId) => targetPath.includes(tabId)) || "summary"
     );

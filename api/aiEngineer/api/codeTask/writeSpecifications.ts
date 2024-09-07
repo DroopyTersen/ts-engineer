@@ -63,7 +63,19 @@ export const writeSpecifications = async (
         existingCodeTask?.selected_files ||
         project.filepaths,
       parentObservableId: relevantFilesSpan?.id,
+      minScore: 3,
     });
+
+  let newSpecifications = `<files>\n${relevantFilePaths.join(
+    "\n"
+  )}\n</files>\n`;
+  if (stepBackQuestions.length > 0) {
+    newSpecifications += `<stepback_questions>\n${stepBackQuestions.join(
+      "\n"
+    )}\n</stepback_questions>\n`;
+  }
+
+  emitter?.emit("content", newSpecifications);
 
   relevantFilesSpan?.end({
     relevantFilePaths,
@@ -74,7 +86,9 @@ export const writeSpecifications = async (
     20_000
   );
   const fileStructure = formatFileStructure(project.filepaths);
+  // llm = llm || getLLM("openai", "gpt-4o-mini");
   llm = llm || getLLM("anthropic", "claude-3-5-sonnet-20240620");
+  // llm = llm || getLLM("deepseek", "deepseek-coder");
   // Classify the code task
   const taskType = await classifyCodeTask(validatedInput.input, {
     llm,
@@ -88,13 +102,14 @@ export const writeSpecifications = async (
         title: project.name,
         summary: project.summary,
         fileStructure,
-        fileContents,
+        fileContents: fileContents,
       },
       codeTask: {
         input: validatedInput.input,
         specifications: validatedInput.specifications,
         followupInstructions: validatedInput.followupInstructions,
         taskType,
+        stepBackQuestions,
       },
     },
     {
@@ -102,11 +117,16 @@ export const writeSpecifications = async (
       emitter,
     }
   );
-
+  specifications = newSpecifications + specifications;
   // Save the code task to the database
   let codeTask;
   if (existingCodeTask) {
     // Update existing code task
+    console.log(
+      "🚀 | updating existing code task",
+      validatedInput.codeTaskId,
+      specifications
+    );
     codeTask = await db.updateSpecifications(
       validatedInput.codeTaskId,
       specifications
@@ -123,11 +143,6 @@ export const writeSpecifications = async (
       plan: null,
       file_changes: null,
     });
-  }
-  if (stepBackQuestions.length > 0) {
-    specifications = `\n<stepback_questions>\n${stepBackQuestions.join(
-      "\n"
-    )}\n</stepback_questions>\n\n${specifications}`;
   }
   return {
     specifications,

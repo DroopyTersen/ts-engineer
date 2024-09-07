@@ -13,39 +13,38 @@ export const RawInputForm = ({
 }) => {
   let [value, setValue] = useState(codeTask?.input || "");
   // Show the basic input form if there is no specifications yet
-  if (!codeTask || !codeTask.specifications) {
-    return (
-      <form
-        className="mt-4 max-w-xl"
-        onSubmit={(e) => {
-          e.preventDefault();
-          const formData = new FormData(e.currentTarget);
-          const input = formData.get("input") as string;
-          onSubmit({ input });
+
+  return (
+    <form
+      className="mt-4 max-w-xl"
+      onSubmit={(e) => {
+        e.preventDefault();
+        const formData = new FormData(e.currentTarget);
+        const input = formData.get("input") as string;
+        onSubmit({ input });
+      }}
+    >
+      <MarkdownTextarea
+        label="Code Task"
+        value={value}
+        onChanged={setValue}
+        name="input"
+        textareaProps={{
+          rows: 16,
+          placeholder: "Describe the coding task to be performed...",
         }}
-      >
-        <MarkdownTextarea
-          label="Code Task"
-          value={value}
-          onChanged={setValue}
-          name="input"
-          textareaProps={{
-            rows: 16,
-            placeholder: "Describe the coding task to be performed...",
-          }}
-          hint="Describe what you are trying to do. AI will then generate full specifications that you can edit."
-        />
-        <div>
-          <div className="mt-6 flex justify-end gap-2">
-            <Button variant="secondary" asChild className="w-40">
-              <Link to="..">Cancel</Link>
-            </Button>
-            <Button type="submit" size={"lg"} className="w-40">
-              Next
-            </Button>
-          </div>
+        hint="Describe what you are trying to do. AI will then generate full specifications that you can edit."
+      />
+      <div>
+        <div className="mt-6 flex justify-end gap-2">
+          <Button variant="secondary" asChild className="w-40">
+            <Link to="..">Cancel</Link>
+          </Button>
+          <Button type="submit" size={"lg"} className="w-50">
+            Generate Specifications
+          </Button>
         </div>
-      </form>
-    );
-  }
+      </div>
+    </form>
+  );
 };

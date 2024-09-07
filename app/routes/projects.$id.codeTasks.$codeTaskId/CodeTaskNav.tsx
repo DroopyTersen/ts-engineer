@@ -6,13 +6,25 @@ export type CodeTaskStep = {
 };
 
 type CodeTaskNavProps = {
-  steps: CodeTaskStep[];
   currentStep: string;
   onChange: (stepId: string) => void;
 };
+export const CODE_TASK_STEPS: CodeTaskStep[] = [
+  {
+    id: "01",
+    name: "Raw Input",
+  },
+  {
+    id: "02",
+    name: "Specifications",
+  },
+  {
+    id: "03",
+    name: "Planning",
+  },
+];
 
 export default function CodeTaskNav({
-  steps,
   currentStep,
   onChange,
 }: CodeTaskNavProps) {
@@ -22,8 +34,10 @@ export default function CodeTaskNav({
         role="list"
         className="divide-y divide-gray-300 rounded-md border border-gray-300 md:flex md:divide-y-0"
       >
-        {steps.map((step, stepIdx) => {
-          const currentStepIndex = steps.findIndex((s) => s.id === currentStep);
+        {CODE_TASK_STEPS.map((step, stepIdx) => {
+          const currentStepIndex = CODE_TASK_STEPS.findIndex(
+            (s) => s.id === currentStep
+          );
           let status: "active" | "inactive";
 
           if (stepIdx === currentStepIndex) {
@@ -38,7 +52,7 @@ export default function CodeTaskNav({
               step={step}
               status={status}
               onChange={onChange}
-              isLastStep={stepIdx === steps.length - 1}
+              isLastStep={stepIdx === CODE_TASK_STEPS.length - 1}
             />
           );
         })}

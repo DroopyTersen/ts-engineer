@@ -15,15 +15,8 @@ export const createSearchCodeSnippetsTool = (absolutePath: string) => {
     Tips for effective searching:
     - Use grep-compatible search patterns. For example, to search for "tracer.", use "tracer\\." to escape the dot.
     - Use specific function names, variable names, or unique strings to narrow down results.
-    - Try different variations of your search term to catch all relevant instances.
     - Use this tool to decide which files you want to read fully to aid you in your coding task.
-    
-    Examples of grep-compatible search patterns:
-    - "functionName": Search for exact function name
-    - "\\bword\\b": Search for whole word matches
-    - "pattern1|pattern2": Search for multiple patterns
-    - "^import": Search for lines starting with "import"
-    - "\\.(js|ts)$": Search for files ending with .js or .ts`,
+`,
     parameters: z.object({
       searchString: z
         .string()
@@ -38,7 +31,12 @@ export const createSearchCodeSnippetsTool = (absolutePath: string) => {
       );
       try {
         const results = await grepProjectFiles(absolutePath, args.searchString);
-        return formatSearchResults(results);
+        return results
+          .map(
+            (result) =>
+              `${result.filepath}:${result.lineNumber}:\n\`\`\`\n${result.snippet}\n\`\`\``
+          )
+          .join("\n\n");
       } catch (error) {
         console.error("Error searching code snippets:", error);
         return { error: "Failed to search code snippets" };
@@ -46,23 +44,3 @@ export const createSearchCodeSnippetsTool = (absolutePath: string) => {
     },
   });
 };
-
-function formatSearchResults(
-  results: Array<{
-    filepath: string | null;
-    lineNumber: string | null;
-    snippet: string;
-  }>
-) {
-  return results
-    .map(({ filepath, lineNumber, snippet }) => {
-      return `File: ${filepath || "Unknown"}${
-        lineNumber ? `, Line: ${lineNumber}` : ""
-      }
-\`\`\`
-${snippet}
-\`\`\`
-`;
-    })
-    .join("\n\n");
-}

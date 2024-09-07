@@ -47,7 +47,6 @@ export const traceLLMEventEmitter = ({
   });
 
   emitter.on("llm_end", (result) => {
-    console.log("🚀 | emitter.on | result:", result);
     let llmSpan = activeSpans.get(result.requestId);
     if (!llmSpan) {
       console.error("LLM Span not found for requestId", result.requestId);

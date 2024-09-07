@@ -26,7 +26,7 @@ export const summarizeProject = async (
       emitter,
     }
   );
-  await await db.updateProject({
+  await db.updateProject({
     id: project.id,
     name: project.name,
     absolute_path: project.absolute_path,
