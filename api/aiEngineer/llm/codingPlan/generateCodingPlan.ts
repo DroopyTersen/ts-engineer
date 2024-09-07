@@ -1,7 +1,7 @@
 import { createReadFilesTool } from "api/aiEngineer/tools/readFiles.tool";
 import { createSearchCodeSnippetsTool } from "api/aiEngineer/tools/searchCodeSnippets.tool";
+import { getCachedMessageContent, LLM } from "~/toolkit/ai/llm/getLLM";
 import { LLMEventEmitter } from "~/toolkit/ai/streams/LLMEventEmitter";
-import { getCachedMessageContent, LLM } from "~/toolkit/ai/vercel/getLLM";
 
 type GenerateCodingPlanInput = {
   projectContext: {
@@ -51,7 +51,7 @@ export const generateCodingPlan = async (
   - If there are other relevant files, add them into context as well.Then use the suggested FileChanges section to implement the specified changes. 
   - When implmenting the suggested changes, do no rewrite the whole file, only update what needs to up updated. 
   - If you see a comment like "// ...existing code", that means you should leave the code as it was. DON'T update the code to add that comment. 
-  - If there are other changes that need to be made to satisfy the requirements, please implement them as well.
+  - If there are other changes (that aren't described) that need to be made to satisfy the requirements, implement them as well.
 
 Here is the coding task to implement:
 
@@ -67,7 +67,7 @@ Here is the coding task to implement:
   const result = await llm.runTools(
     {
       label: "generateCodingPlan",
-      maxTokens: 4000,
+      maxTokens: 8000,
       temperature: 0.1,
       tools: {
         readFileContents: createReadFilesTool(projectContext.absolutePath),
@@ -124,8 +124,15 @@ Response Format:
 
 [First provide your thought process in <thought> tags. In <thought> tags, provide your reasoning for why you are searching for specific code snippets or reading certain files, what you are looking for, and any key insights you have gained.]
 
-## Overview
-[Concise overview of the task, objectives, and high-level decisions. Give a quick bulleted list of the files that need to be updated, created, deleted, or moved.]
+## Plan
+[Concise overview of the task, objectives, and high-level decisions.]
+
+[First in a <draft> tag, provide bulleted list of the files that need to be updated, created, deleted, or moved and a concise description of the changes that need to be made. This is a first draft and will need to be updated.]
+
+[Review the high level overview and the files that need to be updated in <thought> tags. Are there any considerations or concerns? Are there other files that may need to be updated to complete the task? We need to make sure to be exhausitive with our change plan. Don't be lazy! The feature should be fully implemented once this plan is complete. Leave no stone unturned.]
+
+[Provide a final list of files that need to be updated, created, deleted, or moved and a concise description of the changes that need to be made. This is the final plan.]
+
 
 ## File Changes
 

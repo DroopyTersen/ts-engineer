@@ -5,10 +5,11 @@ import {
 } from "api/aiEngineer/fs/filesToMarkdown";
 import { telemetry } from "api/telemetry/telemetry.server";
 import { z } from "zod";
+import { getLLM, LLM } from "~/toolkit/ai/llm/getLLM";
 import { LLMEventEmitter } from "~/toolkit/ai/streams/LLMEventEmitter";
-import { getLLM, LLM } from "~/toolkit/ai/vercel/getLLM";
 import { generateCodingPlan } from "../../llm/codingPlan/generateCodingPlan";
 import { getProject } from "../getProject";
+import { rankFilesForContext } from "../rankFilesForContext";
 
 export const WriteCodingPlanInput = z.object({
   codeTaskId: z.string(),
@@ -45,8 +46,15 @@ export const writeCodingPlan = async (
       })
     : null;
 
+  let rankResult = await rankFilesForContext({
+    codeTask: validatedInput.specifications,
+    project,
+    selectedFiles: [],
+    minScore: 3,
+  });
+  let relevantFiles = rankResult.results.map((r) => r.filepath);
   const fileContents = await getFileContents(
-    existingCodeTask.selected_files || [],
+    relevantFiles,
     project.absolute_path,
     40_000
   );

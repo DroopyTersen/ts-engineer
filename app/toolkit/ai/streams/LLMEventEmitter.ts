@@ -1,5 +1,5 @@
 import OpenAI from "openai";
-import { VercelChatParams, VercelChatResult } from "../vercel/getLLM";
+import { VercelChatParams, VercelChatResult } from "../llm/getLLM";
 import { JSONValue, ToolCall, ToolResult } from "./LLMDataStream";
 
 // This might be different depending on the LLM provider

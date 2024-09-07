@@ -1,6 +1,6 @@
 import { z } from "zod";
+import { LLM } from "~/toolkit/ai/llm/getLLM";
 import { LLMEventEmitter } from "~/toolkit/ai/streams/LLMEventEmitter";
-import { LLM } from "~/toolkit/ai/vercel/getLLM";
 
 const CodeTaskTypeSchema = z.enum([
   "bugfix",

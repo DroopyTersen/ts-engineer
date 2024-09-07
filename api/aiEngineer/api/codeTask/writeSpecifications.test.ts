@@ -2,8 +2,8 @@ import { getDb, initDb } from "api/aiEngineer/db/pglite/pglite.server";
 import { telemetry } from "api/telemetry/telemetry.server";
 import { traceLLMEventEmitter } from "api/telemetry/traceLLMEventEmitter";
 import { afterAll, beforeAll, describe, expect, it } from "bun:test";
+import { getLLM } from "~/toolkit/ai/llm/getLLM";
 import { LLMEventEmitter } from "~/toolkit/ai/streams/LLMEventEmitter";
-import { getLLM } from "~/toolkit/ai/vercel/getLLM";
 import { wait } from "~/toolkit/utils/wait";
 import { createNewProject } from "../createNewProject";
 import {
@@ -121,7 +121,7 @@ The project is a web application designed to assist software engineers in analyz
 | **[PostgreSQL](https://www.postgresql.org/)**                         | Powerful, open-source object-relational database system.                    |
 | **[OpenAI](https://openai.com/)**                                     | AI research and deployment company, used for AI-related functionalities.    |
 | **[Langfuse](https://langfuse.com/)**                                 | Analytics for LLMs, used for monitoring and analyzing AI performance.       |
-| **[Vercel](https://vercel.com/)**                                     | Cloud platform for static sites and Serverless Functions.                   |
+| **[Vercel](https://llm.com/)**                                     | Cloud platform for static sites and Serverless Functions.                   |
 | **[React](https://reactjs.org/)**                                     | JavaScript library for building user interfaces.                            |
 | **[TypeScript](https://www.typescriptlang.org/)**                     | Typed superset of JavaScript that compiles to plain JavaScript.             |
 | **[Zod](https://zod.dev/)**                                           | TypeScript-first schema validation with static type inference.              |

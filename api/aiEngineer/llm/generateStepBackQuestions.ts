@@ -1,6 +1,6 @@
 import { z } from "zod";
+import { getLLM, LLM } from "~/toolkit/ai/llm/getLLM";
 import { LLMEventEmitter } from "~/toolkit/ai/streams/LLMEventEmitter";
-import { getLLM, LLM } from "~/toolkit/ai/vercel/getLLM";
 
 export const generateStepBackQuestions = async (
   input: {

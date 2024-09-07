@@ -1,16 +1,15 @@
 import { ActionFunctionArgs, json, redirect } from "@remix-run/node";
 import { Form, Link, useOutletContext } from "@remix-run/react";
 import { CodeProject } from "api/aiEngineer/api/getProject";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useApiUrl } from "~/root";
 import { Button } from "~/shadcn/components/ui/button";
 import { Input } from "~/shadcn/components/ui/input";
 import { Label } from "~/shadcn/components/ui/label";
-import { Switch } from "~/shadcn/components/ui/switch";
 import { Textarea } from "~/shadcn/components/ui/textarea";
 import { cn } from "~/shadcn/utils";
 import { useEventStream } from "~/toolkit/ai/ui/useEventStream";
-import { Markdown } from "~/toolkit/components/Markdown/Markdown";
+import { MarkdownTextarea } from "~/toolkit/components/MarkdownTextarea/MarkdownTextarea";
 import { proxyApiRequest } from "~/toolkit/http/proxyApiRequest";
 
 export const action = async ({ request, params }: ActionFunctionArgs) => {
@@ -28,7 +27,6 @@ export default function EditProject() {
   const { project } = useOutletContext<{ project: CodeProject }>();
   let { summarize, summary, isStreaming, streamId, setSummary } =
     useProjectSummary(project);
-  const [isPreview, setIsPreview] = useState(false);
 
   return (
     <div className="p-8  max-w-4xl">
@@ -55,34 +53,16 @@ export default function EditProject() {
           />
         </div>
         <div>
-          <div className="flex justify-between items-center mb-2">
-            <Label htmlFor="summary">Project Summary</Label>
-            <div className="flex items-center space-x-2">
-              <Label htmlFor="preview-mode">Preview</Label>
-              <Switch
-                id="preview-mode"
-                checked={isPreview}
-                onCheckedChange={setIsPreview}
-              />
-            </div>
-          </div>
-          <input type="hidden" name="summary" value={summary} />
-          {isStreaming ? (
-            <div className="prose prose-sm mt-2 border p-4 rounded-md max-w-4xl">
-              <Markdown>{summary}</Markdown>
-            </div>
-          ) : isPreview ? (
-            <div className="prose prose-sm mt-2 border p-4 rounded-md max-w-4xl">
-              <Markdown>{summary}</Markdown>
-            </div>
-          ) : (
-            <Textarea
-              key={streamId || "summary"}
-              rows={12}
-              value={summary}
-              onChange={(e) => setSummary(e.target.value)}
-            />
-          )}
+          <MarkdownTextarea
+            label="Project Summary"
+            name="summary"
+            value={summary}
+            textareaProps={{
+              rows: 12,
+              readOnly: isStreaming,
+            }}
+            onChanged={(val) => setSummary(val)}
+          />
           <Button
             className={cn("mt-2 w-full", isStreaming && "animate-pulse")}
             variant={"ghost"}
@@ -166,12 +146,19 @@ function useProjectSummary(project: CodeProject) {
   };
 
   let isStreaming = eventStream.status === "loading";
+
   // TODO: process the sections in order to create a big string
   // Process sections to create a single summary string
   let streamingSummary = Object.entries(sections)
     .sort(([a], [b]) => parseInt(a) - parseInt(b))
     .map(([_, content]) => content)
     .join("\n\n");
+
+  useEffect(() => {
+    if (!isStreaming && streamingSummary) {
+      setSummaryValue(streamingSummary || "");
+    }
+  }, [isStreaming]);
 
   return {
     streamId: eventStream.id,

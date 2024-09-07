@@ -1,7 +1,7 @@
 import { createReadFilesTool } from "api/aiEngineer/tools/readFiles.tool";
 import { createSearchCodeSnippetsTool } from "api/aiEngineer/tools/searchCodeSnippets.tool";
+import { getCachedMessageContent, LLM } from "~/toolkit/ai/llm/getLLM";
 import { LLMEventEmitter } from "~/toolkit/ai/streams/LLMEventEmitter";
-import { getCachedMessageContent, LLM } from "~/toolkit/ai/vercel/getLLM";
 import { CodeTaskType } from "./classifyCodeTask";
 
 type WriteSpecsInput = {

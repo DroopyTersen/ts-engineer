@@ -3,8 +3,8 @@ import {
   getFileContents,
 } from "api/aiEngineer/fs/filesToMarkdown";
 import { z } from "zod";
+import { getLLM, LLM } from "~/toolkit/ai/llm/getLLM";
 import { LLMEventEmitter } from "~/toolkit/ai/streams/LLMEventEmitter";
-import { getLLM, LLM } from "~/toolkit/ai/vercel/getLLM";
 import { classifyCodeTask } from "../../llm/specfications/classifyCodeTask";
 
 import { db } from "api/aiEngineer/db/db.server";

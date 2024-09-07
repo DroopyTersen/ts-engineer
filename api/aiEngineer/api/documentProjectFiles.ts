@@ -1,7 +1,8 @@
 import { CodeProjectFile } from "@shared/db.schema";
+import { getLLM } from "~/toolkit/ai/llm/getLLM";
 import { LLMEventEmitter } from "~/toolkit/ai/streams/LLMEventEmitter";
-import { getLLM } from "~/toolkit/ai/vercel/getLLM";
 import { AsyncQueue } from "~/toolkit/data-structures/AsyncQueue";
+import { db } from "../db/db.server";
 import { getFileContent } from "../fs/getFileContent";
 import { documentCodeFile } from "../llm/documentCodeFile";
 import { getProject } from "./getProject";
@@ -54,12 +55,12 @@ export const documentProject = async (
     })
   );
 
-  await await getDb().updateProject({
+  await await db.updateProject({
     id: project.id,
     name: project.name,
     absolute_path: project.absolute_path,
     summary: project.summary,
-    files: files,
+    // files: files,
     test_code_command: project.test_code_command,
     exclusions: project.exclusions,
   });

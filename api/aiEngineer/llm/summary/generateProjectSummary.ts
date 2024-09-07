@@ -1,5 +1,5 @@
+import { getLLM, LLM } from "~/toolkit/ai/llm/getLLM";
 import { LLMEventEmitter } from "~/toolkit/ai/streams/LLMEventEmitter";
-import { getLLM, LLM } from "~/toolkit/ai/vercel/getLLM";
 import { wait } from "~/toolkit/utils/wait";
 
 export async function summarizeProjectMarkdown(
@@ -14,6 +14,7 @@ export async function summarizeProjectMarkdown(
     emitter?: LLMEventEmitter;
   }
 ) {
+  console.log("🚀 | summarizeProjectMarkdown:", projectContext.title);
   const systemMessage = {
     role: "system" as const,
     content: summarizeProjectPrompt(
@@ -55,7 +56,7 @@ export async function summarizeProjectMarkdown(
             },
           ],
           temperature: 0.3,
-          maxTokens: 2000,
+          maxTokens: 3000,
         },
         {
           emitter: _innerEmitter,
@@ -82,7 +83,7 @@ Your summary should be:
 - Insightful: Provide valuable observations about the project's architecture and design choices.
 - Clear and professional: Present information in a well-organized, easy-to-understand manner.
 - Concise - prioritze what would be critical for a new developer to know about the codebase.
-- Make sure to provide code snippets in full \`\`\` code blocks with a language tag.
+- Make sure to provide code snippets in full \`\`\` code blocks with a language tag. Make sure to add new line whitespace before and after the code block.
 - Leverage Mermaid diagrams when asked. Try to use project specific details when labeling diagrams (whta kind of DB? what folder are the api server endpoints in? etc... ). Don't add any commentary or additional preamble to the diagrams. Just provide the diagram. Always add a new line before and after the diagram's code block.
 - Avoid adding any commentary or additional preamble. We want this to be quickly digestible by developers. Keep it direct and to the point.
 - Don't add any Heading2 elements. The section title heading Tech Stack, Data Access, Project Structure, etc... will be rendered elsewhere. You should begin the response with the section content an skip the section title heading.
@@ -93,7 +94,7 @@ ${fileStructure}
 </files>
 Here is the full codebase
 <codebase>
-${fileContents.join("\n\n")}
+${fileContents.join("\n\n").slice(0, 110_000 * 4)}
 </codebase>
 
 Remember to base your analysis solely on the provided codebase, avoiding assumptions or speculation about features or functionalities not explicitly present in the code. Always prefer to use formatted text whenever possible (tables, bullets, bolds etc..), write in the style of a README.md file. 

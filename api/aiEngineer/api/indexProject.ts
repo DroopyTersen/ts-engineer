@@ -1,4 +1,4 @@
-import { getLLM } from "~/toolkit/ai/vercel/getLLM";
+import { getLLM } from "~/toolkit/ai/llm/getLLM";
 import { db } from "../db/db.server";
 import { processFileContents } from "../fs/getFileContent";
 import { getProjectFiles } from "../fs/getProjectFiles";

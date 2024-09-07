@@ -1,4 +1,4 @@
-import { getCachedMessageContent } from "~/toolkit/ai/vercel/getLLM";
+import { getCachedMessageContent } from "~/toolkit/ai/llm/getLLM";
 import { formatFileContent, formatFileStructure } from "./filesToMarkdown";
 import { processFileContents } from "./getFileContent";
 

@@ -1,5 +1,5 @@
+import { LLM } from "~/toolkit/ai/llm/getLLM";
 import { LLMEventEmitter } from "~/toolkit/ai/streams/LLMEventEmitter";
-import { LLM } from "~/toolkit/ai/vercel/getLLM";
 
 export const documentCodeFile = async (
   filepath: string,

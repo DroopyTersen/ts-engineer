@@ -1,7 +1,7 @@
 import fs from "fs/promises";
 import { describe, expect, it, vi } from "vitest";
+import { getLLM } from "~/toolkit/ai/llm/getLLM";
 import { LLMEventEmitter } from "~/toolkit/ai/streams/LLMEventEmitter";
-import { getLLM } from "~/toolkit/ai/vercel/getLLM";
 import { summarizeCodeFile } from "./summarizeCodeFile";
 
 describe.skip("summarizeCodeFile", () => {

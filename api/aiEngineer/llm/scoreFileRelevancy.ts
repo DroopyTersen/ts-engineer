@@ -1,6 +1,5 @@
-import { z } from "zod";
+import { getLLM, LLM } from "~/toolkit/ai/llm/getLLM";
 import { LLMEventEmitter } from "~/toolkit/ai/streams/LLMEventEmitter";
-import { getLLM, LLM } from "~/toolkit/ai/vercel/getLLM";
 
 export const scoreFileRelevancy = async (
   input: {
@@ -16,18 +15,13 @@ export const scoreFileRelevancy = async (
     llm?: LLM;
     emitter?: LLMEventEmitter;
   }
-) => {
+): Promise<number> => {
   // Weird thing where trying to score this file makes it go bonkers
   // Infinite loop kind of thing?
   if (input.file?.filepath.includes("scoreFileRelevancy")) {
     return -1;
   }
-  let systemPrompt = getSystemPrompt(
-    input.file,
-    input.fileStructure,
-    input.projectSummary
-  );
-  console.log("🚀 | systemPrompt:", systemPrompt);
+  let systemPrompt = getSystemPrompt(input.file, input.fileStructure, "");
   let llm = options?.llm || getLLM("deepseek", "deepseek-coder");
 
   const controller = new AbortController();
@@ -35,25 +29,20 @@ export const scoreFileRelevancy = async (
 
   try {
     let result = await llm
-      .generateData({
+      .generateText({
         maxRetries: 0,
         system: systemPrompt,
         prompt: `CodeTask: \n${input.codeTask}}`,
-        schema: z.object({
-          score: z.number().int().min(0).max(4),
-        }),
         abortSignal: controller.signal,
       })
       .catch((err) => {
-        // console.error(input.file.filepath, err);
+        console.error(input.file.filepath, err);
         return {
-          object: {
-            score: -1,
-          },
+          text: "-1",
         };
       });
 
-    return result.object.score;
+    return parseInt(result.text.slice(0, 1));
   } finally {
     clearTimeout(timeoutId);
   }
@@ -83,6 +72,7 @@ Carefully analyze the file contents, considering:
 - Reusable patterns or code that could be applied to the task
 
 After your analysis, provide only the numerical score (0-4) that best represents the file's relevance. Do not include any explanations, comments, or additional text in your response. Your output should consist solely of a single number between 0 and 4.
+
 
 ${projectSummary ? `## Project Summary\n${projectSummary}` : ""}
 

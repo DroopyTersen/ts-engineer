@@ -12,8 +12,22 @@ pre {
 span.line {
   height: 16px;
 }
-
+.prose table {
+  background: white;
+  padding: 16px;
+  border-radius: 4px;
+  width: 100%;
+}
+.prose pre:has(.shiki) {
+  font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
+  max-width: 664px;
+  font-size: 13px;
+  line-height: 20px;
+}
 .prose :where(pre:has(.mermaid)):not(:where([class~="not-prose"] *)) {
-  background-color: transparent;
+  background-color: white;
   /* Add any other styles you want to reset or modify */
+}
+.prose pre:has(canvas) {
+  background: white;
 }

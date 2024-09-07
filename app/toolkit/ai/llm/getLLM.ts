@@ -9,8 +9,7 @@ import {
 import { z } from "zod";
 import { AsyncReturnType, Prettify } from "~/toolkit/utils/typescript.utils";
 import { LLMEventEmitter } from "../streams/LLMEventEmitter";
-import "./bunPolyfill";
-import { MODEL_PROVIDERS, type ModelProvider } from "./modelProviders";
+import { MODEL_PROVIDERS, ModelProvider } from "./modelProviders";
 
 export type LLM = ReturnType<typeof getLLM>;
 
@@ -18,9 +17,7 @@ export const getLLM = <T extends ModelProvider>(
   provider: T,
   modelName: keyof (typeof MODEL_PROVIDERS)[T]["models"]
 ) => {
-  let _model = MODEL_PROVIDERS[provider].create(modelName as string, {
-    cacheControl: true,
-  });
+  let _model = MODEL_PROVIDERS[provider].create(modelName as string);
 
   return {
     _model,
@@ -84,7 +81,7 @@ export type StreamTextParams = Prettify<
 >;
 
 export type StreamDataParams<T extends z.ZodType> = Prettify<
-  Omit<Parameters<typeof vercelStreamObject>[0], "model" | "output"> & {
+  Omit<Parameters<typeof vercelStreamObject>[0], "model"> & {
     schema: T;
     label?: string;
   }
@@ -205,10 +202,7 @@ type StreamDataResult = NonNullable<
   : never;
 
 const _streamData = async <TSchema extends z.ZodType>(
-  params: Omit<
-    Parameters<typeof vercelStreamObject>[0],
-    "schema" | "output"
-  > & {
+  params: Parameters<typeof vercelStreamObject>[0] & {
     schema: TSchema;
     label?: string;
   },
@@ -259,84 +253,146 @@ const _streamTextWithTools = async (
   let loopCount = 0;
   const maxLoops = params.maxLoops || 5;
   let requestId = generateId(12);
+
   return new Promise(async (resolve, reject) => {
     emitter?.emit("llm_start", { requestId, ...params });
-    try {
-      let finalContent = "";
-      const stream = await vercelStreamText({
-        ...params,
-        messages,
-        abortSignal: signal,
-        onFinish: async (result) => {
-          if (
-            result.toolCalls &&
-            result.toolCalls.length > 0 &&
-            loopCount < maxLoops
-          ) {
-            messages.push({
-              role: "assistant",
-              content: result.toolCalls.map((toolCall) => ({
-                type: "tool-call",
-                toolCallId: toolCall.toolCallId,
-                toolName: toolCall.toolName,
-                args: toolCall.args,
-              })),
-            });
-            if (result.toolResults) {
-              result.toolResults.forEach((r: any) => {
-                emitter?.emit("tool_result", {
-                  toolCallId: r.toolCallId,
-                  toolName: r.toolName,
-                  result: r.result,
-                  toolDefinitionId: r.toolName,
-                });
-              });
-              messages.push({
-                role: "tool",
-                content: result.toolResults as unknown as any[],
-              });
-            }
-            loopCount++;
-            // resolve(result);
-            // await executeTools(result.toolCalls);
 
-            // Recursive call with updated messages
-            const nextResult = await _streamTextWithTools(
-              { ...params, messages, maxLoops: maxLoops - 1 },
-              asyncOptions
-            );
-            resolve({
-              ...nextResult,
-              toolCalls: [
-                ...(result.toolCalls || []),
-                ...(nextResult.toolCalls || []),
-              ],
-              toolResults: [
-                ...(result.toolResults || []),
-                ...(nextResult.toolResults || []),
-              ],
-            });
-          } else {
+    const attemptStream = async (retryCount = 0): Promise<void> => {
+      try {
+        let finalContent = "";
+        const stream = await vercelStreamText({
+          ...params,
+          messages,
+          maxRetries: 1,
+          abortSignal: signal,
+          onFinish: async (result) => {
             emitter?.emit("llm_end", { requestId, ...result });
-            emitter?.emit("final_content", finalContent);
-            resolve(result);
-          }
-        },
-      });
+            if (
+              result.toolCalls &&
+              result.toolCalls.length > 0 &&
+              loopCount < maxLoops
+            ) {
+              // Add the assistant message with tool calls
 
-      for await (const chunk of stream.fullStream) {
-        if (chunk.type === "text-delta") {
-          finalContent += chunk.textDelta;
-          emitter?.emit("content", chunk.textDelta);
-        } else if (chunk.type === "tool-call") {
-          emitter?.emit("tool_call", {
-            id: chunk.toolCallId,
-            name: chunk.toolName,
-            args: chunk.args,
-            timestamp: Date.now(),
-          });
+              // Wait for tool results before proceeding
+              if (result.toolResults) {
+                const assistantMessage = {
+                  role: "assistant" as const,
+                  content: result.toolCalls
+                    .filter(
+                      (toolCall) =>
+                        result.toolResults &&
+                        result.toolResults.some(
+                          (r: any) => r.toolCallId === toolCall.toolCallId
+                        )
+                    )
+                    .map((toolCall) => ({
+                      type: "tool-call" as const,
+                      toolCallId: toolCall.toolCallId,
+                      toolName: toolCall.toolName,
+                      args: toolCall.args,
+                    })),
+                };
+
+                if (assistantMessage.content.length > 0) {
+                  messages.push(assistantMessage);
+                }
+
+                if (result.toolResults && result.toolResults.length > 0) {
+                  const toolResultMessage = {
+                    role: "tool" as const,
+                    content: result.toolResults.map((r: any) => ({
+                      type: "tool-result" as const,
+                      toolCallId: r.toolCallId,
+                      toolName: r.toolName,
+                      result: r.result,
+                    })),
+                  };
+
+                  messages.push(toolResultMessage);
+
+                  result.toolResults.forEach((r: any) => {
+                    emitter?.emit("tool_result", {
+                      toolCallId: r.toolCallId,
+                      toolName: r.toolName,
+                      result: r.result,
+                      toolDefinitionId: r.toolName,
+                    });
+                  });
+                }
+              } else {
+                // If no tool results, don't add the assistant message
+                console.warn("Tool calls present but no tool results received");
+              }
+
+              loopCount++;
+
+              // Recursive call with updated messages
+              const nextResult = await _streamTextWithTools(
+                { ...params, messages, maxLoops: maxLoops - 1 },
+                asyncOptions
+              );
+              resolve({
+                ...nextResult,
+                toolCalls: [
+                  ...(result.toolCalls || []),
+                  ...(nextResult.toolCalls || []),
+                ],
+                toolResults: [
+                  ...(result.toolResults || []),
+                  ...(nextResult.toolResults || []),
+                ],
+              });
+            } else {
+              emitter?.emit("final_content", finalContent);
+              resolve(result);
+            }
+          },
+        });
+
+        for await (const chunk of stream.fullStream) {
+          if (chunk.type === "text-delta") {
+            finalContent += chunk.textDelta;
+            emitter?.emit("content", chunk.textDelta);
+          } else if (chunk.type === "tool-call") {
+            emitter?.emit("tool_call", {
+              id: chunk.toolCallId,
+              name: chunk.toolName,
+              args: chunk.args,
+              timestamp: Date.now(),
+            });
+          }
         }
+      } catch (err: any) {
+        console.log("🚀 | attemptStream | err:", err);
+        if (
+          err.name === "RetryError" &&
+          err.errors &&
+          err.errors[0] &&
+          err.errors[0].statusCode === 429
+        ) {
+          if (retryCount < 3) {
+            emitter?.emit(
+              "log",
+              `Rate limit exceeded. Retrying in 4.5 seconds... (Attempt ${
+                retryCount + 1
+              })`
+            );
+            console.log(
+              `Rate limit exceeded. Retrying in 4.5 seconds... (Attempt ${
+                retryCount + 1
+              })`
+            );
+            await new Promise((resolve) => setTimeout(resolve, 4500));
+            return attemptStream(retryCount + 1);
+          }
+        }
+        throw err;
       }
+    };
+
+    try {
+      await attemptStream();
     } catch (err: any) {
       console.error("🚀 | streamTextWithTools err:", err);
       emitter?.emit("error", err);
