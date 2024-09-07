@@ -84,6 +84,10 @@ export const writeCodingPlan = async (
           fileContents,
         },
         codeTask: {
+          specifications:
+            validatedInput.specifications ||
+            existingCodeTask?.specifications ||
+            "",
           previousPlan: existingCodeTask.plan || "",
           followUpInput: validatedInput.followUpInput,
         },

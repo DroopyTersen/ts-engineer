@@ -1,6 +1,7 @@
 import { Link } from "@remix-run/react";
 import { useEffect, useState } from "react";
 import { Button } from "~/shadcn/components/ui/button";
+import { Label } from "~/shadcn/components/ui/label";
 import { Textarea } from "~/shadcn/components/ui/textarea";
 import { MarkdownTextarea } from "~/toolkit/components/MarkdownTextarea/MarkdownTextarea";
 import { useCodeTask } from "./useCodeTask";
@@ -55,14 +56,19 @@ export const SpecificationsForm = ({
         }
       />
       <div className="space-y-2 mt-4">
+        <Label htmlFor="followUpInput">Follow-up Input</Label>
         <Textarea
+          id="followUpInput"
           value={followUpInput}
           onChange={(e) => setFollowUpInput(e.target.value)}
-          placeholder="Enter follow-up questions or additional information..."
+          placeholder="Enter follow-up instructions..."
           className="h-24"
         />
         <Button
-          onClick={() => actions.regenerateSpecifications(followUpInput)}
+          onClick={() => {
+            actions.regenerateSpecifications(followUpInput);
+            setFollowUpInput("");
+          }}
           disabled={specificationsStream.isStreaming || !followUpInput.trim()}
         >
           {specificationsStream.isStreaming
