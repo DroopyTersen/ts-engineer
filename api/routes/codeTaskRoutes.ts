@@ -79,6 +79,26 @@ app.post("/:projectId/codeTasks/:codeTaskId/saveCodingPlan", async (c) => {
   }
 });
 
+app.post("/:projectId/codeTasks/:codeTaskId/saveSpecifications", async (c) => {
+  const projectId = c.req.param("projectId");
+  const codeTaskId = c.req.param("codeTaskId");
+  const { specifications } = await c.req.json();
+
+  try {
+    const updatedCodeTask = await db.updateSpecifications({
+      codeTaskId,
+      specifications,
+    });
+    return c.json({ success: true, codeTask: updatedCodeTask });
+  } catch (error) {
+    console.error("Error saving specifications:", error);
+    return c.json(
+      { success: false, message: "Failed to save specifications" },
+      500
+    );
+  }
+});
+
 app.delete("/:projectId/codeTasks/:codeTaskId", async (c) => {
   const projectId = c.req.param("projectId");
   const codeTaskId = c.req.param("codeTaskId");

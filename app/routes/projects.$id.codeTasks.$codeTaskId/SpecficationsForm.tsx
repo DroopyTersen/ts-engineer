@@ -1,8 +1,9 @@
-import { Link } from "@remix-run/react";
 import { useEffect, useState } from "react";
+import { BsChevronRight } from "react-icons/bs";
 import { Button } from "~/shadcn/components/ui/button";
 import { Label } from "~/shadcn/components/ui/label";
 import { Textarea } from "~/shadcn/components/ui/textarea";
+import { cn } from "~/shadcn/utils";
 import { MarkdownTextarea } from "~/toolkit/components/MarkdownTextarea/MarkdownTextarea";
 import { useCodeTask } from "./useCodeTask";
 
@@ -26,15 +27,7 @@ export const SpecificationsForm = ({
   }, [specificationsStream.isStreaming]);
 
   return (
-    <form
-      className="mt-4 max-w-3xl"
-      onSubmit={(e) => {
-        e.preventDefault();
-        let formData = new FormData(e.currentTarget);
-        let specifications = formData.get("specifications") as string;
-        actions.generateCodingPlan(specifications);
-      }}
-    >
+    <form className="mt-4 max-w-3xl" onSubmit={(e) => e.preventDefault()}>
       <MarkdownTextarea
         label="Specifications"
         value={
@@ -65,10 +58,12 @@ export const SpecificationsForm = ({
           className="h-24"
         />
         <Button
+          variant="ghost"
           onClick={() => {
             actions.regenerateSpecifications(followUpInput);
             setFollowUpInput("");
           }}
+          className={cn("w-full")}
           disabled={specificationsStream.isStreaming || !followUpInput.trim()}
         >
           {specificationsStream.isStreaming
@@ -77,19 +72,29 @@ export const SpecificationsForm = ({
         </Button>
       </div>
       <div>
-        <div className="mt-6 flex justify-end gap-2">
-          <Button variant="secondary" asChild className="w-50">
-            <Link to="..">Cancel</Link>
+        <div className="mt-6 flex justify-between gap-2">
+          <Button
+            variant={"secondary"}
+            onClick={() => actions.saveSpecifications(specifications)}
+            size="lg"
+            className="w-44"
+          >
+            {specificationsStream?.isStreaming ? "Streaming..." : "Save"}
           </Button>
           <Button
-            type="submit"
+            onClick={() => actions.generateCodingPlan(specifications)}
             size="lg"
-            className="w-40"
+            className="w-44"
             disabled={specificationsStream?.isStreaming}
           >
-            {specificationsStream?.isStreaming
-              ? "Generating..."
-              : "Generate Plan"}
+            {specificationsStream?.isStreaming ? (
+              "Generating..."
+            ) : (
+              <>
+                Generate Plan
+                <BsChevronRight className="ml-2" />
+              </>
+            )}
           </Button>
         </div>
       </div>

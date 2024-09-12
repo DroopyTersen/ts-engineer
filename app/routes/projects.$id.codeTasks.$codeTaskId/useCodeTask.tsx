@@ -76,6 +76,16 @@ export const useCodeTask = () => {
           body: JSON.stringify({ codingPlan }),
         });
       },
+      saveSpecifications: async (specifications: string) => {
+        console.log(
+          "🚀 | saveSpecifications: | specifications:",
+          specifications
+        );
+        await jsonRequest(`${apiPath}/saveSpecifications`, {
+          method: "POST",
+          body: JSON.stringify({ specifications }),
+        });
+      },
     };
   }, [specificationsStream, codingPlanStream, codeTask, apiPath]);
 

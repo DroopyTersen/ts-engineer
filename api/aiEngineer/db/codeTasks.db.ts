@@ -46,7 +46,13 @@ const createNewCodeTask = async (
 };
 
 // Update specifications for an existing code task
-const updateSpecifications = async (id: string, specifications: string) => {
+const updateSpecifications = async ({
+  codeTaskId,
+  specifications,
+}: {
+  codeTaskId: string;
+  specifications: string;
+}) => {
   try {
     const { rows } = await getDb().query(
       `
@@ -55,7 +61,7 @@ const updateSpecifications = async (id: string, specifications: string) => {
       WHERE id = $2
       RETURNING *
     `,
-      [specifications, id]
+      [specifications, codeTaskId]
     );
     return CodeTaskDbItem.parse(rows[0]);
   } catch (error) {
