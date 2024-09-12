@@ -59,6 +59,26 @@ app.post("/:projectId/codeTasks/:codeTaskId/codingPlan", async (c) => {
   return dataStream.toResponse();
 });
 
+app.post("/:projectId/codeTasks/:codeTaskId/saveCodingPlan", async (c) => {
+  const projectId = c.req.param("projectId");
+  const codeTaskId = c.req.param("codeTaskId");
+  const { codingPlan } = await c.req.json();
+
+  try {
+    const updatedCodeTask = await db.updateCodingPlan({
+      codeTaskId,
+      codingPlan,
+    });
+    return c.json({ success: true, codeTask: updatedCodeTask });
+  } catch (error) {
+    console.error("Error saving coding plan:", error);
+    return c.json(
+      { success: false, message: "Failed to save coding plan" },
+      500
+    );
+  }
+});
+
 app.delete("/:projectId/codeTasks/:codeTaskId", async (c) => {
   const projectId = c.req.param("projectId");
   const codeTaskId = c.req.param("codeTaskId");

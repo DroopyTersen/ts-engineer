@@ -3,6 +3,7 @@ import { type CodeTaskDbItem } from "api/aiEngineer/db/codeTasks.db";
 import { useMemo, useState } from "react";
 import { useApiUrl } from "~/root";
 import { useLLMEventStream } from "~/toolkit/ai/ui/useLLMEventStream";
+import { jsonRequest } from "~/toolkit/http/fetch.utils";
 import { useRouteData } from "~/toolkit/remix/useRouteData";
 
 export const useCodeTask = () => {
@@ -69,8 +70,14 @@ export const useCodeTask = () => {
         });
         setCurrentStep("03");
       },
+      saveCodingPlan: async (codingPlan: string) => {
+        await jsonRequest(`${apiPath}/saveCodingPlan`, {
+          method: "POST",
+          body: JSON.stringify({ codingPlan }),
+        });
+      },
     };
-  }, [specificationsStream, codingPlanStream, codeTask]);
+  }, [specificationsStream, codingPlanStream, codeTask, apiPath]);
 
   return {
     actions,

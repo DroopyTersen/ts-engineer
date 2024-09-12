@@ -27,7 +27,7 @@ export const SpecificationsForm = ({
 
   return (
     <form
-      className="mt-4 max-w-xl"
+      className="mt-4 max-w-3xl"
       onSubmit={(e) => {
         e.preventDefault();
         let formData = new FormData(e.currentTarget);

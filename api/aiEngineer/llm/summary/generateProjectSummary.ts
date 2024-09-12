@@ -248,10 +248,10 @@ For any code snippets, focus just on the important elements and put a comment li
   //   },
   {
     title: "Screens",
-    template: `For projects with a user interface, describe the main screens or routes. Provide a table of the main screens/routes. Name, Route (provide both the route path, and the filename where that route is implemented), Purpose]. If the project doesn't have a UI just respond with N/A
+    template: `For projects with a user interface, describe the main screens or routes. Provide a 3 column table of the main screens/routes. Name, Route (provide both the route path, and the filename where that route is implemented in the same column separated by a newline), Purpose]. If the project doesn't have a UI just respond with N/A
 
 ### Routing
-[For web applications or apps, explain the routing mechanism, file based? convention based? etc.... otherwise say N/A]
+[For web applications or apps, explain the routing mechanism, file based? convention based? etc.... otherwise say N/A]. If applicable, briefly explain how you'd add a new route/screen.
 `,
   },
   {
@@ -286,32 +286,32 @@ sequenceDiagram
   },
   {
     title: "Auth",
-    template: `Explain the methods used for user authentication and authorization. Cover:
+    template: `Explain the methods used for user authentication and authorization. Focus on explaining how it works and showing usage examples of any provided abstractions. You don't need to show the implementation of the abstraction.
+<topics_to_cover>
 - How do we know who they are?
-    - What is the identity provider?
-    - How do we persist the identity? (cookie? session? jwt? etc...)
+    - What is the identity provider? Is it a 3rd party? DIY?
+    - How do we persist the identity? (cookie? session? jwt? etc...), and verify they are logged in?
+    - Speak to any utililty functions that are used to get the current user.
 - How do we know what they are allowed to do?
-- User roles and permissions system
+  - User roles and permissions system
   - How do we control what they see in the UI? (code examples)
   - How do we control the data they can access in the backend? (code examples)
-- If the project doesn't if any auth, that is okay, responde with the section title heading followed by "N/A" and nothing else.
-- Make sure to cover the various aspects of how auth is implemented across the stack
-- Any third-party authentication services integrated
-- Make sure to include code snippets showing how to implement authentication checks.
+</topics_to_cover>
 
-
-Important - if the project doesn't have any auth just respond with the following:
-## Auth
-N/A
+<guidelines>
+- If the project doesn't if any auth, that is okay. Just succinctly say "This app doesn't have any auth" and be done.
+- Make sure to describe the various aspects of how auth is implemented across the stack. You don't need to show the whole implementation, just explain what's happening and show brief usage examples.
+- Make sure to include code snippets showing how perform auth checks in various parts of the app. You don't need to show the implementation, just brief usage examples.
+</guidelines>
 `,
   },
   {
     title: "Configuration Management",
     template: `Describe how the project handles different configurations. Include:
-- How environment-specific settings are managed
-- Use of environment variables
-- Configuration files and their purposes
-- Any provided secrets management approaches, if used (look for .env or .env.example files. if found explain how those are used for local dev)
+- Environment Variables -How environment-specific settings are managed
+  - Any provided secrets management approaches, if used (look for .env or .env.example files. if found explain how those are used for local dev)
+  - Use of environment variables
+- Other Configuration - Configuration files and their purposes
 
 Here is an example:
 ### Environment Variables
@@ -319,56 +319,39 @@ Here is an example:
 - \`.dev.vars\` - used for local environment variables. Automatically picked up by Cloudflare Workers local process. Do NOT check this file into source control
 - \`.dev.vars.example\` - a copy of .dev.vars, except with secrets removed. Added to source control so developers know which values are needed in their \`.dev.vars\`.
 
-### Configuration Files
+### Other Configurations
 - \`wrangler.toml\`: used to configure Cloudflare Workers and Pages, including bindings for services, KV namespaces, and environment variables.
 - \`tailwind.config.ts\`: Tailwind CSS settings.
 - \`postcss.config.js\`: configures PostCSS plugins.
 - \`tsconfig.json\`: Sets TypeScript compiler options and path aliases
 - \`vite.config.ts\`: Configures Vite for the development server and build process`,
   },
-  //   {
-  //     title: "Testing Strategy",
-  //     template: `[Outline the approach to testing in the project. Cover:
-  // - Types of tests used (unit, integration, end-to-end)
-  // - Testing frameworks and tools
-  // - Directory structure for tests
-  // - How to run tests locally
-  // - Any continuous integration setup for automated testing
-  // - Code coverage requirements or goals
-  // - Best practices for writing tests in this project
-
-  // Include examples of test cases for different types of tests. Explain any mocking strategies or test data generation approaches used.]`,
-  //   },
   {
     title: "Deployment Process",
-    template: `Detail the steps and tools used for deploying the application. If provided, include a bulleted list describing:
-- Deployment environments (e.g., staging, production)
-- Step-by-step deployment process if provided
-- Any CI/CD pipelines and how they're configured
-- Hosting platform or infrastructure used
-- How environment-specific configurations are handled during deployment
+    template: `Detail the steps and tools used for deploying the application. Keep this pretty brief. Just describe an overview of what is happening. If something is not applicable, just skip it.
+<response_format>
+## Environments
+[List the environments that the project has. For example: Development, Staging, Production. What is the hosting platform? ]
 
-If using containerization, explain the Docker setup. Include any scripts or commands used in the deployment process. Describe how to troubleshoot common deployment issues.
+## Deployment Steps
+[List the steps to deploy the project. Include the following if applicable:
+  - Step-by-step deployment process if provided
+  - A brief overview of any CI/CD pipelines
+  - How environment-specific configurations are handled during deployment
+  - If using containerization, explain the Docker setup. Include any scripts or commands used in the deployment process. Describe how to troubleshoot common deployment issues.
+]
+</response_format>
 
 If any of the items you've been asked to describe are not applicable, ignore them and move on. You don't need to describe what is not applicable.
-
-Keep this pretty brief. Just describe an overview of what is happening.`,
+`,
   },
   {
     title: "Styling and Component Libraries",
-    template: `
-### Styling
-- CSS methodology used (e.g., BEM, CSS Modules, CSS-in-JS, Tailwind)
-- Any preprocessors or postprocessors used
-- be very brief.
-
-### Component Library
-- Component library or design system, if applicable
-- Theming or customization capabilities
-- Any style guide or visual design principles followed
-
-### Theming
-If applicable, describe how to modify the color theme
+    template: `Describe the follwing topics if applicable. No headings, just a bulleted list of any applicable topics.
+  - CSS methodology used (e.g., BEM, CSS Modules, CSS-in-JS, Tailwind)
+  - Component library or design system, if applicable
+  - Guidance: Any code patterns, style guide or visual design principles followed
+  - Theming or customization capabilities
 `,
   },
 ];

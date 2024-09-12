@@ -1,3 +1,4 @@
+import { getLLM } from "~/toolkit/ai/llm/getLLM";
 import { wait } from "~/toolkit/utils/wait";
 import { getFileContent } from "../fs/getFileContent";
 import { scoreFileRelevancy } from "../llm/scoreFileRelevancy";
@@ -18,16 +19,21 @@ export const rankFilesForContext = async (input: {
       filepath,
       input.project.absolute_path
     );
-    let score = await scoreFileRelevancy({
-      file: {
-        filepath,
-        content: fileContent?.slice(0, 4000 * 4),
-      },
-      codeTask: input.codeTask,
+    let score = await scoreFileRelevancy(
+      {
+        file: {
+          filepath,
+          content: fileContent?.slice(0, 4000 * 4),
+        },
+        codeTask: input.codeTask,
 
-      fileStructure,
-      projectSummary: input.project?.summary?.substring(0, 10_000),
-    });
+        fileStructure,
+        // projectSummary: input.project?.summary?.substring(0, 10_000),
+      },
+      {
+        llm: getLLM("openai", "gpt-4o-mini"),
+      }
+    );
     console.log("🚀 | processFile | score:", score, filepath);
     return {
       filepath,

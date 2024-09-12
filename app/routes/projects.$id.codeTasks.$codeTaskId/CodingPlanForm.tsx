@@ -12,14 +12,29 @@ export const CodingPlanForm = ({
 }: ReturnType<typeof useCodeTask>) => {
   let [codingPlan, setCodingPlan] = useState(codeTask?.plan || "");
   let [followUpInput, setFollowUpInput] = useState("");
+  let [isSaving, setIsSaving] = useState(false);
+
   useEffect(() => {
     if (!codingPlanStream.isStreaming && codingPlanStream?.message?.content) {
       setCodingPlan(codingPlanStream.message?.content || "");
     }
   }, [codingPlanStream.isStreaming]);
 
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      await actions.saveCodingPlan(codingPlan);
+      // Optionally, you can add a success message or notification here
+    } catch (error) {
+      console.error("Error saving coding plan:", error);
+      // Optionally, you can add an error message or notification here
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   return (
-    <form className="mt-4 max-w-xl">
+    <form className="mt-4 max-w-3xl" onSubmit={(e) => e.preventDefault()}>
       <MarkdownTextarea
         label="Coding Plan"
         value={
@@ -60,12 +75,12 @@ export const CodingPlanForm = ({
             <Link to="..">Cancel</Link>
           </Button>
           <Button
-            type="submit"
+            onClick={handleSave}
             size="lg"
             className="w-40"
-            disabled={codingPlanStream?.isStreaming}
+            disabled={codingPlanStream?.isStreaming || isSaving}
           >
-            {codingPlanStream?.isStreaming ? "Generating..." : "Finish"}
+            {isSaving ? "Saving..." : "Save"}
           </Button>
         </div>
       </div>

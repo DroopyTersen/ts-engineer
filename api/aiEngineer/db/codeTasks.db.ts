@@ -106,18 +106,31 @@ export async function updateCodingPlan({
 }: {
   codeTaskId: string;
   codingPlan: string;
-  specifications: string;
+  specifications?: string;
 }) {
   try {
-    const { rows } = await getDb().query(
-      `
-      UPDATE code_tasks
-      SET plan = $1, specifications = $2, updated_at = NOW()
-      WHERE id = $3
-      RETURNING *
-    `,
-      [codingPlan, specifications, codeTaskId]
-    );
+    let query: string;
+    let params: any[];
+
+    if (specifications) {
+      query = `
+        UPDATE code_tasks
+        SET plan = $1, specifications = $2, updated_at = NOW()
+        WHERE id = $3
+        RETURNING *
+      `;
+      params = [codingPlan, specifications, codeTaskId];
+    } else {
+      query = `
+        UPDATE code_tasks
+        SET plan = $1, updated_at = NOW()
+        WHERE id = $2
+        RETURNING *
+      `;
+      params = [codingPlan, codeTaskId];
+    }
+
+    const { rows } = await getDb().query(query, params);
     return CodeTaskDbItem.parse(rows[0]);
   } catch (error) {
     console.error(
