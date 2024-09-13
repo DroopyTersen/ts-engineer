@@ -10,7 +10,7 @@ import { getLLM, LLM } from "~/toolkit/ai/llm/getLLM";
 import { LLMEventEmitter } from "~/toolkit/ai/streams/LLMEventEmitter";
 import { generateRevisedCodingPlan } from "../../llm/codingPlan/generateCodingPlan";
 import { getProject } from "../getProject";
-import { rankFilesForContext } from "../rankFilesForContext";
+import { getRelevantFiles } from "./getRelevantFiles";
 
 export const WriteCodingPlanInput = z.object({
   codeTaskId: z.string(),
@@ -49,18 +49,19 @@ export const writeCodingPlan = async (
     : null;
 
   console.log("🚀 | existingCodeTask:", existingCodeTask);
-  let rankResult = await rankFilesForContext({
-    codeTask: validatedInput.specifications,
+  const { filepaths: relevantFiles } = await getRelevantFiles({
+    userInput: validatedInput.specifications,
     project,
     selectedFiles: validatedInput.selectedFiles || [],
     minScore: 3,
+    maxTokens: 50_000,
+    parentObservableId: relevantFilesSpan?.id,
   });
-  console.log("🚀 | rankResult:", rankResult);
-  let relevantFiles = rankResult.results.map((r) => r.filepath);
+
   const fileContents = await getFileContents(
     relevantFiles,
     project.absolute_path,
-    60_000
+    50_000
   );
   const fileStructure = formatFileStructure(project.filepaths);
 

@@ -14,7 +14,6 @@ export const loader = async ({ params, request }: LoaderFunctionArgs) => {
     request,
     `/projects/${params.id}/codeTasks/${params.codeTaskId}`
   );
-  console.log("🚀 | loader | codeTask:", codeTask);
   return {
     codeTask,
   };

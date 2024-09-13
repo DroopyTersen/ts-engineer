@@ -85,7 +85,6 @@ app.post("/:projectId/codeTasks/:codeTaskId/saveSpecifications", async (c) => {
   const projectId = c.req.param("projectId");
   const codeTaskId = c.req.param("codeTaskId");
   const { specifications, selectedFiles } = await c.req.json();
-  console.log("🚀 | app.post | selectedFiles:", selectedFiles);
 
   try {
     const updatedCodeTask = await db.updateSpecifications({

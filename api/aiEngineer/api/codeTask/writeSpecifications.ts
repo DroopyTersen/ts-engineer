@@ -8,13 +8,10 @@ import { LLMEventEmitter } from "~/toolkit/ai/streams/LLMEventEmitter";
 import { classifyCodeTask } from "../../llm/specfications/classifyCodeTask";
 
 import { db } from "api/aiEngineer/db/db.server";
-import { processFileContents } from "api/aiEngineer/fs/getFileContent";
-import { generateStepBackQuestions } from "api/aiEngineer/llm/generateStepBackQuestions";
 import { generateSpecifications } from "api/aiEngineer/llm/specfications/generateSpecifications";
 import { telemetry } from "api/telemetry/telemetry.server";
-import { traceLLMEventEmitter } from "api/telemetry/traceLLMEventEmitter";
 import { getProject } from "../getProject";
-import { rankFilesForContext } from "../rankFilesForContext";
+import { getRelevantFiles } from "./getRelevantFiles";
 
 export const WriteSpecificationsInput = z.object({
   codeTaskId: z.string(),
@@ -147,89 +144,5 @@ export const writeSpecifications = async (
     specifications,
     title,
     codeTaskId: codeTask.id,
-  };
-};
-
-export const getRelevantFiles = async ({
-  userInput,
-  selectedFiles,
-  project,
-  minScore = 3,
-  maxTokens = 50_000,
-  parentObservableId,
-}: {
-  userInput: string;
-  project: {
-    id: string;
-    absolute_path: string;
-    summary?: string;
-    filepaths: string[];
-  };
-  selectedFiles?: string[];
-  minScore?: number;
-  maxTokens?: number;
-  parentObservableId?: string;
-}) => {
-  let projectFilepaths = project.filepaths;
-  let filepathsForContext: string[] = [];
-  let stepBackQuestions: string[] = [];
-  // if the user selected the files, use them unless they exceed the character limit
-  if (selectedFiles && selectedFiles.length > 0) {
-    const totalLength = await processFileContents(
-      selectedFiles,
-      project.absolute_path,
-      (_, content) => content.length
-    ).then((lengths) => lengths.reduce((sum, length) => sum + length, 0));
-
-    if (totalLength <= maxTokens * 4) {
-      filepathsForContext = selectedFiles;
-    } else {
-      console.log("Selected files exceed maxTokens. Using AI ranking.");
-    }
-  }
-
-  if (filepathsForContext.length === 0) {
-    // use an LLM to rank which files are most relevant
-    console.log("🚀 | ranking files for context...");
-    let emitter = new LLMEventEmitter();
-    parentObservableId &&
-      traceLLMEventEmitter({
-        emitter,
-        telemetry: telemetry,
-        parentObservableId: parentObservableId,
-      });
-    stepBackQuestions = await generateStepBackQuestions(
-      {
-        codeTask: userInput,
-        files: project.filepaths,
-      },
-      {
-        // llm: getLLM("deepseek", "deepseek-coder"),
-        llm: getLLM("openai", "gpt-4o-mini"),
-        emitter,
-      }
-    );
-    console.log("🚀 | step back questions:", stepBackQuestions.join("\n"));
-    let rankedFiles = await rankFilesForContext({
-      codeTask:
-        userInput + "\n\nStep back questions:\n" + stepBackQuestions.join("\n"),
-      project,
-      selectedFiles: selectedFiles?.length ? selectedFiles : projectFilepaths,
-    });
-
-    filepathsForContext = rankedFiles.results
-      .filter((r) => {
-        // If we have manually selected Files, well just return them all, but now they are sorted by relevance
-        if (selectedFiles) {
-          return true;
-        }
-        return r.score >= minScore;
-      })
-      .map((r) => r.filepath);
-  }
-  console.log("🚀 | filepathsForContext:", filepathsForContext.join("\n"));
-  return {
-    filepaths: filepathsForContext,
-    stepBackQuestions: stepBackQuestions,
   };
 };

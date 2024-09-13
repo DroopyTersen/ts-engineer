@@ -1,5 +1,6 @@
-import { useCallback, useState } from "react";
-import { Button } from "~/shadcn/components/ui/button";
+import { useCallback, useMemo, useState } from "react";
+import { Checkbox } from "~/shadcn/components/ui/checkbox";
+import { Input } from "~/shadcn/components/ui/input";
 import {
   createTreeStructure,
   FSNode,
@@ -20,6 +21,7 @@ export function FileExplorer({
   const [treeData, setTreeData] = useState<FSNode[]>(() =>
     createTreeStructure(files, selectedFiles)
   );
+  const [searchQuery, setSearchQuery] = useState("");
 
   const toggleSelect = useCallback(
     (item: FSNode) => {
@@ -66,18 +68,37 @@ export function FileExplorer({
     });
   }, [onSelection]);
 
+  const filteredTreeData = useMemo(() => {
+    if (!searchQuery) return treeData;
+    return filterTree(treeData, searchQuery.toLowerCase());
+  }, [treeData, searchQuery]);
+
+  let oneNodeIsSelected = getSelectedFiles(treeData).length > 0;
   return (
-    <div className="text-sm">
-      <div className="mb-4">
-        <Button type="button" variant="ghost" onClick={selectAll}>
-          Select All
-        </Button>
-        <Button type="button" variant="ghost" onClick={deselectAll}>
-          Deselect All
-        </Button>
+    <div className="text-sm relative">
+      <div className="mb-4 flex items-center gap-4 px-2 pt-2 justify-between sticky top-6 bg-white z-10">
+        <Checkbox
+          checked={oneNodeIsSelected}
+          className="w-5 h-5 rounded hover:bg-gray-200"
+          onCheckedChange={() => {
+            if (oneNodeIsSelected) {
+              deselectAll();
+            } else {
+              selectAll();
+            }
+          }}
+        />
+        <div className="h-6 w-px bg-gray-300/40" />
+        <Input
+          type="search"
+          placeholder="Filter files..."
+          className="rounded-full"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
       </div>
       <Tree
-        nodes={treeData}
+        nodes={filteredTreeData}
         onSelect={toggleSelect}
         onExpand={toggleExpanded}
       />
@@ -166,4 +187,23 @@ const updateAllNodes = (data: FSNode[], isSelected: boolean): FSNode[] => {
       ? updateAllNodes(node.children, isSelected)
       : undefined,
   }));
+};
+
+const filterTree = (nodes: FSNode[], query: string): FSNode[] => {
+  return nodes.reduce((acc: FSNode[], node) => {
+    if (node.fullPath.toLowerCase().includes(query)) {
+      const filteredNode = { ...node };
+      if (node.children) {
+        filteredNode.children = filterTree(node.children, query);
+      }
+      filteredNode.isExpanded = true; // Expand matching nodes
+      acc.push(filteredNode);
+    } else if (node.children) {
+      const filteredChildren = filterTree(node.children, query);
+      if (filteredChildren.length > 0) {
+        acc.push({ ...node, children: filteredChildren, isExpanded: true });
+      }
+    }
+    return acc;
+  }, []);
 };
