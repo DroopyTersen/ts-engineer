@@ -1,5 +1,7 @@
 import { createReadFilesTool } from "api/aiEngineer/tools/readFiles.tool";
+import { readUrlTool } from "api/aiEngineer/tools/readUrl.tool";
 import { createSearchCodeSnippetsTool } from "api/aiEngineer/tools/searchCodeSnippets.tool";
+import { searchWebTool } from "api/aiEngineer/tools/searchWeb.tool";
 import { getCachedMessageContent, LLM } from "~/toolkit/ai/llm/getLLM";
 import { LLMEventEmitter } from "~/toolkit/ai/streams/LLMEventEmitter";
 import { CodeTaskType } from "./classifyCodeTask";
@@ -74,6 +76,8 @@ export const generateSpecifications = async (
       maxTokens: 4000,
       temperature: 0.2,
       tools: {
+        readUrlContents: readUrlTool,
+        searchWeb: searchWebTool,
         readFileContents: createReadFilesTool(projectContext.absolutePath),
         searchCodeSnippets: createSearchCodeSnippetsTool(
           projectContext.absolutePath

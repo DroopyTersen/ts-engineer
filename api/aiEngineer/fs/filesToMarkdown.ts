@@ -38,6 +38,7 @@ export const getFileContents = async (
   return fileContents.filter(Boolean) as string[];
 };
 
+// Only shows the first 300 lines of the file
 export const formatFileContent = (filepath: string, content: string) => {
   let first300Lines = content.split("\n").slice(0, 300).join("\n");
   let fileExtension = filepath.split(".").pop() || "";

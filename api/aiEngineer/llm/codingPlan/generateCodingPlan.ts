@@ -1,8 +1,10 @@
 import { createReadFilesTool } from "api/aiEngineer/tools/readFiles.tool";
+import { readUrlTool } from "api/aiEngineer/tools/readUrl.tool";
 import { createSearchCodeSnippetsTool } from "api/aiEngineer/tools/searchCodeSnippets.tool";
+import { searchWebTool } from "api/aiEngineer/tools/searchWeb.tool";
+import { OpenAI } from "openai";
 import { getCachedMessageContent, LLM } from "~/toolkit/ai/llm/getLLM";
 import { LLMEventEmitter } from "~/toolkit/ai/streams/LLMEventEmitter";
-
 type GenerateCodingPlanInput = {
   projectContext: {
     absolutePath: string;
@@ -92,31 +94,46 @@ Here is the coding task to implement:
 
   emitter?.emit("content", `${formattedSpecifications}\n\n`);
 
-  const result = await llm.runTools(
-    {
-      label: "generateCodingPlan",
-      maxTokens: 8000,
-      temperature: 0.1,
-      tools: {
-        readFileContents: createReadFilesTool(projectContext.absolutePath),
-        searchCodeSnippets: createSearchCodeSnippetsTool(
-          projectContext.absolutePath
-        ),
-      },
-      messages: [
-        { role: "system", content: systemPrompt },
-        {
-          role: "user",
-          content: userMessageTextContents as any,
-        },
-      ],
-    },
-    {
-      emitter,
-    }
-  );
+  let openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+  });
+  let completion = await openai.chat.completions.create({
+    model: "o1-mini",
+    messages: [
+      { role: "user", content: systemPrompt },
+      { role: "user", content: userMessageTextContents as any },
+    ],
+  });
+  console.log("🚀 | completion:", completion);
+  let resultText = completion.choices[0].message.content + "";
+  emitter?.emit("content", resultText);
+  return CURSOR_PREFIX + resultText.trim();
 
-  return CURSOR_PREFIX + result.text.trim();
+  // const result = await llm.runTools(
+  //   {
+  //     label: "generateCodingPlan",
+  //     maxTokens: 8000,
+  //     temperature: 0.1,
+  //     tools: {
+  //       readFileContents: createReadFilesTool(projectContext.absolutePath),
+  //       searchCodeSnippets: createSearchCodeSnippetsTool(
+  //         projectContext.absolutePath
+  //       ),
+  //     },
+  //     messages: [
+  //       { role: "system", content: systemPrompt },
+  //       {
+  //         role: "user",
+  //         content: userMessageTextContents as any,
+  //       },
+  //     ],
+  //   },
+  //   {
+  //     emitter,
+  //   }
+  // );
+
+  // return CURSOR_PREFIX + result.text.trim();
 };
 
 export const generateRevisedCodingPlan = async (
@@ -171,9 +188,11 @@ Here is the follow-up input to address:
   const result = await llm.runTools(
     {
       label: "generateRevisedCodingPlan",
-      maxTokens: 8000,
+      maxTokens: 10_000,
       temperature: 0.1,
       tools: {
+        readUrlContents: readUrlTool,
+        searchWeb: searchWebTool,
         readFileContents: createReadFilesTool(projectContext.absolutePath),
         searchCodeSnippets: createSearchCodeSnippetsTool(
           projectContext.absolutePath

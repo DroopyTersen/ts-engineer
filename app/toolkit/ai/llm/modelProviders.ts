@@ -20,6 +20,7 @@ export const MODEL_PROVIDERS = {
     models: {
       "gpt-4o": "gpt-4o",
       "gpt-4o-mini": "gpt-4o-mini",
+      "o1-mini": "o1-mini",
     },
   },
   anthropic: {

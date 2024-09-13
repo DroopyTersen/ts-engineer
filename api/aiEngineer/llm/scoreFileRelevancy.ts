@@ -31,8 +31,23 @@ export const scoreFileRelevancy = async (
     let result = await llm
       .generateText({
         maxRetries: 0,
-        system: systemPrompt,
-        prompt: `CodeTask: \n${input.codeTask}}`,
+        messages: [
+          {
+            role: "system",
+            content: systemPrompt,
+          },
+          {
+            role: "user",
+            content: `I'm working on this code task, please score the following filecontents from 0 to 4
+            
+CodeTask: \n${input.codeTask}}
+
+## File Contents
+${input.file.filepath}
+
+${input.file.content}`,
+          },
+        ],
         abortSignal: controller.signal,
       })
       .catch((err) => {
@@ -85,11 +100,5 @@ ${fileStructure}
 \`\`\``
     : ""
 }
-
-## File Contents
-${file.filepath}
-
-${file.content}
-
 `;
 };

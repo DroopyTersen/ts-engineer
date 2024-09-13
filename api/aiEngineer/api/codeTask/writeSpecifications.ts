@@ -126,10 +126,10 @@ export const writeSpecifications = async (
       validatedInput.codeTaskId,
       specifications
     );
-    codeTask = await db.updateSpecifications(
-      validatedInput.codeTaskId,
-      specifications
-    );
+    codeTask = await db.updateSpecifications({
+      codeTaskId: validatedInput.codeTaskId,
+      specifications,
+    });
   } else {
     console.log("🚀 | title:", title);
     codeTask = await db.createNewCodeTask({

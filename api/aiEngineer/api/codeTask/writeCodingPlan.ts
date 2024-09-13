@@ -3,14 +3,12 @@ import {
   formatFileStructure,
   getFileContents,
 } from "api/aiEngineer/fs/filesToMarkdown";
+import { generateCodingPlanWithReasoning } from "api/aiEngineer/llm/codingPlan/generateCodingPlanWithReasoning";
 import { telemetry } from "api/telemetry/telemetry.server";
 import { z } from "zod";
 import { getLLM, LLM } from "~/toolkit/ai/llm/getLLM";
 import { LLMEventEmitter } from "~/toolkit/ai/streams/LLMEventEmitter";
-import {
-  generateCodingPlan,
-  generateRevisedCodingPlan,
-} from "../../llm/codingPlan/generateCodingPlan";
+import { generateRevisedCodingPlan } from "../../llm/codingPlan/generateCodingPlan";
 import { getProject } from "../getProject";
 import { rankFilesForContext } from "../rankFilesForContext";
 
@@ -42,7 +40,6 @@ export const writeCodingPlan = async (
   if (!existingCodeTask) {
     throw new Error("Code task not found");
   }
-
   let relevantFilesSpan = traceId
     ? telemetry.createSpan("getRelevantFiles", traceId).start({
         codeTaskId: validatedInput.codeTaskId,
@@ -50,17 +47,19 @@ export const writeCodingPlan = async (
       })
     : null;
 
+  console.log("🚀 | existingCodeTask:", existingCodeTask);
   let rankResult = await rankFilesForContext({
     codeTask: validatedInput.specifications,
     project,
     selectedFiles: [],
     minScore: 3,
   });
+  console.log("🚀 | rankResult:", rankResult);
   let relevantFiles = rankResult.results.map((r) => r.filepath);
   const fileContents = await getFileContents(
     relevantFiles,
     project.absolute_path,
-    40_000
+    60_000
   );
   const fileStructure = formatFileStructure(project.filepaths);
 
@@ -98,7 +97,7 @@ export const writeCodingPlan = async (
       }
     );
   } else {
-    codingPlan = await generateCodingPlan(
+    codingPlan = await generateCodingPlanWithReasoning(
       {
         projectContext: {
           absolutePath: project.absolute_path,

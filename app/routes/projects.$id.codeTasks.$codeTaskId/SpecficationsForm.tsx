@@ -74,7 +74,6 @@ export const SpecificationsForm = ({
       <div>
         <div className="mt-6 flex justify-between gap-2">
           <Button
-            variant={"secondary"}
             onClick={() => actions.saveSpecifications(specifications)}
             size="lg"
             className="w-44"

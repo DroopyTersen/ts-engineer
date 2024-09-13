@@ -9,12 +9,17 @@ export const rankFilesForContext = async (input: {
   selectedFiles?: string[];
   minScore?: number;
 }) => {
-  const files = input.selectedFiles || input.project.filepaths;
+  console.log("🚀 | rankFilesForContext:", input);
+  const files = input.selectedFiles?.length
+    ? input.selectedFiles
+    : input.project.filepaths;
 
+  console.log("🚀 | files:", files);
   let fileStructure = input.project.filepaths.join("\n");
+  const MAX_FILE_LENGTH = 2000 * 4;
   let processFile = async (filepath: string, index: number) => {
     await wait(50 * index);
-    // console.log("🚀 | rankFilesForContext | filepath:", filepath);
+    console.log("🚀 | rankFilesForContext | filepath:", filepath);
     let fileContent = await getFileContent(
       filepath,
       input.project.absolute_path
@@ -23,15 +28,20 @@ export const rankFilesForContext = async (input: {
       {
         file: {
           filepath,
-          content: fileContent?.slice(0, 4000 * 4),
+          content:
+            fileContent.length > MAX_FILE_LENGTH
+              ? fileContent.slice(0, MAX_FILE_LENGTH) +
+                `\n\n...truncated, ${
+                  fileContent.length - MAX_FILE_LENGTH
+                } characters removed for brevity...`
+              : fileContent,
         },
         codeTask: input.codeTask,
-
         fileStructure,
-        // projectSummary: input.project?.summary?.substring(0, 10_000),
+        projectSummary: input.project?.summary?.substring(0, 12_000),
       },
       {
-        llm: getLLM("openai", "gpt-4o-mini"),
+        llm: getLLM("deepseek", "deepseek-coder"),
       }
     );
     console.log("🚀 | processFile | score:", score, filepath);

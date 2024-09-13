@@ -1,5 +1,4 @@
 import { OpenAI } from "openai";
-import { azureOpenAIConfig } from "./azureOpenAI.config";
 import { OpenAITypes } from "./openai.types";
 
 const DEFAULT_MODEL = "gpt-4o";
@@ -11,14 +10,7 @@ export const LLM_DEFAULTS = {
   stream: true,
 } satisfies Partial<OpenAITypes.ChatParams>;
 
-export const createOpenAIClient = (mode: "azure" | "openai" = "azure") => {
-  if (mode === "azure") {
-    const client = new OpenAI({
-      ...azureOpenAIConfig,
-      maxRetries: 2,
-    });
-    return client;
-  }
+export const createOpenAIClient = (mode: string = "azure") => {
   return new OpenAI({
     apiKey: process.env.OPENAI_API_KEY!,
     maxRetries: 2,
