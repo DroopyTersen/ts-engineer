@@ -8,6 +8,7 @@ import { LLMEventEmitter } from "~/toolkit/ai/streams/LLMEventEmitter";
 import { classifyCodeTask } from "../../llm/specfications/classifyCodeTask";
 
 import { db } from "api/aiEngineer/db/db.server";
+import { processFileContents } from "api/aiEngineer/fs/getFileContent";
 import { generateStepBackQuestions } from "api/aiEngineer/llm/generateStepBackQuestions";
 import { generateSpecifications } from "api/aiEngineer/llm/specfications/generateSpecifications";
 import { telemetry } from "api/telemetry/telemetry.server";
@@ -52,15 +53,13 @@ export const writeSpecifications = async (
           project.filepaths,
       })
     : null;
-
+  const selectedFiles =
+    validatedInput.selectedFiles || existingCodeTask?.selected_files || [];
   const { filepaths: relevantFilePaths, stepBackQuestions } =
     await getRelevantFiles({
       userInput: validatedInput.input,
       project,
-      selectedFiles:
-        validatedInput.selectedFiles ||
-        existingCodeTask?.selected_files ||
-        project.filepaths,
+      selectedFiles,
       parentObservableId: relevantFilesSpan?.id,
       minScore: 3,
     });
@@ -129,6 +128,7 @@ export const writeSpecifications = async (
     codeTask = await db.updateSpecifications({
       codeTaskId: validatedInput.codeTaskId,
       specifications,
+      selected_files: selectedFiles ? relevantFilePaths : [],
     });
   } else {
     console.log("🚀 | title:", title);
@@ -138,7 +138,7 @@ export const writeSpecifications = async (
       title: `${taskType}: ${title}`,
       input: validatedInput.input,
       specifications,
-      selected_files: relevantFilePaths,
+      selected_files: selectedFiles ? relevantFilePaths : [],
       plan: null,
       file_changes: null,
     });
@@ -155,6 +155,7 @@ export const getRelevantFiles = async ({
   selectedFiles,
   project,
   minScore = 3,
+  maxTokens = 50_000,
   parentObservableId,
 }: {
   userInput: string;
@@ -166,14 +167,28 @@ export const getRelevantFiles = async ({
   };
   selectedFiles?: string[];
   minScore?: number;
+  maxTokens?: number;
   parentObservableId?: string;
 }) => {
-  let filepathsForContext = [];
+  let projectFilepaths = project.filepaths;
+  let filepathsForContext: string[] = [];
   let stepBackQuestions: string[] = [];
-  // if the user selected the files, use them unless there are too many
-  if (selectedFiles && selectedFiles.length > 0 && selectedFiles.length < 30) {
-    filepathsForContext = selectedFiles;
-  } else {
+  // if the user selected the files, use them unless they exceed the character limit
+  if (selectedFiles && selectedFiles.length > 0) {
+    const totalLength = await processFileContents(
+      selectedFiles,
+      project.absolute_path,
+      (_, content) => content.length
+    ).then((lengths) => lengths.reduce((sum, length) => sum + length, 0));
+
+    if (totalLength <= maxTokens * 4) {
+      filepathsForContext = selectedFiles;
+    } else {
+      console.log("Selected files exceed maxTokens. Using AI ranking.");
+    }
+  }
+
+  if (filepathsForContext.length === 0) {
     // use an LLM to rank which files are most relevant
     console.log("🚀 | ranking files for context...");
     let emitter = new LLMEventEmitter();
@@ -199,10 +214,17 @@ export const getRelevantFiles = async ({
       codeTask:
         userInput + "\n\nStep back questions:\n" + stepBackQuestions.join("\n"),
       project,
-      selectedFiles: selectedFiles,
+      selectedFiles: selectedFiles?.length ? selectedFiles : projectFilepaths,
     });
+
     filepathsForContext = rankedFiles.results
-      .filter((r) => r.score >= minScore)
+      .filter((r) => {
+        // If we have manually selected Files, well just return them all, but now they are sorted by relevance
+        if (selectedFiles) {
+          return true;
+        }
+        return r.score >= minScore;
+      })
       .map((r) => r.filepath);
   }
   console.log("🚀 | filepathsForContext:", filepathsForContext.join("\n"));

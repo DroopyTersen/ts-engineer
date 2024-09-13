@@ -31,7 +31,6 @@ export const useLLMEventStream = <TInputData = any>({
       }
     }
   );
-  console.log("🚀 | eventStream:", eventStream.id);
 
   let mostRecentMessage: LLMDataMessage | null =
     events.length > 0

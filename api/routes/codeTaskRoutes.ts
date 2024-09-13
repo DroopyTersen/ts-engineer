@@ -30,6 +30,7 @@ app.post("/:projectId/codeTasks/:codeTaskId/specifications", async (c) => {
       codeTaskId,
       input: args.input,
       followUpInput: args.followUpInput,
+      selectedFiles: args.selectedFiles,
     },
     {
       emitter,
@@ -50,6 +51,7 @@ app.post("/:projectId/codeTasks/:codeTaskId/codingPlan", async (c) => {
       codeTaskId,
       specifications: args.input,
       followUpInput: args.followUpInput,
+      selectedFiles: (args?.selectedFiles as string[]) || [],
     },
     {
       emitter,
@@ -82,12 +84,14 @@ app.post("/:projectId/codeTasks/:codeTaskId/saveCodingPlan", async (c) => {
 app.post("/:projectId/codeTasks/:codeTaskId/saveSpecifications", async (c) => {
   const projectId = c.req.param("projectId");
   const codeTaskId = c.req.param("codeTaskId");
-  const { specifications } = await c.req.json();
+  const { specifications, selectedFiles } = await c.req.json();
+  console.log("🚀 | app.post | selectedFiles:", selectedFiles);
 
   try {
     const updatedCodeTask = await db.updateSpecifications({
       codeTaskId,
       specifications,
+      selected_files: selectedFiles,
     });
     return c.json({ success: true, codeTask: updatedCodeTask });
   } catch (error) {

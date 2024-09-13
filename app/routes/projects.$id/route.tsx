@@ -1,7 +1,7 @@
 import { LoaderFunctionArgs } from "@remix-run/node";
 import { Outlet, useLoaderData } from "@remix-run/react";
 import { CodeProject } from "api/aiEngineer/api/getProject";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useApiUrl } from "~/root";
 import {
   ResizableHandle,
@@ -34,26 +34,38 @@ export const loader = async ({ params, request }: LoaderFunctionArgs) => {
 };
 
 function useSelectedFiles(project: CodeProject) {
-  const [selectedFiles, setSelectedFiles] = useState<string[]>(
-    project.filepaths || []
-  );
+  const [selectedFiles, _setSelectedFiles] = useState<string[]>([]);
+  const [selectionKey, setSelectionKey] = useState("manual");
   let [tokenCount, setTokenCount] = useState<number | null>(null);
   let apiUrl = useApiUrl();
+  const setSelectedFiles = useCallback(
+    (selectedFiles: string[], selectionKey?: string) => {
+      _setSelectedFiles(selectedFiles);
+      if (selectionKey) {
+        setSelectionKey(selectionKey);
+      }
+    },
+    [_setSelectedFiles, setSelectionKey]
+  );
   useEffect(() => {
-    jsonRequest(apiUrl + `/projects/${project.id}/selection-usage`, {
-      method: "POST",
-      body: JSON.stringify({
-        selectedFiles: selectedFiles,
-      }),
-    }).then((usage) => setTokenCount(usage.usageEstimate?.tokens));
+    if (selectedFiles.length > 0) {
+      jsonRequest(apiUrl + `/projects/${project.id}/selection-usage`, {
+        method: "POST",
+        body: JSON.stringify({
+          selectedFiles: selectedFiles,
+        }),
+      }).then((usage) => setTokenCount(usage.usageEstimate?.tokens));
+    } else {
+      setTokenCount(0);
+    }
   }, [selectedFiles.join(",")]);
-  return { selectedFiles, setSelectedFiles, tokenCount };
+  return { selectedFiles, setSelectedFiles, tokenCount, selectionKey };
 }
 
 export default function ProjectDetailsRoute() {
   let data = useLoaderData<typeof loader>();
   let project = data?.project;
-  const { selectedFiles, setSelectedFiles, tokenCount } =
+  const { selectedFiles, setSelectedFiles, tokenCount, selectionKey } =
     useSelectedFiles(project);
   let isHydrated = useIsHydrated();
   if (!isHydrated) {
@@ -73,7 +85,9 @@ export default function ProjectDetailsRoute() {
               {formatNumber(tokenCount || 0)} tokens
             </div>
             <FileExplorer
+              key={selectionKey}
               files={project.filepaths || []}
+              selectedFiles={selectedFiles}
               onSelection={setSelectedFiles}
             />
           </ScrollArea>
@@ -82,7 +96,7 @@ export default function ProjectDetailsRoute() {
         <ResizablePanel>
           <div className="overflow-y-auto h-full">
             <ProjectTabs projectId={project.id} />
-            <Outlet context={{ project, selectedFiles }} />
+            <Outlet context={{ project, selectedFiles, setSelectedFiles }} />
           </div>
         </ResizablePanel>
       </ResizablePanelGroup>

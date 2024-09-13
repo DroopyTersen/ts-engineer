@@ -36,18 +36,21 @@ export const useCodeTask = () => {
 
   const actions = useMemo(() => {
     return {
-      generateCodingPlan: (specifications: string) => {
+      generateCodingPlan: (specifications: string, selectedFiles: string[]) => {
         if (codingPlanStream.isStreaming) {
           codingPlanStream.actions.cancel();
         }
-        codingPlanStream.actions.submit({ input: specifications });
+        codingPlanStream.actions.submit({
+          input: specifications,
+          selectedFiles: selectedFiles.length > 0 ? selectedFiles : undefined,
+        });
         setCurrentStep("03");
       },
-      generateSpecifications: (input: string) => {
-        if (specificationsStream.isStreaming) {
-          specificationsStream.actions.cancel();
-        }
-        specificationsStream.actions.submit({ input });
+      generateSpecifications: (input: string, selectedFiles: string[]) => {
+        specificationsStream.actions.submit({
+          input,
+          selectedFiles: selectedFiles.length > 0 ? selectedFiles : undefined,
+        });
         setCurrentStep("02");
       },
       regenerateSpecifications: (followUpInput: string) => {
@@ -76,14 +79,18 @@ export const useCodeTask = () => {
           body: JSON.stringify({ codingPlan }),
         });
       },
-      saveSpecifications: async (specifications: string) => {
+      saveSpecifications: async (
+        specifications: string,
+        selectedFiles: string[]
+      ) => {
         console.log(
           "🚀 | saveSpecifications: | specifications:",
-          specifications
+          specifications,
+          selectedFiles
         );
         await jsonRequest(`${apiPath}/saveSpecifications`, {
           method: "POST",
-          body: JSON.stringify({ specifications }),
+          body: JSON.stringify({ specifications, selectedFiles }),
         });
       },
     };

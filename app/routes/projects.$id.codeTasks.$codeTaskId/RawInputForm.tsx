@@ -1,4 +1,4 @@
-import { Link } from "@remix-run/react";
+import { Link, useOutletContext } from "@remix-run/react";
 import { CodeTaskDbItem } from "api/aiEngineer/db/codeTasks.db";
 import { useState } from "react";
 import { Button } from "~/shadcn/components/ui/button";
@@ -9,10 +9,10 @@ export const RawInputForm = ({
   onSubmit,
 }: {
   codeTask: CodeTaskDbItem | null;
-  onSubmit: (data: { input: string }) => void;
+  onSubmit: (data: { input: string; selectedFiles: string[] }) => void;
 }) => {
   let [value, setValue] = useState(codeTask?.input || "");
-  // Show the basic input form if there is no specifications yet
+  const { selectedFiles } = useOutletContext<{ selectedFiles: string[] }>();
 
   return (
     <form
@@ -21,7 +21,7 @@ export const RawInputForm = ({
         e.preventDefault();
         const formData = new FormData(e.currentTarget);
         const input = formData.get("input") as string;
-        onSubmit({ input });
+        onSubmit({ input, selectedFiles });
       }}
     >
       <MarkdownTextarea

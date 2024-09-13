@@ -1,20 +1,24 @@
 import { useCallback, useState } from "react";
+import { Button } from "~/shadcn/components/ui/button";
 import {
   createTreeStructure,
   FSNode,
   getSelectedFiles,
+  updateParentFolders,
 } from "./createTreeStructure";
 import { TreeItem } from "./TreeItem";
 
 export function FileExplorer({
   files,
+  selectedFiles = [],
   onSelection,
 }: {
   files: string[];
+  selectedFiles?: string[];
   onSelection: (selectedFiles: string[]) => void;
 }) {
   const [treeData, setTreeData] = useState<FSNode[]>(() =>
-    createTreeStructure(files)
+    createTreeStructure(files, selectedFiles)
   );
 
   const toggleSelect = useCallback(
@@ -46,9 +50,32 @@ export function FileExplorer({
     );
   };
 
+  const selectAll = useCallback(() => {
+    setTreeData((prevData) => {
+      const updatedData = updateAllNodes(prevData, true);
+      onSelection(getSelectedFiles(updatedData));
+      return updatedData;
+    });
+  }, [onSelection]);
+
+  const deselectAll = useCallback(() => {
+    setTreeData((prevData) => {
+      const updatedData = updateAllNodes(prevData, false);
+      onSelection([]);
+      return updatedData;
+    });
+  }, [onSelection]);
+
   return (
     <div className="text-sm">
-      {/* <h2 className="text-lg font-semibold mb-4">File Explorer</h2> */}
+      <div className="mb-4">
+        <Button type="button" variant="ghost" onClick={selectAll}>
+          Select All
+        </Button>
+        <Button type="button" variant="ghost" onClick={deselectAll}>
+          Deselect All
+        </Button>
+      </div>
       <Tree
         nodes={treeData}
         onSelect={toggleSelect}
@@ -131,19 +158,12 @@ const updateNodeAndChildren = (node: FSNode): FSNode => {
   return node;
 };
 
-const updateParentFolders = (data: FSNode[]): FSNode[] => {
-  return data.map((node) => {
-    if (node.type === "folder" && node.children) {
-      const updatedChildren = updateParentFolders(node.children);
-      const allChildrenSelected = updatedChildren.every(
-        (child) => child.isSelected
-      );
-      return {
-        ...node,
-        isSelected: allChildrenSelected,
-        children: updatedChildren,
-      };
-    }
-    return node;
-  });
+const updateAllNodes = (data: FSNode[], isSelected: boolean): FSNode[] => {
+  return data.map((node) => ({
+    ...node,
+    isSelected,
+    children: node.children
+      ? updateAllNodes(node.children, isSelected)
+      : undefined,
+  }));
 };

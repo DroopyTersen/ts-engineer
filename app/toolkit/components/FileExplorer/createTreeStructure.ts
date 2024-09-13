@@ -8,7 +8,11 @@ export type FSNode = {
   fullPath: string;
 };
 
-export function createTreeStructure(files: string[]): FSNode[] {
+export function createTreeStructure(
+  files: string[],
+  selectedFiles: string[] = []
+): FSNode[] {
+  console.log("🚀 | selectedFiles:", selectedFiles);
   const root: FSNode[] = [];
 
   function addNode(
@@ -16,29 +20,41 @@ export function createTreeStructure(files: string[]): FSNode[] {
     currentLevel: FSNode[],
     depth: number,
     parentPath: string
-  ): void {
-    if (parts.length === 0) return;
+  ): boolean {
+    if (parts.length === 0) return false;
     const part = parts[0];
     const isFile = parts.length === 1;
     const fullPath = parentPath ? `${parentPath}/${part}` : part;
 
     let node = currentLevel.find((n) => n.name === part);
+    let containsSelectedFile = false;
 
     if (!node) {
+      containsSelectedFile = isFile && selectedFiles.includes(fullPath);
       node = {
         id: fullPath,
         name: part,
         type: isFile ? "file" : "folder",
-        isExpanded: depth === 0, // Only expand first level folders
-        isSelected: false,
+        isExpanded: depth === 0 || containsSelectedFile,
+        isSelected: isFile && selectedFiles.includes(fullPath),
         children: isFile ? undefined : [],
         fullPath: fullPath,
       };
       currentLevel.push(node);
     }
     if (!isFile) {
-      addNode(parts.slice(1), node.children as FSNode[], depth + 1, fullPath);
+      const childContainsSelected = addNode(
+        parts.slice(1),
+        node.children as FSNode[],
+        depth + 1,
+        fullPath
+      );
+      if (childContainsSelected) {
+        node.isExpanded = true;
+        containsSelectedFile = true;
+      }
     }
+    return containsSelectedFile;
   }
 
   files.forEach((filePath) => {
@@ -58,7 +74,8 @@ export function createTreeStructure(files: string[]): FSNode[] {
       }));
   };
 
-  return sortNodes(root);
+  let sortedNodes = sortNodes(root);
+  return updateParentFolders(sortedNodes);
 }
 
 export function getSelectedFiles(tree: FSNode[]): string[] {
@@ -66,7 +83,7 @@ export function getSelectedFiles(tree: FSNode[]): string[] {
 
   function traverse(node: FSNode) {
     if (node.type === "file" && node.isSelected) {
-      selectedFiles.push(node.id);
+      selectedFiles.push(node.fullPath);
     }
     if (node.children) {
       node.children.forEach(traverse);
@@ -76,3 +93,20 @@ export function getSelectedFiles(tree: FSNode[]): string[] {
   tree.forEach(traverse);
   return selectedFiles;
 }
+
+export const updateParentFolders = (data: FSNode[]): FSNode[] => {
+  return data.map((node) => {
+    if (node.type === "folder" && node.children) {
+      const updatedChildren = updateParentFolders(node.children);
+      const allChildrenSelected = updatedChildren.every(
+        (child) => child.isSelected
+      );
+      return {
+        ...node,
+        isSelected: allChildrenSelected,
+        children: updatedChildren,
+      };
+    }
+    return node;
+  });
+};

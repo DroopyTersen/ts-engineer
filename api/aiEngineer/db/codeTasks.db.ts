@@ -49,19 +49,21 @@ const createNewCodeTask = async (
 const updateSpecifications = async ({
   codeTaskId,
   specifications,
+  selected_files = [],
 }: {
   codeTaskId: string;
   specifications: string;
+  selected_files?: string[];
 }) => {
   try {
     const { rows } = await getDb().query(
       `
       UPDATE code_tasks
-      SET specifications = $1, updated_at = NOW()
-      WHERE id = $2
+      SET specifications = $1, selected_files = $2, updated_at = NOW()
+      WHERE id = $3
       RETURNING *
     `,
-      [specifications, codeTaskId]
+      [specifications, JSON.stringify(selected_files), codeTaskId]
     );
     return CodeTaskDbItem.parse(rows[0]);
   } catch (error) {

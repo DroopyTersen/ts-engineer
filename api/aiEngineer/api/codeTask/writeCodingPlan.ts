@@ -17,6 +17,7 @@ export const WriteCodingPlanInput = z.object({
   projectId: z.string(),
   specifications: z.string(),
   followUpInput: z.string().optional(),
+  selectedFiles: z.array(z.string()).optional(),
 });
 
 export type WriteCodingPlanInput = z.infer<typeof WriteCodingPlanInput>;
@@ -51,7 +52,7 @@ export const writeCodingPlan = async (
   let rankResult = await rankFilesForContext({
     codeTask: validatedInput.specifications,
     project,
-    selectedFiles: [],
+    selectedFiles: validatedInput.selectedFiles || [],
     minScore: 3,
   });
   console.log("🚀 | rankResult:", rankResult);

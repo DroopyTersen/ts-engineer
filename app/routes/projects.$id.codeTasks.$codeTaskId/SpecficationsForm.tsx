@@ -1,3 +1,5 @@
+import { useOutletContext } from "@remix-run/react";
+import type { CodeProject } from "api/aiEngineer/api/getProject";
 import { useEffect, useState } from "react";
 import { BsChevronRight } from "react-icons/bs";
 import { Button } from "~/shadcn/components/ui/button";
@@ -16,6 +18,11 @@ export const SpecificationsForm = ({
     codeTask?.specifications || ""
   );
   let [followUpInput, setFollowUpInput] = useState("");
+
+  const { project, selectedFiles } = useOutletContext<{
+    project: CodeProject;
+    selectedFiles: string[];
+  }>();
 
   useEffect(() => {
     if (
@@ -74,14 +81,18 @@ export const SpecificationsForm = ({
       <div>
         <div className="mt-6 flex justify-between gap-2">
           <Button
-            onClick={() => actions.saveSpecifications(specifications)}
+            onClick={() =>
+              actions.saveSpecifications(specifications, selectedFiles)
+            }
             size="lg"
             className="w-44"
           >
             {specificationsStream?.isStreaming ? "Streaming..." : "Save"}
           </Button>
           <Button
-            onClick={() => actions.generateCodingPlan(specifications)}
+            onClick={() =>
+              actions.generateCodingPlan(specifications, selectedFiles)
+            }
             size="lg"
             className="w-44"
             disabled={specificationsStream?.isStreaming}

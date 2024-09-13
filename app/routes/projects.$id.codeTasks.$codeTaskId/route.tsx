@@ -1,5 +1,7 @@
 import { LoaderFunctionArgs } from "@remix-run/node";
+import { useOutletContext } from "@remix-run/react";
 import { CodeTaskDbItem } from "api/aiEngineer/db/codeTasks.db";
+import { useEffect } from "react";
 import { proxyApiRequestAsJson } from "~/toolkit/http/proxyApiRequest";
 import CodeTaskNav from "./CodeTaskNav";
 import { CodingPlanForm } from "./CodingPlanForm";
@@ -12,6 +14,7 @@ export const loader = async ({ params, request }: LoaderFunctionArgs) => {
     request,
     `/projects/${params.id}/codeTasks/${params.codeTaskId}`
   );
+  console.log("🚀 | loader | codeTask:", codeTask);
   return {
     codeTask,
   };
@@ -19,7 +22,16 @@ export const loader = async ({ params, request }: LoaderFunctionArgs) => {
 
 export default function CodeTasksRoute() {
   let codeTask = useCodeTask();
+  let { selectedFiles, setSelectedFiles } = useOutletContext<{
+    selectedFiles: string[];
+    setSelectedFiles: (selectedFiles: string[], selectionKey?: string) => void;
+  }>();
 
+  useEffect(() => {
+    if (codeTask.codeTask?.selected_files) {
+      setSelectedFiles(codeTask.codeTask.selected_files, Date.now().toString());
+    }
+  }, []);
   return (
     <div className="px-4 py-2">
       <div className="max-w-xl">
@@ -31,8 +43,8 @@ export default function CodeTasksRoute() {
       {codeTask.currentStep === "01" && (
         <RawInputForm
           codeTask={codeTask.codeTask}
-          onSubmit={({ input }) =>
-            codeTask.actions.generateSpecifications(input)
+          onSubmit={({ input, selectedFiles }) =>
+            codeTask.actions.generateSpecifications(input, selectedFiles)
           }
         />
       )}
