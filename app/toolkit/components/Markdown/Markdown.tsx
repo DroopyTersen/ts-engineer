@@ -1,7 +1,5 @@
 import MarkdownToJSX from "markdown-to-jsx";
 import { cn } from "~/shadcn/utils";
-import { ChartRenderer } from "./ChartRenderer";
-import { MermaidDiagram } from "./MermaidDiagram";
 import { SyntaxHighlightedCode } from "./SyntaxHighlightedCode";
 
 export const Markdown = ({
@@ -21,20 +19,39 @@ export const Markdown = ({
       <MarkdownToJSX
         options={{
           overrides: {
-            code: {
+            // code: {
+            //   component: ({ className, children }) => {
+            //     const language = className?.split("-")[1];
+            //     if (language === "mermaid") {
+            //       return <MermaidDiagram>{children}</MermaidDiagram>;
+            //     } else if (language === "chart") {
+            //       return <ChartRenderer config={children} />;
+            //     } else {
+            //       return (
+            //         <SyntaxHighlightedCode className={className}>
+            //           {children}
+            //         </SyntaxHighlightedCode>
+            //       );
+            //     }
+            //   },
+            // },
+            pre: {
               component: ({ className, children }) => {
-                const language = className?.split("-")[1];
-                if (language === "mermaid") {
-                  return <MermaidDiagram>{children}</MermaidDiagram>;
-                } else if (language === "chart") {
-                  return <ChartRenderer config={children} />;
-                } else {
+                if (children.type === "code") {
+                  const language =
+                    children.props.className?.split("-")?.[1] || "txt";
+                  console.log("🚀 | language:", language);
+                  console.log("🚀 | children:", children);
                   return (
-                    <SyntaxHighlightedCode className={className}>
-                      {children}
+                    <SyntaxHighlightedCode
+                      className={className}
+                      lang={language}
+                    >
+                      {children.props.children}
                     </SyntaxHighlightedCode>
                   );
                 }
+                return <pre className={className}>{children}</pre>;
               },
             },
           },

@@ -16,7 +16,6 @@ export const useLLMEventStream = <TInputData = any>({
     apiPath,
     (event) => {
       try {
-        console.log("Event", eventStream.id, event);
         setEvents((prevEvents) => {
           return [
             ...prevEvents,

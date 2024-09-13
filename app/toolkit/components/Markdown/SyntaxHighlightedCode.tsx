@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { cn } from "~/shadcn/utils";
-import { useIsHydrated } from "~/toolkit/remix/useIsHydrated";
 import { debounce } from "~/toolkit/utils/debounce";
 
 // Cache for storing highlighted code
@@ -9,17 +8,17 @@ const cachedCode: Map<string, string> = new Map();
 export const SyntaxHighlightedCode = ({
   className,
   children,
+  lang,
 }: {
   className?: string;
   children: string;
+  lang: string;
 }) => {
-  let isHydrated = useIsHydrated();
   const [highlightedCode, setHighlightedCode] = useState<string>(
     () => cachedCode.get(children) || ""
   );
-  const language = className?.split("-")[1] || "plaintext";
   let isFetchingRef = useRef(false);
-  const codeRef = useRef<HTMLSpanElement>(null);
+  const codeRef = useRef<HTMLPreElement>(null);
 
   const debouncedHighlightCode = useCallback(
     debounce(async () => {
@@ -41,9 +40,9 @@ export const SyntaxHighlightedCode = ({
           },
           body: JSON.stringify({
             code: children,
-            lang: language,
+            lang,
             theme: "slack-dark",
-            structure: "inline",
+            // structure: "inline",
           }),
         });
 
@@ -56,12 +55,12 @@ export const SyntaxHighlightedCode = ({
         cachedCode.set(children, data.html);
       } catch (error) {
         console.error("Error highlighting code:", error);
-        setHighlightedCode(`<code>${children}</code>`);
+        setHighlightedCode(`<pre>${children}</pre>`);
       } finally {
         isFetchingRef.current = false;
       }
     }, 200),
-    [children, language]
+    [children, lang]
   );
 
   useEffect(() => {
@@ -90,7 +89,7 @@ export const SyntaxHighlightedCode = ({
   }, [debouncedHighlightCode]);
 
   return (
-    <code
+    <span
       className={cn("shiki", className)}
       ref={codeRef}
       dangerouslySetInnerHTML={{ __html: highlightedCode || children }}

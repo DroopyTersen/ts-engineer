@@ -12,7 +12,6 @@ export function createTreeStructure(
   files: string[],
   selectedFiles: string[] = []
 ): FSNode[] {
-  console.log("🚀 | selectedFiles:", selectedFiles);
   const root: FSNode[] = [];
 
   function addNode(

@@ -98,7 +98,7 @@ export default function FileViewer() {
           }}
         >
           {Array.from({ length: numLines }).map((_, i) => (
-            <div className="h-[17.48px] text-right" key={i}>
+            <div className="line-number text-right" key={i}>
               {i + 1}
             </div>
           ))}

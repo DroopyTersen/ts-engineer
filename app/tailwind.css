@@ -2,27 +2,33 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --code-font-size: 0.85rem;
+  --line-height: 1.25rem;
+}
+
 pre code {
   font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
-  font-size: 0.85em;
+  font-size: var(--code-font-size);
 }
 pre {
-  line-height: 17px;
+  line-height: var(--line-height);
 }
-span.line {
-  height: 16px;
+.line-number {
+  height: var(--line-height);
 }
+
 .prose table {
   background: white;
   padding: 16px;
   border-radius: 4px;
   width: 100%;
 }
-.prose pre:has(.shiki) {
-  font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
-  max-width: 664px;
-  font-size: 13px;
-  line-height: 20px;
+
+.prose.prose-sm pre.shiki code {
+  max-width: 734px;
+  font-size: 0.8rem;
+  line-height: 1.2rem;
 }
 .prose :where(pre:has(.mermaid)):not(:where([class~="not-prose"] *)) {
   background-color: white;
@@ -30,4 +36,36 @@ span.line {
 }
 .prose pre:has(canvas) {
   background: white;
+}
+
+pre.shiki code .diff {
+  transition: background-color 0.5s;
+  margin: 0 -24px;
+  padding: 1px 24px;
+  width: calc(100% + 48px);
+  display: inline-block;
+}
+
+pre.shiki code .diff:before {
+  position: absolute;
+  left: 10px;
+}
+
+pre.shiki code .diff.remove {
+  background-color: rgba(255, 100, 100, 0.2);
+  opacity: 1;
+}
+
+pre.shiki code .diff.remove:before {
+  content: "-";
+  color: rgb(255, 100, 100);
+}
+
+pre.shiki code .diff.add {
+  background-color: rgba(100, 255, 100, 0.2);
+}
+
+pre.shiki code .diff.add:before {
+  content: "+";
+  color: rgb(100, 255, 100);
 }

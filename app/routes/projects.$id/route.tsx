@@ -80,7 +80,7 @@ export default function ProjectDetailsRoute() {
       <ResizablePanelGroup direction="horizontal" className="w-full h-full">
         <ResizablePanel defaultSize={20} minSize={15}>
           <ScrollArea type="auto" className=" h-full px-4 py-4">
-            <div className="px-4 sticky top-0 bg-white z-10">
+            <div className="px-4 sticky top-0 bg-white z-10 text-sm text-gray-500 text-center">
               {selectedFiles.length} Selected Files{" "}
               {formatNumber(tokenCount || 0)} tokens
             </div>
