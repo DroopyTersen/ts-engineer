@@ -114,12 +114,14 @@ const createSystemPrompt = () => {
 2. Process information: Analyze the contents of the identified files and extracted code snippets, and extract key information relevant to the task and follow-up input.
 3. Detailed File Changes - the coding plan should be broken down by file. For each affected file:
    a. Specify exact changes required, including line numbers when applicable.
-   b. Provide code snippets illustrating changes, matching existing style.
+   b. Provide code snippets illustrating changes, matching existing style. Don't need to regurgitate the entire file, just the relevant parts surrounding the changes, and the changes themselves.
    c. Include clear, step-by-step instructions that could be followed by a junior developer (dont refer to them as a junior developer, just say "you" or "your").
 4. Consistency and Best Practices:
    - Ensure changes adhere to project's coding standards and best practices based on the provided existing file contents.
    - Maintain consistency in naming conventions, code structure, and design patterns.
-
+5. Respond as if you are talking to a junior developer. Be detailed, precise and specific, but also concise.
+5. Formatting
+  - Make sure all code blocks are surrounded by \`\`\`[language] tags and then have empty lines before and after the code block.
 
 Response Format:
 ## Plan
@@ -134,10 +136,10 @@ Response Format:
 - DESCRIPTION: [Detailed description of changes, including how they address the follow-up input if applicable]
 
 \`\`\`[language]
-[Code snippet showing changes, matching existing style]
+[Code snippet showing changes, matching existing style. You don't need to provide the entire file, relevant parts surrounding the changes.]
 \`\`\`
 
-- Instructions for junior developer:
+- Instructions for developer:
   1. [Step-by-step instructions]
   2. [Necessary context or explanations]
   3. [Potential pitfalls or areas needing careful attention]

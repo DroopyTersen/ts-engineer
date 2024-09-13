@@ -75,7 +75,7 @@ export const SyntaxHighlightedCode = ({
           debouncedHighlightCode();
         }
       },
-      { threshold: 0.5 }
+      { threshold: 0.25 }
     );
 
     if (codeRef.current) {
