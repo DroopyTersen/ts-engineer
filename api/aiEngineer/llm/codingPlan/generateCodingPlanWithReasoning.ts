@@ -116,6 +116,7 @@ const createSystemPrompt = () => {
    a. Specify exact changes required, including line numbers when applicable.
    b. Provide code snippets illustrating changes, matching existing style. Don't need to regurgitate the entire file, just the relevant parts surrounding the changes, and the changes themselves.
    c. Include clear, step-by-step instructions that could be followed by a junior developer (dont refer to them as a junior developer, just say "you" or "your").
+   d. If a file doesn't need to be changed, leave it out of the File Changes section. If it's important to the task, you can mention it in the Additional Notes section.
 4. Consistency and Best Practices:
    - Ensure changes adhere to project's coding standards and best practices based on the provided existing file contents.
    - Maintain consistency in naming conventions, code structure, and design patterns.
@@ -127,7 +128,7 @@ Response Format:
 ## Plan
 [Concise overview of the task, objectives, and high-level decisions. One or two sentences at most.]
 
-[Provide a numbered list of files that need to be updated, created, deleted, or moved, and a concise description of the changes that need to be made. We need to make sure to be exhaustive with our change plan. Don't be lazy! The feature should be fully implemented once this plan is complete. Leave no stone unturned.]
+[Provide a numbered list of files that need to be updated, created, deleted, or moved, and a concise description of the changes that need to be made. We need to make sure to be exhaustive with our change plan. Don't be lazy! The feature should be fully implemented once this plan is complete. Leave no stone unturned. If a file doesn't need to be changed, leave it out of the File Changes section.]
 
 ## File Changes
 
@@ -151,7 +152,9 @@ Response Format:
 ...
 
 ## Additional Notes
-[Any extra information, considerations, or resources]
+[Any extra information, considerations, or resources. Don't mention preachy things warning about code quality, testing or performance unless you are asked about it. Stick to the task at hand.]
+
+
 
 Ensure your response follows this structure and provides clear, actionable instructions for each file change. Maintain consistency with the existing codebase and adhere to best practices.`;
 };
