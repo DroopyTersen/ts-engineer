@@ -8,7 +8,6 @@ import { telemetry } from "api/telemetry/telemetry.server";
 import { z } from "zod";
 import { getLLM, LLM } from "~/toolkit/ai/llm/getLLM";
 import { LLMEventEmitter } from "~/toolkit/ai/streams/LLMEventEmitter";
-import { generateRevisedCodingPlan } from "../../llm/codingPlan/generateCodingPlan";
 import { getProject } from "../getProject";
 import { getRelevantFiles } from "./getRelevantFiles";
 
@@ -49,10 +48,13 @@ export const writeCodingPlan = async (
     : null;
 
   console.log("🚀 | existingCodeTask:", existingCodeTask);
+  const selectedFiles = validatedInput.selectedFiles?.length
+    ? validatedInput.selectedFiles
+    : existingCodeTask?.selected_files || [];
   const { filepaths: relevantFiles } = await getRelevantFiles({
     userInput: validatedInput.specifications,
     project,
-    selectedFiles: validatedInput.selectedFiles || [],
+    selectedFiles,
     minScore: 3,
     maxTokens: 50_000,
     parentObservableId: relevantFilesSpan?.id,
@@ -66,7 +68,7 @@ export const writeCodingPlan = async (
   const fileStructure = formatFileStructure(project.filepaths);
 
   relevantFilesSpan?.end({
-    relevantFilePaths: existingCodeTask.selected_files,
+    relevantFilePaths: relevantFiles,
   });
 
   // llm = llm || getLLM("openai", "gpt-4o-mini");
@@ -74,54 +76,30 @@ export const writeCodingPlan = async (
 
   let codingPlan: string;
 
-  if (validatedInput.followUpInput) {
-    codingPlan = await generateRevisedCodingPlan(
-      {
-        projectContext: {
-          absolutePath: project.absolute_path,
-          title: project.name,
-          summary: project.summary,
-          fileStructure,
-          fileContents,
-        },
-        codeTask: {
-          specifications:
-            validatedInput.specifications ||
-            existingCodeTask?.specifications ||
-            "",
-          previousPlan: existingCodeTask.plan || "",
-          followUpInput: validatedInput.followUpInput,
-        },
+  codingPlan = await generateCodingPlanWithReasoning(
+    {
+      projectContext: {
+        absolutePath: project.absolute_path,
+        title: project.name,
+        summary: project.summary,
+        fileStructure,
+        fileContents,
       },
-      {
-        llm,
-        emitter,
-      }
-    );
-  } else {
-    codingPlan = await generateCodingPlanWithReasoning(
-      {
-        projectContext: {
-          absolutePath: project.absolute_path,
-          title: project.name,
-          summary: project.summary,
-          fileStructure,
-          fileContents,
-        },
-        codeTask: {
-          specifications:
-            validatedInput.specifications ||
-            existingCodeTask?.specifications ||
-            "",
-          rawInput: existingCodeTask.input,
-        },
+      codeTask: {
+        followUpInput: validatedInput.followUpInput || "",
+        previousPlan: existingCodeTask.plan || "",
+        specifications:
+          validatedInput.specifications ||
+          existingCodeTask?.specifications ||
+          "",
+        rawInput: existingCodeTask.input,
       },
-      {
-        llm,
-        emitter,
-      }
-    );
-  }
+    },
+    {
+      llm,
+      emitter,
+    }
+  );
 
   // Update the existing code task with the coding plan
   const updatedCodeTask = await db.updateCodingPlan({

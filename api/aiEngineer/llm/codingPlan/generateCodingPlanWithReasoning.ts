@@ -6,8 +6,6 @@ export const generateCodingPlanWithReasoning = async (
   {
     projectContext,
     codeTask,
-    followUpInput, // Added optional followUpInput
-    previousPlan, // Added optional previousPlan
   }: {
     projectContext: {
       absolutePath: string;
@@ -17,11 +15,11 @@ export const generateCodingPlanWithReasoning = async (
       fileContents: string[];
     };
     codeTask: {
+      followUpInput?: string; // Optional followUpInput
+      previousPlan?: string; // Optional previousPlan
       specifications: string;
       rawInput?: string;
     };
-    followUpInput?: string; // Optional followUpInput
-    previousPlan?: string; // Optional previousPlan
   },
   {
     llm,
@@ -32,7 +30,7 @@ export const generateCodingPlanWithReasoning = async (
   }
 ) => {
   const systemPrompt = createSystemPrompt();
-
+  const { followUpInput, previousPlan } = codeTask;
   // Initialize userMessageTextContents with project context
   let userMessageTextContents = [
     getCachedMessageContent(
