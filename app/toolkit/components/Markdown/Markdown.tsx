@@ -35,13 +35,29 @@ export const Markdown = ({
             //     }
             //   },
             // },
+            thought: {
+              component: ({ children }) => {
+                return (
+                  <div className="text-sm bg-gray-100 p-2 rounded-md">
+                    <span className="font-bold">Thought:</span> {children}
+                  </div>
+                );
+              },
+            },
+            draft: {
+              component: ({ children }) => {
+                return (
+                  <div className="text-sm bg-gray-100 p-2 rounded-md">
+                    <span className="font-bold">Draft:</span> {children}
+                  </div>
+                );
+              },
+            },
             pre: {
               component: ({ className, children }) => {
                 if (children.type === "code") {
                   const language =
                     children.props.className?.split("-")?.[1] || "txt";
-                  console.log("🚀 | language:", language);
-                  console.log("🚀 | children:", children);
                   return (
                     <SyntaxHighlightedCode
                       className={className}

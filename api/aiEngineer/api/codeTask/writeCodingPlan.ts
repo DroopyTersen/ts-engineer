@@ -3,7 +3,7 @@ import {
   formatFileStructure,
   getFileContents,
 } from "api/aiEngineer/fs/filesToMarkdown";
-import { generateCodingPlanWithReasoning } from "api/aiEngineer/llm/codingPlan/generateCodingPlanWithReasoning";
+import { generateCodingPlan } from "api/aiEngineer/llm/codingPlan/generateCodingPlan";
 import { telemetry } from "api/telemetry/telemetry.server";
 import { z } from "zod";
 import { getLLM, LLM } from "~/toolkit/ai/llm/getLLM";
@@ -76,7 +76,8 @@ export const writeCodingPlan = async (
 
   let codingPlan: string;
 
-  codingPlan = await generateCodingPlanWithReasoning(
+  codingPlan = await generateCodingPlan(
+    // codingPlan = await generateCodingPlanWithReasoning(
     {
       projectContext: {
         absolutePath: project.absolute_path,
