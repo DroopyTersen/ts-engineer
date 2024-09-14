@@ -78,7 +78,7 @@ export const generateCodingPlanWithReasoning = async (
     - Do NOT include these comments in your actual code changes. They are only there to guide you on what to modify.
   - When making changes, apply the additions and removals as indicated by the diff syntax, but do not include the '// [!code --]' or '// [!code ++]' comments in your final code.
 
-Here is the coding task to implement:
+Here is the coding task to implement. Again, for each one of the changes below, you chould create a change in Cursor Composor:
 
 `;
 
