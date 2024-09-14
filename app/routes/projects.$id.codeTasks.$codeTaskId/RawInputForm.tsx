@@ -16,7 +16,7 @@ export const RawInputForm = ({
 
   return (
     <form
-      className="mt-4 max-w-xl"
+      className="mt-4 max-w-4xl"
       onSubmit={(e) => {
         e.preventDefault();
         const formData = new FormData(e.currentTarget);

@@ -33,7 +33,7 @@ export default function CodeTasksRoute() {
   }, []);
   return (
     <div className="px-4 py-2">
-      <div className="max-w-xl">
+      <div className="max-w-4xl">
         <CodeTaskNav
           currentStep={codeTask.currentStep}
           onChange={codeTask.setCurrentStep}
