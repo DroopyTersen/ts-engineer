@@ -4,6 +4,7 @@ import {
   getFileContents,
 } from "api/aiEngineer/fs/filesToMarkdown";
 import { generateCodingPlan } from "api/aiEngineer/llm/codingPlan/generateCodingPlan";
+import { generateCodingPlanWithReasoning } from "api/aiEngineer/llm/codingPlan/generateCodingPlanWithReasoning";
 import { telemetry } from "api/telemetry/telemetry.server";
 import { z } from "zod";
 import { getLLM, LLM } from "~/toolkit/ai/llm/getLLM";
@@ -75,9 +76,11 @@ export const writeCodingPlan = async (
   llm = llm || getLLM("anthropic", "claude-3-5-sonnet-20240620");
 
   let codingPlan: string;
-
-  codingPlan = await generateCodingPlan(
-    // codingPlan = await generateCodingPlanWithReasoning(
+  let generateFn = validatedInput.followUpInput
+    ? generateCodingPlan
+    : generateCodingPlanWithReasoning;
+  // codingPlan = await generateCodingPlan(
+  codingPlan = await generateFn(
     {
       projectContext: {
         absolutePath: project.absolute_path,
