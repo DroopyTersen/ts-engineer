@@ -4,7 +4,6 @@ import {
   getFileContents,
 } from "api/aiEngineer/fs/filesToMarkdown";
 import { generateCodingPlan } from "api/aiEngineer/llm/codingPlan/generateCodingPlan";
-import { generateCodingPlanWithReasoning } from "api/aiEngineer/llm/codingPlan/generateCodingPlanWithReasoning";
 import { telemetry } from "api/telemetry/telemetry.server";
 import { z } from "zod";
 import { getLLM, LLM } from "~/toolkit/ai/llm/getLLM";
@@ -80,7 +79,8 @@ export const writeCodingPlan = async (
   let codingPlan: string;
   let generateFn = validatedInput.followUpInput
     ? generateCodingPlan
-    : generateCodingPlanWithReasoning;
+    : generateCodingPlan;
+  // : generateCodingPlanWithReasoning;
   // codingPlan = await generateCodingPlan(
   codingPlan = await generateFn(
     {

@@ -55,15 +55,15 @@ export const Markdown = ({
             },
             pre: {
               component: ({ className, children }) => {
-                if (children.type === "code") {
+                if (children?.type === "code") {
                   const language =
-                    children.props.className?.split("-")?.[1] || "txt";
+                    children?.props?.className?.split("-")?.[1] || "txt";
                   return (
                     <SyntaxHighlightedCode
                       className={className}
                       lang={language}
                     >
-                      {children.props.children}
+                      {children?.props?.children}
                     </SyntaxHighlightedCode>
                   );
                 }
