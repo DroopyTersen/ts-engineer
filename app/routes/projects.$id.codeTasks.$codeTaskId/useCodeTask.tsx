@@ -63,7 +63,10 @@ export const useCodeTask = () => {
         });
         setCurrentStep("02");
       },
-      regenerateCodingPlan: (followUpInput: string) => {
+      regenerateCodingPlan: (
+        followUpInput: string,
+        selectedFiles: string[]
+      ) => {
         if (codingPlanStream.isStreaming) {
           codingPlanStream.actions.cancel();
         }

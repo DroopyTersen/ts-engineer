@@ -52,19 +52,21 @@ export const writeCodingPlan = async (
   const selectedFiles = validatedInput.selectedFiles?.length
     ? validatedInput.selectedFiles
     : existingCodeTask?.selected_files || [];
+  console.log("🚀 | selectedFiles:", selectedFiles);
   const { filepaths: relevantFiles } = await getRelevantFiles({
     userInput: validatedInput.specifications,
     project,
     selectedFiles,
     minScore: 3,
-    maxTokens: 50_000,
+    maxTokens: 70_000,
     parentObservableId: relevantFilesSpan?.id,
   });
+  console.log("🚀 | relevantFiles:", relevantFiles);
 
   const fileContents = await getFileContents(
     relevantFiles,
     project.absolute_path,
-    50_000
+    70_000
   );
   const fileStructure = formatFileStructure(project.filepaths);
 

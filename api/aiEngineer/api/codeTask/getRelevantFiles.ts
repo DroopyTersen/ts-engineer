@@ -1,4 +1,3 @@
-import { processFileContents } from "api/aiEngineer/fs/getFileContent";
 import { generateStepBackQuestions } from "api/aiEngineer/llm/generateStepBackQuestions";
 import { telemetry } from "api/telemetry/telemetry.server";
 import { traceLLMEventEmitter } from "api/telemetry/traceLLMEventEmitter";
@@ -30,21 +29,27 @@ export const getRelevantFiles = async ({
   let filepathsForContext: string[] = [];
   let stepBackQuestions: string[] = [];
 
-  if (selectedFiles && selectedFiles.length > 0) {
-    const totalLength = await processFileContents(
-      selectedFiles,
-      project.absolute_path,
-      (_, content) => content.length
-    ).then((lengths) => lengths.reduce((sum, length) => sum + length, 0));
+  // if (selectedFiles && selectedFiles.length > 0) {
+  //   const totalLength = await processFileContents(
+  //     selectedFiles,
+  //     project.absolute_path,
+  //     (_, content) => content.length
+  //   ).then((lengths) => lengths.reduce((sum, length) => sum + length, 0));
 
-    if (totalLength <= maxTokens * 4) {
-      filepathsForContext = selectedFiles;
-    } else {
-      console.log("Selected files exceed maxTokens. Using AI ranking.");
-    }
-  }
+  //   console.log(
+  //     "🚀 | totalLength:",
+  //     totalLength,
+  //     maxTokens * 4,
+  //     selectedFiles.length
+  //   );
+  //   if (totalLength <= maxTokens * 4) {
+  //     filepathsForContext = selectedFiles;
+  //   } else {
+  //     console.log("Selected files exceed maxTokens. Using AI ranking.");
+  //   }
+  // }
 
-  if (filepathsForContext.length === 0) {
+  if (!selectedFiles?.length) {
     console.log("🚀 | ranking files for context...");
     let emitter = new LLMEventEmitter();
     parentObservableId &&
@@ -80,9 +85,8 @@ export const getRelevantFiles = async ({
       })
       .map((r) => r.filepath);
   }
-  console.log("🚀 | filepathsForContext:", filepathsForContext.join("\n"));
   return {
-    filepaths: filepathsForContext,
+    filepaths: selectedFiles?.length ? selectedFiles : filepathsForContext,
     stepBackQuestions: stepBackQuestions,
   };
 };
