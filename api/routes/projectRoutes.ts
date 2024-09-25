@@ -50,11 +50,17 @@ app.get("/:projectId/files", async (c) => {
 
 app.get("/:projectId/markdown", async (c) => {
   const project = await getProject(c.req.param("projectId"));
-  let markdown = await filesToMarkdown(
-    project.filepaths,
-    project.absolute_path
-  );
+  const files = c.req.query("files");
+  const filesToProcess = files ? files.split(",") : project.filepaths;
+  let markdown = await filesToMarkdown(filesToProcess, project.absolute_path);
   return c.text(markdown);
+});
+app.post("/:projectId/markdown", async (c) => {
+  const project = await getProject(c.req.param("projectId"));
+  let body = await c.req.json();
+  let filesToProcess = body?.files || project.filepaths;
+  let markdown = await filesToMarkdown(filesToProcess, project.absolute_path);
+  return c.json({ markdown });
 });
 
 app.post("/:projectId/summarize", async (c) => {

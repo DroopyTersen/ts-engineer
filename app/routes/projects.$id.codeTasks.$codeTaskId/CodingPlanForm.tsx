@@ -1,4 +1,4 @@
-import { Link } from "@remix-run/react";
+import { Link, useOutletContext } from "@remix-run/react";
 import { useEffect, useState } from "react";
 import { Button } from "~/shadcn/components/ui/button";
 import { Label } from "~/shadcn/components/ui/label";
@@ -14,6 +14,9 @@ export const CodingPlanForm = ({
   let [codingPlan, setCodingPlan] = useState(codeTask?.plan || "");
   let [followUpInput, setFollowUpInput] = useState("");
   let [isSaving, setIsSaving] = useState(false);
+  let { selectedFiles } = useOutletContext<{
+    selectedFiles: string[];
+  }>();
 
   useEffect(() => {
     if (!codingPlanStream.isStreaming && codingPlanStream?.message?.content) {
@@ -68,7 +71,9 @@ export const CodingPlanForm = ({
           />
         </div>
         <Button
-          onClick={() => actions.regenerateCodingPlan(followUpInput)}
+          onClick={() =>
+            actions.regenerateCodingPlan(followUpInput, selectedFiles)
+          }
           disabled={codingPlanStream.isStreaming || !followUpInput.trim()}
         >
           {codingPlanStream.isStreaming ? "Regenerating..." : "Regenerate Plan"}

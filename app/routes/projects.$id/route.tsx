@@ -10,13 +10,16 @@ import {
 } from "~/shadcn/components/ui/resizable";
 import { ScrollArea } from "~/shadcn/components/ui/scroll-area";
 
+import { Link } from "@remix-run/react";
+import { BsMarkdown } from "react-icons/bs";
+import { Button } from "~/shadcn/components/ui/button";
 import { FileExplorer } from "~/toolkit/components/FileExplorer/FileExplorer";
 import { jsonRequest } from "~/toolkit/http/fetch.utils";
 import { proxyApiRequestAsJson } from "~/toolkit/http/proxyApiRequest";
 import { useIsHydrated } from "~/toolkit/remix/useIsHydrated";
 import { formatNumber } from "~/toolkit/utils/formatNumber";
 import { ProjectHeader } from "./ProjectHeader";
-import { ProjectTabs } from "./ProjectTabs";
+import ProjectTabs from "./ProjectTabs";
 
 // export const action = async ({ request }: ActionFunctionArgs) => {
 //   let resp = await proxyApiRequest(request);
@@ -62,7 +65,7 @@ function useSelectedFiles(project: CodeProject) {
   return { selectedFiles, setSelectedFiles, tokenCount, selectionKey };
 }
 
-export default function ProjectDetailsRoute() {
+export default function ProjectRoute() {
   let data = useLoaderData<typeof loader>();
   let project = data?.project;
   const { selectedFiles, setSelectedFiles, tokenCount, selectionKey } =
@@ -74,15 +77,26 @@ export default function ProjectDetailsRoute() {
   if (!project) {
     return <div>Project not found</div>;
   }
+  const showMarkdownButton = selectedFiles.length > 0;
+
   return (
     <div className="grid grid-rows-[70px_1fr] h-screen">
       <ProjectHeader project={project} />
       <ResizablePanelGroup direction="horizontal" className="w-full h-full">
         <ResizablePanel defaultSize={20} minSize={15}>
           <ScrollArea type="auto" className=" h-full px-4 py-4">
-            <div className="px-4 sticky top-0 bg-white z-10 text-sm text-gray-500 text-center">
-              {selectedFiles.length} Selected Files{" "}
-              {formatNumber(tokenCount || 0)} tokens
+            <div className="px-4 sticky top-0 bg-white z-10 text-sm text-gray-500 flex justify-between items-center">
+              <span>
+                {selectedFiles.length} Selected Files{" "}
+                {formatNumber(tokenCount || 0)} tokens
+              </span>
+              {showMarkdownButton && (
+                <Button variant="ghost" size="sm" asChild>
+                  <Link to={`/projects/${project.id}/markdown`}>
+                    <BsMarkdown className="h-4 w-4" />
+                  </Link>
+                </Button>
+              )}
             </div>
             <FileExplorer
               key={selectionKey}
@@ -95,7 +109,7 @@ export default function ProjectDetailsRoute() {
         <ResizableHandle withHandle />
         <ResizablePanel>
           <div className="overflow-y-auto h-full">
-            <ProjectTabs projectId={project.id} />
+            <ProjectTabs projectId={project.id} selectedFiles={selectedFiles} />
             <Outlet context={{ project, selectedFiles, setSelectedFiles }} />
           </div>
         </ResizablePanel>

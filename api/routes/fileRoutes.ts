@@ -37,9 +37,22 @@ app.get("/:projectId/file-viewer", async (c) => {
     let html = await codeToHtml(fileContents, {
       lang: fileExtension,
       theme: "slack-dark",
+    }).catch(async (err) => {
+      console.log("🚀 | app.get | err1:", err);
+      let secondTry = await codeToHtml(fileContents, {
+        theme: "slack-dark",
+        lang: "md",
+      }).catch((err) => {
+        console.log("🚀 | app.get | err3:", err);
+        return `<pre class="shiki">${fileContents}</pre>`;
+      });
+      return secondTry;
     });
+    console.log("🚀 | app.get | html:", html.slice(0, 100));
+
     return c.html(html);
   } catch (error) {
+    console.log("🚀 | app.get | error:", error);
     return c.json({ error: "File not found" }, { status: 404 });
   }
 });

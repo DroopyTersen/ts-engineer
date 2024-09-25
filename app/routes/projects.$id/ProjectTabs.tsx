@@ -2,15 +2,18 @@ import { Link, useLocation, useNavigation } from "@remix-run/react";
 import { useEffect, useState } from "react";
 import { Tabs, TabsList, TabsTrigger } from "~/shadcn/components/ui/tabs";
 
-interface ProjectTabsProps {
+let tabIds = ["summary", "chat", "codeTasks", "edit", "markdown"];
+
+export default function ProjectTabs({
+  projectId,
+  selectedFiles,
+}: {
   projectId: string;
-}
-
-let tabIds = ["summary", "chat", "codeTasks", "edit"];
-
-export function ProjectTabs({ projectId }: ProjectTabsProps) {
+  selectedFiles: string[];
+}) {
   let { pathname } = useLocation();
   let navigation = useNavigation();
+
   let targetPath = navigation.location?.pathname || pathname;
   let [activeTab, setActiveTab] = useState(() => {
     return tabIds.find((tabId) => targetPath.includes(tabId)) || "summary";
@@ -22,7 +25,7 @@ export function ProjectTabs({ projectId }: ProjectTabsProps) {
   }, [targetPath]);
 
   return (
-    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+    <Tabs defaultValue={activeTab} className="w-full">
       <TabsList>
         <TabsTrigger value="summary" asChild>
           <Link to={`/projects/${projectId}/summary`}>Summary</Link>
@@ -36,6 +39,11 @@ export function ProjectTabs({ projectId }: ProjectTabsProps) {
         <TabsTrigger value="edit" asChild>
           <Link to={`/projects/${projectId}/edit`}>Edit</Link>
         </TabsTrigger>
+        {selectedFiles?.length > 0 && (
+          <TabsTrigger value="markdown" asChild>
+            <Link to={`/projects/${projectId}/markdown`}>Markdown</Link>
+          </TabsTrigger>
+        )}
       </TabsList>
     </Tabs>
   );
