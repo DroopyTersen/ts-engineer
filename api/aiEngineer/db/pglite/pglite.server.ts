@@ -7,6 +7,9 @@ import { createSingleton } from "~/toolkit/utils/createSingleton.server";
 
 let _pg: PGlite;
 export const initDb = async (dataDir?: string) => {
+  if (_pg) {
+    return _pg;
+  }
   _pg = await createSingleton("pg", async () => {
     let pg = new PGlite({
       dataDir: dataDir,

@@ -1,11 +1,11 @@
+import { describe, expect, it, setDefaultTimeout } from "bun:test";
 import fs from "fs/promises";
-import { describe, expect, it, vi } from "vitest";
 import { getLLM } from "~/toolkit/ai/llm/getLLM";
 import { LLMEventEmitter } from "~/toolkit/ai/streams/LLMEventEmitter";
 import { summarizeCodeFile } from "./summarizeCodeFile";
 
 describe.skip("summarizeCodeFile", () => {
-  vi.setConfig({ testTimeout: 30000 });
+  setDefaultTimeout(30000);
   it("should generate summarization for getLLM.ts", async () => {
     let emitter = new LLMEventEmitter();
     emitter.on("content", console.log);

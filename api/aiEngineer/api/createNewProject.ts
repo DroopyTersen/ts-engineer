@@ -6,12 +6,14 @@ import { DEFAULT_EXCLUSIONS } from "../fs/getProjectFiles";
 const CreateNewProjectInput = z.object({
   name: z.string().optional(),
   absolutePath: z.string(),
-  test_code_command: z.string().optional().default("bun run build"),
+  test_code_command: z.string().optional(),
 });
-
-export const createNewProject = async (formData: FormData) => {
-  const userInput = validateSchema(formData, CreateNewProjectInput);
-  console.log("🚀 | createNewProject | userInput:", userInput);
+export type CreateNewProjectInput = z.infer<typeof CreateNewProjectInput>;
+export const createNewProject = async (
+  input: FormData | CreateNewProjectInput
+) => {
+  const userInput = validateSchema(input, CreateNewProjectInput);
+  // console.log("🚀 | createNewProject | userInput:", userInput);
 
   // Remove trailing slash from absolutePath if present
   const cleanedPath = userInput.absolutePath.replace(/\/$/, "");
@@ -26,12 +28,11 @@ export const createNewProject = async (formData: FormData) => {
     summary: "",
     files: [],
     exclusions: DEFAULT_EXCLUSIONS.join("\n"),
-    test_code_command: userInput.test_code_command,
+    test_code_command: userInput?.test_code_command || "bun run build",
   };
   let existingProject = await db.getProjectByAbsolutePath(
     project.absolute_path
   );
-  console.log("🚀 | createNewProject | existingProject:", existingProject);
   if (existingProject) {
     return existingProject;
   }

@@ -45,7 +45,7 @@ const getFileByFilepath = async (projectId: string, filepath: string) => {
     [projectId, filepath]
   );
   try {
-    return FileDbItem.parse(rows?.[0]);
+    return rows?.[0] ? FileDbItem.parse(rows?.[0]) : null;
   } catch (err) {
     console.log("🚀 | getFileByFilepath | err:", err, projectId, filepath);
     return null;
@@ -80,28 +80,37 @@ async function searchFilesWithEmbedding(criteria: SearchFilesCriteria) {
 /** Search files by keyword */
 async function searchFilesByKeyword(criteria: SearchFilesCriteria) {
   try {
-    // Construct the SQL query with optional metadata filters
-    const query = `
-      SELECT *
-      FROM search_files($1, $2, $3, $4);
-    `;
+    // Function to execute the search query
+    const executeSearch = async (searchQuery: string) => {
+      const query = `
+        SELECT *
+        FROM search_files($1, $2, $3, $4, $5);
+      `;
+      const params = [
+        searchQuery,
+        criteria.limit || 10,
+        criteria?.projectId || null,
+        criteria?.filepath || null,
+        criteria?.extension || null,
+      ];
+      return await getDb().query(query, params);
+    };
 
-    // Prepare the parameters
-    const params = [
-      criteria.query,
-      10, // max_items, you might want to make this configurable
-      criteria?.projectId || null,
-      criteria?.filepath || null,
-    ];
+    // Attempt exact match first
+    const exactMatchQuery = criteria.query.includes('"')
+      ? criteria.query
+      : `"${criteria.query}" `;
+    let { rows } = await executeSearch(exactMatchQuery);
+    console.log("🚀 | searchFilesByKeyword | rows:", rows);
 
-    console.log("Executing query:", query);
-    console.log("With parameters:", params);
+    // If no results, fall back to regular search
+    if (rows.length === 0) {
+      ({ rows } = await executeSearch(criteria.query));
+    }
 
-    // Execute the query
-    const { rows } = await getDb().query(query, params);
-
-    console.log("Query executed successfully. Rows returned:", rows);
     return z.array(FileSearchResultItem).parse(rows);
+    // Note: We no longer need to manually create the snippet here
+    // as it's now provided by the SQL function
   } catch (error) {
     console.error("Error in keyword search:", error);
     if (error instanceof Error) {

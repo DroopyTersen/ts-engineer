@@ -57,9 +57,9 @@ CREATE OR REPLACE FUNCTION rank_search_results(search_query text) RETURNS TABLE 
 BEGIN
   RETURN QUERY
   SELECT id, filepath, project_id, summary, documentation, content, updated_at, extension, num_chars, filename,
-          ts_rank(tsv, to_tsquery('custom_config', search_query)) AS rank
+          ts_rank(tsv, websearch_to_tsquery('custom_config', search_query)) AS rank
   FROM files
-  WHERE tsv @@ to_tsquery('custom_config', search_query)
+  WHERE tsv @@ websearch_to_tsquery('custom_config', search_query)
   ORDER BY rank DESC;
 END
 $$ LANGUAGE plpgsql;
@@ -80,9 +80,9 @@ CREATE OR REPLACE FUNCTION rank_search_results_cd(search_query text) RETURNS TAB
 BEGIN
   RETURN QUERY
   SELECT id, filepath, project_id, summary, documentation, content, updated_at, extension, num_chars, filename,
-          ts_rank_cd(tsv, to_tsquery('custom_config', search_query)) AS rank
+          ts_rank_cd(tsv, websearch_to_tsquery('custom_config', search_query)) AS rank
   FROM files
-  WHERE tsv @@ to_tsquery('custom_config', search_query)
+  WHERE tsv @@ websearch_to_tsquery('custom_config', search_query)
   ORDER BY rank DESC;
 END
 $$ LANGUAGE plpgsql;
@@ -104,18 +104,26 @@ CREATE OR REPLACE FUNCTION search_files(
   extension text,
   num_chars int,
   filename text,
-  rank real
+  rank real,
+  snippet text,
+  match_start int
 ) AS $$
 BEGIN
   RETURN QUERY EXECUTE format(
     'SELECT id, filepath, project_id, summary, documentation, content, updated_at, extension, num_chars, filename,
-            ts_rank(tsv, to_tsquery(''custom_config'', %L)) AS rank
-      FROM files
-      WHERE tsv @@ to_tsquery(''custom_config'', %L)
+            ts_rank(tsv, query) AS rank,
+            ts_headline(''custom_config'', content, query, 
+              ''StartSel=<mark>, StopSel=</mark>, 
+              MaxWords=50, MinWords=20, 
+              ShortWord=3, MaxFragments=3, 
+              FragmentDelimiter=" ... "
+            '') AS snippet,
+            (ts_rank(tsv, query, 32)::int >> 8 & 268435455) AS match_start
+      FROM files, websearch_to_tsquery(''custom_config'', %L) query
+      WHERE tsv @@ query
       %s %s %s
       ORDER BY rank DESC
       LIMIT %s',
-    p_search_query,
     p_search_query,
     CASE WHEN p_project_id IS NOT NULL THEN format('AND project_id = %L', p_project_id) ELSE '' END,
     CASE WHEN p_filepath IS NOT NULL THEN format('AND filepath ILIKE %L', '%' || p_filepath || '%') ELSE '' END,

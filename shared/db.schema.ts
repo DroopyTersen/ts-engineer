@@ -41,7 +41,20 @@ export const FileDbItem = z.object({
 export type FileDbItem = z.infer<typeof FileDbItem>;
 
 export const FileSearchResultItem = FileDbItem.extend({
+  snippet: z
+    .string()
+    .optional()
+    .transform((val) => {
+      console.log("🚀 | .transform | val:", val);
+      if (!val) return val;
+      const lines = val.split("\n");
+      return lines
+        .filter((line) => line.trim() !== "")
+        .join("\n")
+        .trim();
+    }),
   similarity: z.number().optional(), // similarity is only present in search_files_with_embedding
   rank: z.number().optional(), // rank is only present in search_files
+  match_start: z.number().optional(), // match_start is only present in search_files
 });
 export type FileSearchResultItem = z.infer<typeof FileSearchResultItem>;

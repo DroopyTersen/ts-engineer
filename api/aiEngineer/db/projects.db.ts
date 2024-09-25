@@ -61,10 +61,8 @@ const updateProject = async (input: CodeProjectDbItem) => {
 };
 
 const insertProject = async (input: CodeProjectDbItem) => {
-  console.log("🚀 | insertProject | input:", input);
   try {
     const validatedInput = CodeProjectDbItem.parse(input);
-    console.log("🚀 | insertProject | validatedInput:", validatedInput);
 
     const { rows } = await getDb().query(
       `
@@ -81,7 +79,6 @@ const insertProject = async (input: CodeProjectDbItem) => {
         validatedInput.test_code_command,
       ]
     );
-    console.log("🚀 | insertProject | rows:", rows);
 
     console.log(`Project inserted successfully: ${validatedInput.name}`);
     return getProjectById(validatedInput.id);

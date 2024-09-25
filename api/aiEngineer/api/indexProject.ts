@@ -28,7 +28,7 @@ export const indexProject = async (
     if (shouldSummarize) {
       // Check if filepath has a parent folder
       summarization = await summarizeCodeFile(filepath, content, {
-        llm: getLLM("deepseek", "deepseek-coder"),
+        llm: getLLM("openai", "gpt-4o-mini"),
       });
     }
     return db.saveProjectFile({
