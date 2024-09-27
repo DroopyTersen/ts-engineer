@@ -1,7 +1,7 @@
 import { SerializeFrom } from "@remix-run/node";
 import { Link } from "@remix-run/react";
 import type { CodeSearchResultItem } from "api/aiEngineer/db/files.db";
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import { Button } from "~/shadcn/components/ui/button";
 import {
   Card,
@@ -23,20 +23,20 @@ export function CodeSearchResultItem({
   viewFile,
 }: CodeSearchResultItemProps) {
   let snippetRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (snippetRef.current) {
-      const highlightedLine =
-        snippetRef.current.querySelector(".line.highlighted");
-      if (highlightedLine) {
-        // Scroll to the highlighted line with a small offset for better visibility
-        highlightedLine.scrollIntoView({
-          behavior: "instant",
-          block: "center",
-          inline: "center",
-        });
-      }
-    }
-  }, [item?.snippet]);
+  // useEffect(() => {
+  //   if (snippetRef.current) {
+  //     const highlightedLine =
+  //       snippetRef.current.querySelector(".line.highlighted");
+  //     if (highlightedLine) {
+  //       // Scroll to the highlighted line with a small offset for better visibility
+  //       highlightedLine.scrollIntoView({
+  //         behavior: "instant",
+  //         block: "center",
+  //         inline: "center",
+  //       });
+  //     }
+  //   }
+  // }, [item?.snippet]);
   return (
     <Card className="overflow-hidden">
       <CardHeader className="pb-2">
@@ -76,9 +76,9 @@ export function CodeSearchResultItem({
           <div className="mt-2">
             <ScrollArea
               ref={snippetRef}
-              className="h-[200px] w-full rounded-md border p-2 bg-[#222]"
+              className="h-[200px] w-full rounded-md border p-2 bg-[#222] text-white"
             >
-              <div
+              <pre
                 className="text-sm [&>pre]:p-4 flex-grow"
                 dangerouslySetInnerHTML={{ __html: item.snippet }}
               />

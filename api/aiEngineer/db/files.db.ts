@@ -15,6 +15,7 @@ export type SearchFilesCriteria = {
 };
 
 export type SearchFilesResponse = AsyncReturnType<typeof searchFiles>;
+
 export type CodeSearchResultItem = Prettify<
   SearchFilesResponse["results"][number]
 >;
@@ -50,13 +51,12 @@ const searchFiles = async (criteria: SearchFilesCriteria) => {
       );
     })
     .filter((r) => r !== undefined);
-  let enrichedResults = await enrichWithProjectData(fusedResults);
+  let { enrichedResults, projects } = await enrichWithProjectData(fusedResults);
 
   return {
     criteria,
     results: enrichedResults,
-    embeddingResults,
-    keywordResults,
+    projects,
   };
 };
 
@@ -307,11 +307,12 @@ export const filesDb = {
  */
 async function enrichWithProjectData<T extends { project_id: string | null }>(
   results: T[]
-): Promise<
-  (T & {
+): Promise<{
+  enrichedResults: (T & {
     project: { id: string; name: string; absolute_path: string } | undefined;
-  })[]
-> {
+  })[];
+  projects: { id: string; name: string; absolute_path: string }[];
+}> {
   // Extract unique project IDs from the results
   const projectIds = [...new Set(results.map((result) => result.project_id))];
 
@@ -319,19 +320,22 @@ async function enrichWithProjectData<T extends { project_id: string | null }>(
   const projectQuery = `
     SELECT id, name, absolute_path
     FROM code_projects
-    WHERE id = ANY($1::text[]);
+    ORDER BY name ASC
   `;
-  const { rows } = await getDb().query(projectQuery, [projectIds]);
+  const { rows } = await getDb().query(projectQuery);
 
   // Add project details to the results
-  return results.map((result) => ({
-    ...result,
-    project: rows.find((row: any) => row.id === result.project_id) as
-      | {
-          id: string;
-          name: string;
-          absolute_path: string;
-        }
-      | undefined,
-  }));
+  return {
+    enrichedResults: results.map((result) => ({
+      ...result,
+      project: rows.find((row: any) => row.id === result.project_id) as
+        | {
+            id: string;
+            name: string;
+            absolute_path: string;
+          }
+        | undefined,
+    })),
+    projects: rows as { id: string; name: string; absolute_path: string }[],
+  };
 }

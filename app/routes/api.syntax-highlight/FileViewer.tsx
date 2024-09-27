@@ -110,7 +110,7 @@ export const FileViewer = ({
           ))}
         </div>
         <div
-          className="text-sm [&>pre]:p-4 flex-grow overflow-x-auto"
+          className="text-sm [&>pre]:p-4 flex-grow"
           dangerouslySetInnerHTML={{ __html: codeHtml }}
         />
       </div>

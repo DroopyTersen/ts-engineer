@@ -1,4 +1,5 @@
 import { Label } from "@radix-ui/react-label";
+import { RadioGroup } from "@radix-ui/react-radio-group";
 import { ScrollArea } from "@radix-ui/react-scroll-area";
 import { LoaderFunctionArgs, SerializeFrom } from "@remix-run/node";
 import { Form, Link, useLoaderData } from "@remix-run/react";
@@ -12,13 +13,16 @@ import { ChevronRightIcon, SearchIcon } from "~/shadcn/components/icons";
 import { Button } from "~/shadcn/components/ui/button";
 import { Card } from "~/shadcn/components/ui/card";
 import { Input } from "~/shadcn/components/ui/input";
+import { RadioGroupItem } from "~/shadcn/components/ui/radio-group";
 import {
   ResizableHandle,
   ResizablePanel,
   ResizablePanelGroup,
 } from "~/shadcn/components/ui/resizable";
+import { cn } from "~/shadcn/utils";
 import { MyDrawer } from "~/toolkit/components/Drawer/Drawer";
 import { proxyApiRequestAsJson } from "~/toolkit/http/proxyApiRequest";
+import { useIsHydrated } from "~/toolkit/remix/useIsHydrated";
 import { FileViewer } from "../api.syntax-highlight/FileViewer";
 import { CodeSearchResultItem } from "./CodeSearchResultItem";
 
@@ -31,11 +35,16 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 };
 
 export default function SearchRoute() {
-  const { results, criteria } = useLoaderData<typeof loader>();
+  const { results, criteria, projects } = useLoaderData<typeof loader>();
   let [drawerFileId, setDrawerFileId] = useState("");
+  let isHydrated = useIsHydrated();
   let drawerFile = drawerFileId
     ? results.find((result) => result.id === drawerFileId)
     : null;
+
+  if (!isHydrated) {
+    return null;
+  }
   return (
     <div className="grid grid-rows-[70px_1fr] h-screen">
       <SearchPageHeader criteria={criteria} />
@@ -59,7 +68,7 @@ export default function SearchRoute() {
         <ResizablePanel defaultSize={20} minSize={15}>
           <ScrollArea type="auto" className=" h-full px-4 py-4">
             <Form action="/search" method="GET" id="search-form">
-              <fieldset className="flex flex-col gap-4">
+              <fieldset className="flex flex-col gap-8">
                 <div className="relative flex-1">
                   <div className="absolute inset-y-0 left-2 flex items-center justify-center">
                     <SearchIcon className="h-4 w-4 text-gray-300" />
@@ -81,8 +90,63 @@ export default function SearchRoute() {
                     name="extension"
                     placeholder="e.g., js, tsx, py"
                     defaultValue={criteria.extension}
-                    className="w-full text-base"
+                    className="w-full text-lg"
                   />
+                </div>
+                <div className="space-y-2 relative">
+                  <Label className="font-medium text-sm">Project</Label>
+                  {projects && projects.length > 0 ? (
+                    <RadioGroup
+                      name="projectId"
+                      defaultValue={criteria.projectId}
+                      onChange={(e) => {
+                        e.currentTarget.closest("form")?.submit();
+                      }}
+                    >
+                      {criteria.projectId && (
+                        <div className="flex items-center space-x-2 absolute top-0 right-0">
+                          <RadioGroupItem
+                            value=""
+                            id={`project-all`}
+                            checked={criteria.projectId === ""}
+                            className="opacity-0"
+                          />
+                          <Label
+                            htmlFor={`project-all`}
+                            className="cursor-pointer p-2 hover:bg-gray-100 rounded-md text-sm font-medium"
+                          >
+                            Show all projects
+                          </Label>
+                        </div>
+                      )}
+                      {projects.map((project) => (
+                        <div
+                          key={project.id}
+                          className="flex items-center space-x-2 mb-1 text-lg font-medium"
+                        >
+                          <RadioGroupItem
+                            value={project.id}
+                            id={`project-${project.id}`}
+                          />
+                          <Label
+                            htmlFor={`project-${project.id}`}
+                            className={cn(
+                              "cursor-pointer hover:text-gray-900",
+                              criteria.projectId &&
+                                criteria.projectId !== project.id &&
+                                "text-gray-400"
+                            )}
+                          >
+                            {project.name}
+                          </Label>
+                        </div>
+                      ))}
+                    </RadioGroup>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      No projects available
+                    </p>
+                  )}
                 </div>
                 <div>
                   <Button className="w-full" type="submit">

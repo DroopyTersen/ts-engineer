@@ -33,7 +33,6 @@ ${result?.snippet || result?.content?.slice(0, 1000) + "..." || ""}`
     <relevant_indices>put the numbers of your indices here, separated by commas</relevant_indices>
   `;
 
-  console.log("🚀 | rerankSearchResults | prompt:", prompt);
   const response = await llm.generateData({
     temperature: 0,
     schema: RerankResponseSchema,
