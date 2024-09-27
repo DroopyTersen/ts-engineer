@@ -69,3 +69,13 @@ pre.shiki code .diff.add:before {
   content: "+";
   color: rgb(100, 255, 100);
 }
+
+pre.shiki code .highlighted {
+  margin: -2px -24px;
+  padding: 2px 24px;
+  width: calc(100% + 48px);
+  display: inline-block;
+  background-color: rgba(255, 255, 255, 0.15);
+  /* background-color: rgba(100, 255, 100, 0.2); */
+  opacity: 1;
+}

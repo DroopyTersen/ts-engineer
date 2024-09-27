@@ -1,7 +1,7 @@
 import { FileDbItem, FileSearchResultItem } from "@shared/db.schema";
 import { z } from "zod";
 import { embedTexts } from "~/toolkit/ai/openai/openai.sdk";
-import { AsyncReturnType } from "~/toolkit/utils/typescript.utils";
+import { AsyncReturnType, Prettify } from "~/toolkit/utils/typescript.utils";
 import { getDb } from "./pglite/pglite.server";
 
 export type SearchFilesCriteria = {
@@ -10,29 +10,51 @@ export type SearchFilesCriteria = {
   filepath?: string;
   extension?: string;
   limit?: number;
+  type?: "keyword" | "vector" | "hybrid";
+  keywordQuery?: string;
 };
 
 export type SearchFilesResponse = AsyncReturnType<typeof searchFiles>;
+export type CodeSearchResultItem = Prettify<
+  SearchFilesResponse["results"][number]
+>;
 /** Hybrid search for files by embedding and keyword */
 const searchFiles = async (criteria: SearchFilesCriteria) => {
+  // Skip the vector search if the search type is keyword
+  let vectorSearchPromise =
+    criteria?.type === "keyword"
+      ? Promise.resolve([])
+      : searchFilesWithEmbedding(criteria);
+  // Skip the keyword search if the search type is vector.
+  // Use the extracted keword query if it exists
+  let keywordSearchPromise =
+    criteria?.type === "vector"
+      ? Promise.resolve([])
+      : searchFilesByKeyword({
+          ...criteria,
+          query: criteria?.keywordQuery || criteria.query,
+        });
   let [embeddingResults, keywordResults] = await Promise.all([
-    searchFilesWithEmbedding(criteria),
-    searchFilesByKeyword(criteria),
+    vectorSearchPromise,
+    keywordSearchPromise,
   ]);
   let rankedIds = rankFusion(
     embeddingResults.map((r) => r.id + ""),
     keywordResults.map((r) => r.id + "")
   );
-  let fusedResults = rankedIds.map((id) => {
-    return (
-      embeddingResults.find((r) => r.id + "" === id) ||
-      keywordResults.find((r) => r.id + "" === id)
-    );
-  });
+  let fusedResults = rankedIds
+    .map((id) => {
+      return (
+        keywordResults.find((r) => r.id + "" === id) ||
+        embeddingResults.find((r) => r.id + "" === id)
+      );
+    })
+    .filter((r) => r !== undefined);
+  let enrichedResults = await enrichWithProjectData(fusedResults);
 
   return {
     criteria,
-    results: fusedResults,
+    results: enrichedResults,
     embeddingResults,
     keywordResults,
   };
@@ -101,7 +123,6 @@ async function searchFilesByKeyword(criteria: SearchFilesCriteria) {
       ? criteria.query
       : `"${criteria.query}" `;
     let { rows } = await executeSearch(exactMatchQuery);
-    console.log("🚀 | searchFilesByKeyword | rows:", rows);
 
     // If no results, fall back to regular search
     if (rows.length === 0) {
@@ -278,3 +299,39 @@ export const filesDb = {
   saveProjectFile,
   getFileByFilepath,
 };
+
+/**
+ * Enriches an array of FileSearchResultItem with project name and absolute path.
+ * @param results - Array of FileSearchResultItem to be enriched.
+ * @returns Enriched array of FileSearchResultItem with project details.
+ */
+async function enrichWithProjectData<T extends { project_id: string | null }>(
+  results: T[]
+): Promise<
+  (T & {
+    project: { id: string; name: string; absolute_path: string } | undefined;
+  })[]
+> {
+  // Extract unique project IDs from the results
+  const projectIds = [...new Set(results.map((result) => result.project_id))];
+
+  // Fetch project details for the unique project IDs
+  const projectQuery = `
+    SELECT id, name, absolute_path
+    FROM code_projects
+    WHERE id = ANY($1::text[]);
+  `;
+  const { rows } = await getDb().query(projectQuery, [projectIds]);
+
+  // Add project details to the results
+  return results.map((result) => ({
+    ...result,
+    project: rows.find((row: any) => row.id === result.project_id) as
+      | {
+          id: string;
+          name: string;
+          absolute_path: string;
+        }
+      | undefined,
+  }));
+}

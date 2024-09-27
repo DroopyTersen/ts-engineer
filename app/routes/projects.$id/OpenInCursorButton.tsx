@@ -32,7 +32,12 @@ export const OpenInCursorButton = ({
           className
         )}
       >
-        {children || (
+        {children ? (
+          <div className="flex items-center gap-2">
+            {children}
+            <HiOutlineExternalLink className="h-4 w-4" />
+          </div>
+        ) : (
           <>
             <span className="font-mono">{absolutePath}</span>
             <HiOutlineExternalLink className="h-4 w-4" />

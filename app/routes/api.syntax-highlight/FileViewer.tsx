@@ -1,57 +1,64 @@
-import { LoaderFunctionArgs } from "@remix-run/node";
-import {
-  Link,
-  useLoaderData,
-  useOutletContext,
-  useParams,
-} from "@remix-run/react";
-import { CodeProject } from "api/aiEngineer/api/getProject";
+import { useParams } from "@remix-run/react";
 import { useEffect, useState } from "react";
 import { BsX } from "react-icons/bs";
-import { HiOutlineExternalLink } from "react-icons/hi";
 import { useApiUrl } from "~/root";
-import { proxyApiRequest } from "~/toolkit/http/proxyApiRequest";
-import { OpenInCursorButton } from "./projects.$id/OpenInCursorButton";
+import { Button } from "~/shadcn/components/ui/button";
+import { cn } from "~/shadcn/utils";
+import { useAsyncData } from "~/toolkit/hooks/useAsyncData";
+import { OpenInCursorButton } from "../projects.$id/OpenInCursorButton";
 
-export const loader = async ({ request, params }: LoaderFunctionArgs) => {
-  let url = new URL(request.url);
-  let apiResp = await proxyApiRequest(request);
-  let codeHtml = await apiResp.text();
-  let filepath = url.searchParams.get("file");
-  return {
-    filepath,
-    codeHtml,
-  };
+const getSyntaxHighlightedCode = async (
+  apiUrl: string,
+  projectId: string,
+  filepath: string
+) => {
+  return fetch(
+    `${apiUrl}/projects/${projectId}/file-viewer?file=${filepath}`
+  ).then((res) => res.text());
 };
-
-export default function FileViewer() {
+export const FileViewer = ({
+  project,
+  filepath,
+  onClose,
+  className,
+}: {
+  project: {
+    id: string;
+    absolute_path: string;
+  };
+  filepath: string;
+  onClose: () => void;
+  className?: string;
+}) => {
   let apiUrl = useApiUrl();
   let { id } = useParams();
-  let { project } = useOutletContext<{ project: CodeProject }>();
-  let { filepath, codeHtml } = useLoaderData<typeof loader>();
+
   let [numLines, setNumLines] = useState(0);
+  let { data: codeHtml } = useAsyncData(
+    getSyntaxHighlightedCode,
+    [apiUrl, project.id, filepath],
+    ""
+  );
 
   useEffect(() => {
     if (codeHtml) {
       let preTag = document.createElement("pre");
       preTag.innerHTML = codeHtml;
       let code = preTag.innerText;
-      console.log("🚀 | useEffect | code:", code);
       const lineCount = code.split("\n").length;
-      console.log("🚀 | useEffect | lineCount:", lineCount);
       setNumLines(lineCount);
     }
   }, [codeHtml]);
 
   return (
-    <div className="bg-[#222] text-gray-100 h-full">
+    <div className={cn("bg-[#222] text-gray-100 h-full", className)}>
       <div className="px-4 py-2 flex items-center justify-between border-b border-white/10 sticky top-0 bg-[#222]">
         <div className="flex items-center">
-          <Link
-            to={`/projects/${id}`}
-            prefetch="intent"
-            className="rounded-full p-1 flex items-center justify-center hover:bg-white/10 mr-2"
+          <Button
+            variant={"ghost"}
+            onClick={() => onClose()}
             aria-label="Go back"
+            className="text-white hover:text-white hover:bg-gray-500 rounded-full p-1 w-8 h-8"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -67,24 +74,24 @@ export default function FileViewer() {
                 d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"
               />
             </svg>
-          </Link>
-          <h1 className="text-sm tracking-wide">{filepath}</h1>
-          <Link
-            to={`/projects/${id}`}
-            prefetch="intent"
-            className="rounded-full p-1 flex items-center justify-center hover:bg-white/10 ml-2"
+          </Button>
+          <h1 className="text-sm tracking-wide ml-1">{filepath}</h1>
+          <Button
+            variant={"ghost"}
+            onClick={() => onClose()}
+            aria-label="Go back"
+            className="text-white hover:text-white hover:bg-gray-500 rounded-full p-1 w-7 h-7"
           >
             <BsX className="w-5 h-5" />
-          </Link>
+          </Button>
         </div>
         <OpenInCursorButton
-          className="hover:bg-gray-700"
+          className="hover:bg-gray-500"
           projectId={id!}
           absolutePath={project.absolute_path}
           filepath={filepath!}
         >
           <span className="font-mono">Cursor</span>
-          <HiOutlineExternalLink className="h-4 w-4 ml-1" />
         </OpenInCursorButton>
       </div>
       <div className="flex">
@@ -109,4 +116,4 @@ export default function FileViewer() {
       </div>
     </div>
   );
-}
+};

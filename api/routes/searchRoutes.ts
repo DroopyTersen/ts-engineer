@@ -1,11 +1,11 @@
+import { searchCode } from "api/aiEngineer/api/searchCode";
 import { Hono } from "hono";
-import { db } from "../aiEngineer/db/db.server";
 import { SearchFilesCriteria } from "../aiEngineer/db/files.db";
-
 const app = new Hono();
 
 app.get("/", async (c) => {
   let query = c.req.query("query");
+  console.log("🚀 | app.get | query:", query);
   if (!query) {
     return c.json({ error: "missing query" }, { status: 400 });
   }
@@ -21,7 +21,8 @@ app.get("/", async (c) => {
   if (c.req.query("extension")) {
     criteria.extension = c.req.query("extension");
   }
-  let results = await db.searchFiles(criteria);
+  let results = await searchCode(criteria);
+
   return c.json(results);
 });
 

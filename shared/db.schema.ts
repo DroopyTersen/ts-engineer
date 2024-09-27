@@ -45,11 +45,19 @@ export const FileSearchResultItem = FileDbItem.extend({
     .string()
     .optional()
     .transform((val) => {
-      console.log("🚀 | .transform | val:", val);
       if (!val) return val;
       const lines = val.split("\n");
       return lines
         .filter((line) => line.trim() !== "")
+        .map((line) => {
+          // if the line contains <mark> then remove any <mark> and </mark> tags
+          // then add a '// [!code highlight]' to the end of the line for shiki to highlight
+          if (line.includes("<mark>")) {
+            line = line.replace(/<mark>/g, "").replace(/<\/mark>/g, "");
+            line += " // [!code highlight]";
+          }
+          return line;
+        })
         .join("\n")
         .trim();
     }),

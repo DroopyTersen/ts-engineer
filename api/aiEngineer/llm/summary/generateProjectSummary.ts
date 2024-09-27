@@ -70,7 +70,13 @@ export async function summarizeProjectMarkdown(
 }
 
 const summarizeProjectPrompt = (
+  /*
+  The full list of filespaths in the project
+  */
   fileStructure: string,
+  /*
+  A list of filespaths followed by the content of the file.
+  */
   fileContents: string[]
 ) => `
 You are an expert senior software engineer with extensive experience in analyzing and summarizing codebases. Your task is to examine the given codebase and provide a comprehensive summary of the project using the specified output template, that can be placed in the project's README.md file. Approach this task with meticulous attention to detail and a deep understanding of software architecture and best practices.
