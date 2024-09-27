@@ -9,6 +9,7 @@ import type {
   SearchFilesResponse,
 } from "api/aiEngineer/db/files.db";
 import { useState } from "react";
+import { useApiUrl } from "~/root";
 import { ChevronRightIcon, SearchIcon } from "~/shadcn/components/icons";
 import { Button } from "~/shadcn/components/ui/button";
 import { Card } from "~/shadcn/components/ui/card";
@@ -20,7 +21,9 @@ import {
   ResizablePanelGroup,
 } from "~/shadcn/components/ui/resizable";
 import { cn } from "~/shadcn/utils";
+import { useLLMEventStream } from "~/toolkit/ai/ui/useLLMEventStream";
 import { MyDrawer } from "~/toolkit/components/Drawer/Drawer";
+import { Markdown } from "~/toolkit/components/Markdown/Markdown";
 import { proxyApiRequestAsJson } from "~/toolkit/http/proxyApiRequest";
 import { useIsHydrated } from "~/toolkit/remix/useIsHydrated";
 import { FileViewer } from "../api.syntax-highlight/FileViewer";
@@ -41,6 +44,23 @@ export default function SearchRoute() {
   let drawerFile = drawerFileId
     ? results.find((result) => result.id === drawerFileId)
     : null;
+
+  const apiUrl = useApiUrl();
+  const answerStream = useLLMEventStream<{
+    query: string;
+    fileIds: string[];
+  }>({
+    apiPath: `${apiUrl}/search/answer-question`,
+    bodyInput: {},
+  });
+
+  const handleGenerateAnswer = () => {
+    const fileIds = results.map((result) => result.id);
+    answerStream.actions.submit({
+      query: criteria.query,
+      fileIds,
+    });
+  };
 
   if (!isHydrated) {
     return null;
@@ -160,6 +180,23 @@ export default function SearchRoute() {
         <ResizableHandle withHandle />
         <ResizablePanel>
           <div className="overflow-y-auto h-full pl-4 pt-4">
+            <Button
+              onClick={handleGenerateAnswer}
+              disabled={results.length === 0 || answerStream.isStreaming}
+              className="mb-4 w-full max-w-5xl"
+            >
+              {answerStream.isStreaming
+                ? "Generating..."
+                : "Generate an Answer"}
+            </Button>
+            {answerStream.message?.content && (
+              <Card className="p-4 mb-4 max-w-5xl bg-gray-100">
+                <h3 className="text-lg font-semibold mb-2">
+                  Generated Answer:
+                </h3>
+                <Markdown>{answerStream.message.content}</Markdown>
+              </Card>
+            )}
             <CodeSearchResults results={results} viewFile={setDrawerFileId} />
           </div>
         </ResizablePanel>

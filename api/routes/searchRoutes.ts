@@ -1,6 +1,9 @@
 import { searchCode } from "api/aiEngineer/api/searchCode";
 import { Hono } from "hono";
+import { createEventStreamDataStream } from "~/toolkit/ai/streams/createLLMEventStream";
+import { answerQuestion } from "../aiEngineer/api/answerQuestion";
 import { SearchFilesCriteria } from "../aiEngineer/db/files.db";
+
 const app = new Hono();
 
 app.get("/", async (c) => {
@@ -24,6 +27,18 @@ app.get("/", async (c) => {
   let results = await searchCode(criteria);
 
   return c.json(results);
+});
+
+app.post("/answer-question", async (c) => {
+  const dataStream = createEventStreamDataStream(c.req.raw.signal);
+  const emitter = dataStream.createEventEmitter();
+  const { query, fileIds } = await c.req.json();
+
+  answerQuestion({ query, fileIds }, { emitter }).finally(() =>
+    dataStream.close()
+  );
+
+  return dataStream.toResponse();
 });
 
 export default app;

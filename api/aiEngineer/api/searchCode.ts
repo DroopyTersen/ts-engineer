@@ -25,6 +25,7 @@ export const searchCode = async (criteria: SearchFilesCriteria) => {
     ...criteria,
     type: queryClassfication?.type,
     keywordQuery: queryClassfication?.keywordQuery,
+    limit: 25,
   });
 
   // If it's a keyword search and there are no results, retry as a hybrid search
@@ -55,7 +56,8 @@ export const searchCode = async (criteria: SearchFilesCriteria) => {
       const rerankedResults = await rerankSearchResults(
         criteria.query,
         resultsToRerank,
-        getLLM("openai", "gpt-4o-mini")
+        getLLM("openai", "gpt-4o-mini"),
+        25
       );
       console.log("🚀 | Setting cache for reranked results:", rerankCacheKey);
       memoryCache.set(rerankCacheKey, rerankedResults);
