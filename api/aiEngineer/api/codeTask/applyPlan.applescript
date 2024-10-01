@@ -22,4 +22,11 @@ tell application "System Events"
     keystroke "i" using {command down, shift down}
 end tell
 
+delay 1
+
+-- Simulate pressing Enter
+tell application "System Events"
+    key code 36
+end tell
+
 delay 0.5
