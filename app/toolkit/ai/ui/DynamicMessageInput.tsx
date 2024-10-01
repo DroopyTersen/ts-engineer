@@ -23,10 +23,16 @@ export const DynamicMessageInput = forwardRef<
     handleSubmit: (userInput: string) => void;
     placeholder?: string;
     autoFocus?: boolean;
+    className?: string;
   }
 >(
   (
-    { handleSubmit, placeholder = "Enter your message...", autoFocus = false },
+    {
+      handleSubmit,
+      placeholder = "Enter your message...",
+      autoFocus = false,
+      className,
+    },
     ref
   ) => {
     const [inputText, setInputText] = useState("");
@@ -44,7 +50,6 @@ export const DynamicMessageInput = forwardRef<
       },
     }));
     useEffect(() => {
-      console.log(inputText.includes("\n"));
       if ((inputText.length > 100 || inputText.includes("\n")) && !isTextarea) {
         setIsTextarea(true);
       } else if (
@@ -108,7 +113,7 @@ export const DynamicMessageInput = forwardRef<
     };
 
     return (
-      <div className="relative">
+      <div className={cn("relative rounded-full", className)}>
         {!isTextarea ? (
           <Input
             autoFocus={autoFocus}
@@ -123,7 +128,7 @@ export const DynamicMessageInput = forwardRef<
                 ? "text-base h-10"
                 : inputText.length > 30
                 ? "text-lg h-12 pl-4"
-                : "text-xl h-12 pl-5"
+                : "text-xl h-14 pl-5"
             }`}
           />
         ) : (
@@ -152,9 +157,9 @@ export const DynamicMessageInput = forwardRef<
                 ? "h-10"
                 : inputText.length > 30
                 ? "h-12"
-                : "h-12 px-4"
+                : "h-14 w-28"
             }`,
-            isTextarea && "rounded-md right-5 bottom-0 top-auto -mb-4"
+            isTextarea && "rounded-md right-5 bottom-0 top-auto -mb-4 w-14"
           )}
         >
           <Send className="w-4 h-4 mr-1" />

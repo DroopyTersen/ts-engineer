@@ -4,9 +4,12 @@ function convertHtmlToText(html: string): string {
   return tempDiv.textContent || tempDiv.innerText || "";
 }
 
-export async function copyHtmlToClipboard(html: string): Promise<void> {
+export async function copyHtmlToClipboard(
+  html: string,
+  text?: string
+): Promise<void> {
   // Convert HTML to plain text
-  const plainText = convertHtmlToText(html);
+  const plainText = text || convertHtmlToText(html);
 
   // Create a new ClipboardItem
   const clipboardItemInput = {

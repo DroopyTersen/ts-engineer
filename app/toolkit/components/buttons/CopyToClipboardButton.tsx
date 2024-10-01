@@ -6,7 +6,6 @@ import { copyHtmlToClipboard } from "~/toolkit/utils/clipboard.utils.client";
 interface Props {
   plainText?: string | (() => string);
   html?: string | (() => string);
-  markdown?: string | (() => string);
   elementId?: string;
   className?: string;
   children?: React.ReactNode;
@@ -34,11 +33,17 @@ export function CopyToClipboardButton({
   let handleCopy = async () => {
     setIsCopied(true);
     if (html) {
-      await copyHtmlToClipboard(typeof html === "function" ? html() : html);
+      await copyHtmlToClipboard(
+        typeof html === "function" ? html() : html,
+        typeof plainText === "string" ? plainText : undefined
+      );
     } else if (elementId) {
       let element = document.getElementById(elementId);
       if (element) {
-        await copyHtmlToClipboard(element.innerHTML);
+        await copyHtmlToClipboard(
+          element.innerHTML,
+          typeof plainText === "string" ? plainText : undefined
+        );
       }
     }
     if (plainText) {

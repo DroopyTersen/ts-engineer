@@ -29,10 +29,16 @@ export const sendMessage = async ({
       ),
       db.getConversation(conversationId),
     ]);
-    const llm = getLLM("anthropic", "claude-3-5-sonnet");
+    console.log(
+      "🚀 | projectContext:",
+      projectContext.fileContents.map((fc) => fc.slice(0, 100)).join("\n")
+    );
     let aiResponse = await chatWithProject(messages, projectContext, {
-      llm,
       emitter,
+    });
+    emitter.emit("data", {
+      type: "selectedFiles",
+      selectedFiles: projectContext.filepaths,
     });
     let newMessages = [...messages, { role: "assistant", content: aiResponse }];
     let title =
@@ -46,7 +52,7 @@ export const sendMessage = async ({
         {
           role: "assistant",
           content: aiResponse,
-          selectedFiles: selectedFiles,
+          selectedFiles: projectContext.filepaths,
         },
       ],
       title: title,
@@ -78,5 +84,10 @@ const generateTitle = async (messages: CoreMessage[]) => {
       },
     ],
   });
+  // Remove quotes if present at the beginning and end of the response
+  let title = response.text;
+  if (title.startsWith('"') && title.endsWith('"')) {
+    title = title.slice(1, -1);
+  }
   return response.text;
 };

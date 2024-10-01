@@ -1,6 +1,7 @@
 import { deleteConversation } from "api/aiEngineer/api/chat/deleteConversation";
 import { getConversations } from "api/aiEngineer/api/chat/getConversations";
 import { sendMessage } from "api/aiEngineer/api/chat/sendMessage";
+import { db } from "api/aiEngineer/db/db.server";
 import { Hono } from "hono";
 import { createEventStreamDataStream } from "~/toolkit/ai/streams/createLLMEventStream";
 
@@ -28,8 +29,16 @@ app.post("/:projectId/chat/:conversationId", async (c) => {
 
 app.get("/:projectId/conversations", async (c) => {
   const projectId = c.req.param("projectId");
+  console.log("🚀 | app.get | projectId:", projectId);
   const conversations = await getConversations(projectId);
   return c.json(conversations);
+});
+
+app.get("/:projectId/conversations/:conversationId", async (c) => {
+  const projectId = c.req.param("projectId");
+  const conversationId = c.req.param("conversationId");
+  let conversation = await db.getConversation(conversationId);
+  return c.json(conversation);
 });
 
 app.delete("/:projectId/conversations/:conversationId", async (c) => {

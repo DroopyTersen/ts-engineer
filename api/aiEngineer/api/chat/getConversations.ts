@@ -1,3 +1,4 @@
+import { AsyncReturnType } from "~/toolkit/utils/typescript.utils";
 import { db } from "../../db/db.server";
 
 export const getConversations = async (projectId: string) => {
@@ -9,3 +10,4 @@ export const getConversations = async (projectId: string) => {
     throw new Error("Failed to retrieve conversations");
   }
 };
+export type GetConversationsResult = AsyncReturnType<typeof getConversations>;

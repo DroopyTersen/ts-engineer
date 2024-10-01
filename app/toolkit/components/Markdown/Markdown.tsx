@@ -1,20 +1,25 @@
 import MarkdownToJSX from "markdown-to-jsx";
 import { cn } from "~/shadcn/utils";
+import { ChartRenderer } from "./ChartRenderer";
+import { MermaidDiagram } from "./MermaidDiagram";
 import { SyntaxHighlightedCode } from "./SyntaxHighlightedCode";
 
 export const Markdown = ({
   children,
   className,
+  id,
 }: {
   children: string;
   className?: string;
+  id?: string;
 }) => {
   return (
     <div
       className={cn(
-        "prose prose-sm max-w-4xl [&_table_th]:text-left [&>div>*]:mt-0 whitespace-pre-wrap ",
+        "prose max-w-4xl [&_table_th]:text-left [&>div>*]:mt-0 whitespace-pre-wrap ",
         className
       )}
+      id={id}
     >
       <MarkdownToJSX
         options={{
@@ -26,38 +31,31 @@ export const Markdown = ({
             //       return <MermaidDiagram>{children}</MermaidDiagram>;
             //     } else if (language === "chart") {
             //       return <ChartRenderer config={children} />;
-            //     } else {
-            //       return (
-            //         <SyntaxHighlightedCode className={className}>
-            //           {children}
-            //         </SyntaxHighlightedCode>
-            //       );
             //     }
+            //     return <code className={className}>{children}</code>;
             //   },
             // },
             thought: {
-              component: ({ children }) => {
-                return (
-                  <div className="text-sm bg-gray-100 p-2 rounded-md">
-                    <span className="font-bold">Thought:</span> {children}
-                  </div>
-                );
-              },
+              component: ThoughtBox,
             },
-            draft: {
-              component: ({ children }) => {
-                return (
-                  <div className="text-sm bg-gray-100 p-2 rounded-md">
-                    <span className="font-bold">Draft:</span> {children}
-                  </div>
-                );
-              },
+            questions: {
+              component: ThoughtBox,
             },
+            draft: ThoughtBox,
             pre: {
               component: ({ className, children }) => {
                 if (children?.type === "code") {
                   const language =
                     children?.props?.className?.split("-")?.[1] || "txt";
+                  if (language === "mermaid") {
+                    return (
+                      <MermaidDiagram>
+                        {children?.props?.children}
+                      </MermaidDiagram>
+                    );
+                  } else if (language === "chart") {
+                    return <ChartRenderer config={children?.props?.children} />;
+                  }
                   return (
                     <SyntaxHighlightedCode
                       className={className}
@@ -75,6 +73,17 @@ export const Markdown = ({
       >
         {children}
       </MarkdownToJSX>
+    </div>
+  );
+};
+
+const ThoughtBox = ({ children }: { children: React.ReactNode }) => {
+  return (
+    <div className="text-sm bg-gray-100 p-4 rounded-md mb-4">
+      <span className="font-bold flex items-center gap-2">
+        <span className="text-3xl leading-5">🤔</span> Thinking...
+      </span>
+      {children}
     </div>
   );
 };

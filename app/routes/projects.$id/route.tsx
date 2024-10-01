@@ -121,7 +121,14 @@ export default function ProjectRoute() {
 export function useSelectedFilesContext() {
   let { selectedFiles, setSelectedFiles } = useOutletContext<{
     selectedFiles: string[];
-    setSelectedFiles: (selectedFiles: string[]) => void;
+    setSelectedFiles: (selectedFiles: string[], selectionKey?: string) => void;
   }>();
   return { selectedFiles, setSelectedFiles };
+}
+
+export function useProjectContext() {
+  let { project } = useOutletContext<{
+    project: CodeProject;
+  }>();
+  return { project };
 }

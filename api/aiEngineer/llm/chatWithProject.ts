@@ -1,5 +1,5 @@
 import { CoreMessage } from "ai";
-import { LLM } from "~/toolkit/ai/llm/getLLM";
+import { getLLM, LLM } from "~/toolkit/ai/llm/getLLM";
 import { LLMEventEmitter } from "~/toolkit/ai/streams/LLMEventEmitter";
 import { createReadFilesTool } from "../tools/readFiles.tool";
 import { readUrlTool } from "../tools/readUrl.tool";
@@ -17,18 +17,18 @@ export const chatWithProject = async (
     fileContents: string[];
   },
   options: {
-    llm: LLM;
+    llm?: LLM;
     emitter?: LLMEventEmitter;
   }
 ) => {
-  const { llm, emitter } = options;
+  const { emitter } = options;
   let userMessageTextContents = createCachedProjectMessageTextContents({
     fileContents: projectContext.fileContents,
     fileStructure: projectContext.fileStructure,
     summary: projectContext.summary || "No summary provided",
     title: projectContext.title,
   });
-
+  let llm = getLLM("anthropic", "claude-3-5-sonnet-20240620");
   const result = await llm.runTools(
     {
       messages: [
@@ -41,9 +41,13 @@ export const chatWithProject = async (
           content: userMessageTextContents,
         },
         ...messages,
+        {
+          role: "user",
+          content: "Hi there!",
+        },
       ],
-      temperature: 0.2,
-      maxTokens: 2000,
+      temperature: 0,
+      maxTokens: 1800,
       tools: {
         readFileContents: createReadFilesTool(projectContext.absolutePath),
         searchCodeSnippets: createSearchCodeSnippetsTool(
@@ -71,13 +75,15 @@ Your answers should be:
 - Concise - prioritze what would be critical for a new developer to know about the codebase.
 - Make sure to provide code snippets in full \`\`\` code blocks with a language tag. Make sure to add new line whitespace before and after the code block.
 - Leverage Mermaid diagrams when asked. Try to use project specific details when labeling diagrams (whta kind of DB? what folder are the api server endpoints in? etc... ). Don't add any commentary or additional preamble to the diagrams. Just provide the diagram. Always add a new line before and after the diagram's code block.
-- Avoid adding verbose commentary or preamble. We want this to be quickly digestible by developers. Keep it direct and to the point.
-</response_guidelines>
+- Avoid adding verbose commentary or preamble. We want this to be quickly digestible by developers. Keep it direct and to the point. Just directly answer the prompt.
+- Always prefer to explain things with code snippets and diagrams. Ideally snippets from the codebase.
+- Seriously! DO NOT start with something like "Certainly!". We don't want that polite stuff, just answer the question directly and get right to the point.
+</response_guidelines> 
 
 Your goal is to create a clear, concise, and actionable answers to the user's questions. Follow these steps:
 
 <process>
-  1. Analyze the question: Carefully review the provided information and task description. Rewrite the question in your own words in a <questions> tag. Often it will be helpful to decompose the question into sub questions, and/or create a list of step back questions that you need to answer to fully understand the question. Put all this into the <questions> tag.
+  1. Analyze the question: Carefully review the provided information and task description. Rewrite the question in your own words in a <questions> tag. Often it will be helpful to decompose the question into sub questions, and/or create a list of step back questions that you need to answer to fully understand the question. Put all this into the <questions> tag. Make sure to add empty new lines before and after the <questions> tag.
   
   2. Based on the <questions>, identify relevant files: Based on the task, think about which files in the <file_structure> might be relevant. List these files and explain why they're important.
   
@@ -95,4 +101,19 @@ Remember, you can call \`readFileContents\` and \`searchCodeSnippets\` multiple 
 
 You will have access to tools where you can search the web for answers (typically to look up documentation for a library). If needed you should perform web search and then choose one or two pages to read with the readUrlContents tool.
 </tool_guidance>
+
+<example_interaction>
+Q: does this app have any auth?
+
+A: <questions>
+1. Does this application have any authentication or authorization mechanisms in place?
+2. If there is authentication, how is it implemented?
+3. Are there any specific files or components related to authentication?
+4. Is there any user management or session handling visible in the codebase?
+</questions>
+
+It appears that this application does have some form of authentication implemented, but it's not a fully-fledged authentication system.
+
+[The rest of the response is omitted for brevity]
+</example_interaction>
 `;
