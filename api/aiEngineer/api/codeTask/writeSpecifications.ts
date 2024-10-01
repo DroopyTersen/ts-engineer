@@ -1,7 +1,3 @@
-import {
-  formatFileStructure,
-  getFileContents,
-} from "api/aiEngineer/fs/filesToMarkdown";
 import { z } from "zod";
 import { getLLM, LLM } from "~/toolkit/ai/llm/getLLM";
 import { LLMEventEmitter } from "~/toolkit/ai/streams/LLMEventEmitter";
@@ -9,9 +5,7 @@ import { classifyCodeTask } from "../../llm/specfications/classifyCodeTask";
 
 import { db } from "api/aiEngineer/db/db.server";
 import { generateSpecifications } from "api/aiEngineer/llm/specfications/generateSpecifications";
-import { telemetry } from "api/telemetry/telemetry.server";
-import { getProject } from "../getProject";
-import { getRelevantFiles } from "./getRelevantFiles";
+import { getProjectCodeContext } from "./getProjectCodeContext";
 
 export const WriteSpecificationsInput = z.object({
   codeTaskId: z.string(),
@@ -37,51 +31,22 @@ export const writeSpecifications = async (
   }
 ) => {
   const validatedInput = WriteSpecificationsInput.parse(rawInput);
-  const project = await getProject(validatedInput.projectId);
   let existingCodeTask = await db.getCodeTaskById(validatedInput.codeTaskId);
 
-  let relevantFilesSpan = traceId
-    ? telemetry.createSpan("getRelevantFiles", traceId).start({
-        userInput: validatedInput.input,
-        project,
-        selectedFiles:
-          validatedInput.selectedFiles ||
-          existingCodeTask?.selected_files ||
-          project.filepaths,
-      })
-    : null;
   const selectedFiles =
     validatedInput.selectedFiles || existingCodeTask?.selected_files || [];
-  const { filepaths: relevantFilePaths, stepBackQuestions } =
-    await getRelevantFiles({
-      userInput: validatedInput.input,
-      project,
-      selectedFiles,
-      parentObservableId: relevantFilesSpan?.id,
-      minScore: 3,
-    });
+  let projectContext = await getProjectCodeContext(
+    validatedInput.input,
+    validatedInput.projectId,
+    selectedFiles
+  );
 
-  let newSpecifications = `<files>\n${relevantFilePaths.join(
+  let newSpecifications = `<files>\n${projectContext.filepaths.join(
     "\n"
   )}\n</files>\n`;
-  if (stepBackQuestions.length > 0) {
-    newSpecifications += `<stepback_questions>\n${stepBackQuestions.join(
-      "\n"
-    )}\n</stepback_questions>\n`;
-  }
 
   emitter?.emit("content", newSpecifications);
 
-  relevantFilesSpan?.end({
-    relevantFilePaths,
-  });
-  let fileContents = await getFileContents(
-    relevantFilePaths,
-    project.absolute_path,
-    70_000
-  );
-  const fileStructure = formatFileStructure(project.filepaths);
-  // llm = llm || getLLM("openai", "gpt-4o-mini");
   llm = llm || getLLM("anthropic", "claude-3-5-sonnet-20240620");
   // llm = llm || getLLM("deepseek", "deepseek-coder");
   // Classify the code task
@@ -92,19 +57,12 @@ export const writeSpecifications = async (
   // Prepare context for spec writing
   let { title, specifications } = await generateSpecifications(
     {
-      projectContext: {
-        absolutePath: project.absolute_path,
-        title: project.name,
-        summary: project.summary,
-        fileStructure,
-        fileContents: fileContents,
-      },
+      projectContext,
       codeTask: {
         input: validatedInput.input,
         specifications: validatedInput.specifications,
         followUpInput: validatedInput.followUpInput,
         taskType,
-        stepBackQuestions,
       },
     },
     {
@@ -119,7 +77,7 @@ export const writeSpecifications = async (
     codeTask = await db.updateSpecifications({
       codeTaskId: validatedInput.codeTaskId,
       specifications,
-      selected_files: selectedFiles ? relevantFilePaths : [],
+      selected_files: projectContext.filepaths,
     });
   } else {
     console.log("🚀 | title:", title);
@@ -129,7 +87,7 @@ export const writeSpecifications = async (
       title: `${taskType}: ${title}`,
       input: validatedInput.input,
       specifications,
-      selected_files: selectedFiles ? relevantFilePaths : [],
+      selected_files: projectContext.filepaths,
       plan: null,
       file_changes: null,
     });

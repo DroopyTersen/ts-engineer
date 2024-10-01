@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { initDb } from "./aiEngineer/db/pglite/pglite.server";
 import { telemetryMiddleware } from "./middleware/telemetryMiddleware";
+import chatRoutes from "./routes/chatRoutes";
 import codeTaskRoutes from "./routes/codeTaskRoutes";
 import fileRoutes from "./routes/fileRoutes";
 import projectRoutes from "./routes/projectRoutes";
@@ -30,10 +31,11 @@ app.route("/projects", projectRoutes);
 app.route("/projects", codeTaskRoutes);
 app.route("/projects", fileRoutes);
 app.route("/search", searchRoutes);
+app.route("/projects", chatRoutes);
 
 // Keep the test route in the main file
-app.get("/test", async (c) => {
-  // ... (test route implementation)
+app.get("/healthcheck", async (c) => {
+  return c.json({ status: "ok" });
 });
 
 export default app;

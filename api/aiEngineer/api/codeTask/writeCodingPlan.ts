@@ -1,15 +1,9 @@
 import { db } from "api/aiEngineer/db/db.server";
-import {
-  formatFileStructure,
-  getFileContents,
-} from "api/aiEngineer/fs/filesToMarkdown";
 import { generateCodingPlan } from "api/aiEngineer/llm/codingPlan/generateCodingPlan";
-import { telemetry } from "api/telemetry/telemetry.server";
 import { z } from "zod";
 import { getLLM, LLM } from "~/toolkit/ai/llm/getLLM";
 import { LLMEventEmitter } from "~/toolkit/ai/streams/LLMEventEmitter";
-import { getProject } from "../getProject";
-import { getRelevantFiles } from "./getRelevantFiles";
+import { getProjectCodeContext } from "./getProjectCodeContext";
 
 export const WriteCodingPlanInput = z.object({
   codeTaskId: z.string(),
@@ -34,44 +28,21 @@ export const writeCodingPlan = async (
   }
 ) => {
   const validatedInput = WriteCodingPlanInput.parse(rawInput);
-  const project = await getProject(validatedInput.projectId);
   let existingCodeTask = await db.getCodeTaskById(validatedInput.codeTaskId);
 
   if (!existingCodeTask) {
     throw new Error("Code task not found");
   }
-  let relevantFilesSpan = traceId
-    ? telemetry.createSpan("getRelevantFiles", traceId).start({
-        codeTaskId: validatedInput.codeTaskId,
-        project,
-      })
-    : null;
-
-  console.log("🚀 | existingCodeTask:", existingCodeTask);
   const selectedFiles = validatedInput.selectedFiles?.length
     ? validatedInput.selectedFiles
     : existingCodeTask?.selected_files || [];
-  console.log("🚀 | selectedFiles:", selectedFiles);
-  const { filepaths: relevantFiles } = await getRelevantFiles({
-    userInput: validatedInput.specifications,
-    project,
-    selectedFiles,
-    minScore: 3,
-    maxTokens: 70_000,
-    parentObservableId: relevantFilesSpan?.id,
-  });
-  console.log("🚀 | relevantFiles:", relevantFiles);
-
-  const fileContents = await getFileContents(
-    relevantFiles,
-    project.absolute_path,
-    70_000
+  let projectContext = await getProjectCodeContext(
+    existingCodeTask?.input + existingCodeTask?.specifications,
+    validatedInput.projectId,
+    selectedFiles
   );
-  const fileStructure = formatFileStructure(project.filepaths);
 
-  relevantFilesSpan?.end({
-    relevantFilePaths: relevantFiles,
-  });
+  console.log("🚀 | existingCodeTask:", existingCodeTask);
 
   // llm = llm || getLLM("openai", "gpt-4o-mini");
   llm = llm || getLLM("anthropic", "claude-3-5-sonnet-20240620");
@@ -84,13 +55,7 @@ export const writeCodingPlan = async (
   // codingPlan = await generateCodingPlan(
   codingPlan = await generateFn(
     {
-      projectContext: {
-        absolutePath: project.absolute_path,
-        title: project.name,
-        summary: project.summary,
-        fileStructure,
-        fileContents,
-      },
+      projectContext,
       codeTask: {
         followUpInput: validatedInput.followUpInput || "",
         previousPlan: existingCodeTask.plan || "",

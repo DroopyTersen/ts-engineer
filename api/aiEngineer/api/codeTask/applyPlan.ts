@@ -9,7 +9,6 @@ export const applyPlan = async (projectId: string, codeTaskId: string) => {
   if (!project) {
     throw new Error("Project not found");
   }
-
   const codeTask = await db.getCodeTaskById(codeTaskId);
   if (!codeTask || !codeTask.plan) {
     throw new Error("Code task or plan not found");
