@@ -65,4 +65,28 @@ export const FileSearchResultItem = FileDbItem.extend({
   rank: z.number().optional(), // rank is only present in search_files
   match_start: z.number().optional(), // match_start is only present in search_files
 });
+
 export type FileSearchResultItem = z.infer<typeof FileSearchResultItem>;
+
+export const ConversationMessage = z.object({
+  role: z.string(),
+  content: z.string(),
+  id: z.string().optional(),
+  selectedFiles: z.array(z.string()).optional(),
+  data: z.record(z.unknown()).optional(), // Add this line
+});
+
+export const ConversationDbItem = z.object({
+  id: z.string(),
+  title: z.string().nullable(),
+  messages: z.array(ConversationMessage),
+  project_id: z.string(),
+  created_at: z
+    .union([z.string(), z.date()])
+    .transform((val) => (typeof val === "string" ? new Date(val) : val)),
+  updated_at: z
+    .union([z.string(), z.date()])
+    .transform((val) => (typeof val === "string" ? new Date(val) : val)),
+});
+
+export type ConversationDbItem = z.infer<typeof ConversationDbItem>;
