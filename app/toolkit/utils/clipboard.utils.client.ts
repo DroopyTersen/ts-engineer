@@ -37,3 +37,7 @@ export const copyElementToClipboard = async (
   // Copy to clipboard
   await navigator.clipboard.write([clipboardItem]);
 };
+
+export const copyTextToClipboard = async (text: string) => {
+  await navigator.clipboard.writeText(text);
+};

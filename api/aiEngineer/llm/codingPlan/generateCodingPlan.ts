@@ -37,12 +37,15 @@ export const generateCodingPlan = async (
     codeTask.previousPlan && codeTask.followUpInput
       ? {
           type: "text",
-          text: `Please update the previous_plan according to the follow_up_input instructions. Generate the new plan entirely! Don't be lazy!
+          text: `Please update the previous_plan according to the follow_up_input instructions. You need to rewrite the entire previous plan but adjusted to match the follow_up_input instructions. Generate the new plan entirely! Don't be lazy!
     
     <previous_plan>${codeTask.previousPlan}</previous_plan>\n\n
     
     
-    <follow_up_input>${codeTask.followUpInput}. Generate the updated plan entirely! Don't be lazy!</follow_up_input>`,
+    <follow_up_input>${codeTask.followUpInput}. Generate the updated plan entirely! Don't be lazy!</follow_up_input>
+
+It is VERY IMPORTANT that you update the entire previous plan. Don't be lazy! Generate the whole enitre plan again but adjusted to match the follow_up_input instructions.
+`,
         }
       : {
           type: "text",

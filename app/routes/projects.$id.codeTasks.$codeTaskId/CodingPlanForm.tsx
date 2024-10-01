@@ -4,6 +4,7 @@ import { Button } from "~/shadcn/components/ui/button";
 import { Label } from "~/shadcn/components/ui/label";
 import { Textarea } from "~/shadcn/components/ui/textarea";
 import { MarkdownTextarea } from "~/toolkit/components/MarkdownTextarea/MarkdownTextarea";
+import { ApplyInCursorButton } from "./ApplyInCursorButton";
 import { useCodeTask } from "./useCodeTask";
 
 export const CodingPlanForm = ({
@@ -80,18 +81,23 @@ export const CodingPlanForm = ({
         </Button>
       </div>
       <div>
-        <div className="mt-6 flex justify-end gap-2">
+        <div className="mt-6 flex justify-end gap-2 pb-12">
           <Button variant="secondary" asChild className="w-40">
             <Link to="..">Cancel</Link>
           </Button>
           <Button
             onClick={handleSave}
-            size="lg"
             className="w-40"
             disabled={codingPlanStream?.isStreaming || isSaving}
           >
             {isSaving ? "Saving..." : "Save"}
           </Button>
+          <ApplyInCursorButton
+            codePlan={codingPlan}
+            projectId={codeTask?.project_id}
+            codeTaskId={codeTask?.id}
+            disabled={codingPlanStream?.isStreaming}
+          />
         </div>
       </div>
     </form>

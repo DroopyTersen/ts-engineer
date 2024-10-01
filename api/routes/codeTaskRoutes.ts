@@ -2,6 +2,8 @@ import { Hono } from "hono";
 import { createEventStreamDataStream } from "~/toolkit/ai/streams/createLLMEventStream";
 import { writeCodingPlan } from "../aiEngineer/api/codeTask/writeCodingPlan";
 import { writeSpecifications } from "../aiEngineer/api/codeTask/writeSpecifications";
+
+import { applyPlan } from "api/aiEngineer/api/codeTask/applyPlan";
 import { db } from "../aiEngineer/db/db.server";
 
 const app = new Hono();
@@ -99,6 +101,19 @@ app.post("/:projectId/codeTasks/:codeTaskId/saveSpecifications", async (c) => {
       { success: false, message: "Failed to save specifications" },
       500
     );
+  }
+});
+
+app.post("/:projectId/codeTasks/:codeTaskId/applyPlan", async (c) => {
+  const projectId = c.req.param("projectId");
+  const codeTaskId = c.req.param("codeTaskId");
+
+  try {
+    await applyPlan(projectId, codeTaskId);
+    return c.json({ message: "Plan applied successfully" });
+  } catch (error) {
+    console.error("Error applying plan:", error);
+    return c.json({ error: "Failed to apply plan" }, 500);
   }
 });
 
