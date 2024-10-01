@@ -1,13 +1,15 @@
-import { useNavigate, useParams } from "@remix-run/react";
+import { useNavigate, useParams, useRevalidator } from "@remix-run/react";
 import { type CodeTaskDbItem } from "api/aiEngineer/db/codeTasks.db";
 import { useMemo, useState } from "react";
 import { useApiUrl } from "~/root";
 import { useLLMEventStream } from "~/toolkit/ai/ui/useLLMEventStream";
+import { useUpdateEffect } from "~/toolkit/hooks/useUpdateEffect";
 import { jsonRequest } from "~/toolkit/http/fetch.utils";
 import { useRouteData } from "~/toolkit/remix/useRouteData";
 
 export const useCodeTask = () => {
   let { codeTaskId, id: projectId } = useParams();
+  let revalidator = useRevalidator();
   let apiUrl = useApiUrl();
   let navigate = useNavigate();
   let codeTask = useRouteData((r) => r?.data?.codeTask) as CodeTaskDbItem;
@@ -25,6 +27,14 @@ export const useCodeTask = () => {
     apiPath: `${apiPath}/specifications`,
     bodyInput: {},
   });
+  useUpdateEffect(() => {
+    if (!specificationsStream.isStreaming) {
+      setTimeout(() => {
+        revalidator.revalidate();
+      }, 100);
+    }
+  }, [specificationsStream?.isStreaming]);
+
   let codingPlanStream = useLLMEventStream<{
     input: string;
     followUpInput?: string;

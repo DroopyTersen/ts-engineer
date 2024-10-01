@@ -1,5 +1,5 @@
 import { LoaderFunctionArgs } from "@remix-run/node";
-import { Outlet, useLoaderData } from "@remix-run/react";
+import { Outlet, useLoaderData, useOutletContext } from "@remix-run/react";
 import { CodeProject } from "api/aiEngineer/api/getProject";
 import { useCallback, useEffect, useState } from "react";
 import { useApiUrl } from "~/root";
@@ -116,4 +116,12 @@ export default function ProjectRoute() {
       </ResizablePanelGroup>
     </div>
   );
+}
+
+export function useSelectedFilesContext() {
+  let { selectedFiles, setSelectedFiles } = useOutletContext<{
+    selectedFiles: string[];
+    setSelectedFiles: (selectedFiles: string[]) => void;
+  }>();
+  return { selectedFiles, setSelectedFiles };
 }

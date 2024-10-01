@@ -17,7 +17,9 @@ export const getLLM = <T extends ModelProvider>(
   provider: T,
   modelName: keyof (typeof MODEL_PROVIDERS)[T]["models"]
 ) => {
-  let _model = MODEL_PROVIDERS[provider].create(modelName as string);
+  let _model = MODEL_PROVIDERS[provider].create(modelName as string, {
+    cacheControl: true,
+  });
 
   return {
     _model,
@@ -266,6 +268,10 @@ const _streamTextWithTools = async (
           maxRetries: 1,
           abortSignal: signal,
           onFinish: async (result) => {
+            console.log(
+              "🚀 | run tools experimental_providerMetadata:",
+              result.experimental_providerMetadata
+            );
             emitter?.emit("llm_end", { requestId, ...result });
             if (
               result.toolCalls &&

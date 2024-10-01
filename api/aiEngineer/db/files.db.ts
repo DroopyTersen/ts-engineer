@@ -142,7 +142,7 @@ async function searchFilesByKeyword(criteria: SearchFilesCriteria) {
   }
 }
 
-function rankFusion(
+export function rankFusion(
   resultIdsA: Array<string>,
   resultIdsB: Array<string>
 ): Array<string> {

@@ -69,9 +69,10 @@ export const useLLMEventsChat = <TInputData = any>({
     }
   }, [eventStream.id]);
 
-  const submit = (userInput: string) => {
+  const submit = (userInput: string, data: Partial<TInputData>) => {
     let body = {
       ...bodyInput,
+      ...data,
       messages: [...messages, { role: "user", content: userInput }],
     };
     setMessages((prev) => [

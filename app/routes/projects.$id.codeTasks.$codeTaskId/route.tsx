@@ -21,6 +21,7 @@ export const loader = async ({ params, request }: LoaderFunctionArgs) => {
 
 export default function CodeTasksRoute() {
   let codeTask = useCodeTask();
+
   let { selectedFiles, setSelectedFiles } = useOutletContext<{
     selectedFiles: string[];
     setSelectedFiles: (selectedFiles: string[], selectionKey?: string) => void;
@@ -30,7 +31,7 @@ export default function CodeTasksRoute() {
     if (codeTask.codeTask?.selected_files) {
       setSelectedFiles(codeTask.codeTask.selected_files, Date.now().toString());
     }
-  }, []);
+  }, [codeTask.codeTask?.selected_files]);
   return (
     <div className="px-4 py-2">
       <div className="max-w-4xl">

@@ -1,7 +1,8 @@
 import { createReadFilesTool } from "api/aiEngineer/tools/readFiles.tool";
 import { createSearchCodeSnippetsTool } from "api/aiEngineer/tools/searchCodeSnippets.tool";
-import { getCachedMessageContent, LLM } from "~/toolkit/ai/llm/getLLM";
+import { LLM } from "~/toolkit/ai/llm/getLLM";
 import { LLMEventEmitter } from "~/toolkit/ai/streams/LLMEventEmitter";
+import { createCachedProjectMessageTextContents } from "../specfications/generateSpecifications";
 
 type GenerateCodingPlanInput = {
   projectContext: {
@@ -32,17 +33,7 @@ export const generateCodingPlan = async (
   const systemPrompt = createSystemPrompt();
 
   let userMessageTextContents = [
-    getCachedMessageContent(
-      `<summary>${projectContext.summary || "No summary provided"}</summary>`
-    ),
-    getCachedMessageContent(
-      `<file_structure>${projectContext.fileStructure}</file_structure>`
-    ),
-    getCachedMessageContent(
-      `<file_contents>${projectContext.fileContents.join(
-        "\n\n"
-      )}</file_contents>`
-    ),
+    ...createCachedProjectMessageTextContents(projectContext),
     codeTask.previousPlan && codeTask.followUpInput
       ? {
           type: "text",

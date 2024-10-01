@@ -4,13 +4,14 @@ import { traceLLMEventEmitter } from "api/telemetry/traceLLMEventEmitter";
 import { getLLM } from "~/toolkit/ai/llm/getLLM";
 import { LLMEventEmitter } from "~/toolkit/ai/streams/LLMEventEmitter";
 import { rankFilesForContext } from "../rankFilesForContext";
+import { searchCode } from "../searchCode";
 
 export const getRelevantFiles = async ({
   userInput,
   selectedFiles,
+  mode = "search",
   project,
   minScore = 3,
-  maxTokens = 50_000,
   parentObservableId,
 }: {
   userInput: string;
@@ -20,6 +21,7 @@ export const getRelevantFiles = async ({
     summary?: string;
     filepaths: string[];
   };
+  mode?: "search" | "score";
   selectedFiles?: string[];
   minScore?: number;
   maxTokens?: number;
@@ -69,21 +71,34 @@ export const getRelevantFiles = async ({
       }
     );
     console.log("🚀 | step back questions:", stepBackQuestions.join("\n"));
-    let rankedFiles = await rankFilesForContext({
-      codeTask:
-        userInput + "\n\nStep back questions:\n" + stepBackQuestions.join("\n"),
-      project,
-      selectedFiles: selectedFiles?.length ? selectedFiles : projectFilepaths,
-    });
 
-    filepathsForContext = rankedFiles.results
-      .filter((r) => {
-        if (selectedFiles) {
-          return true;
-        }
-        return r.score >= minScore;
-      })
-      .map((r) => r.filepath);
+    if (mode === "search") {
+      let searchResults = await searchCode({
+        queries: [userInput, ...stepBackQuestions],
+        type: "vector",
+        projectId: project.id,
+        limit: 25,
+      });
+      filepathsForContext = searchResults.results.map((r) => r.filepath);
+    } else {
+      let rankedFiles = await rankFilesForContext({
+        codeTask:
+          userInput +
+          "\n\nStep back questions:\n" +
+          stepBackQuestions.join("\n"),
+        project,
+        selectedFiles: selectedFiles?.length ? selectedFiles : projectFilepaths,
+      });
+
+      filepathsForContext = rankedFiles.results
+        .filter((r) => {
+          if (selectedFiles) {
+            return true;
+          }
+          return r.score >= minScore;
+        })
+        .map((r) => r.filepath);
+    }
   }
   return {
     filepaths: selectedFiles?.length ? selectedFiles : filepathsForContext,

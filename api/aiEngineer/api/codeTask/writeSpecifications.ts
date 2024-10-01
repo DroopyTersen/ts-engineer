@@ -78,7 +78,7 @@ export const writeSpecifications = async (
   let fileContents = await getFileContents(
     relevantFilePaths,
     project.absolute_path,
-    20_000
+    70_000
   );
   const fileStructure = formatFileStructure(project.filepaths);
   // llm = llm || getLLM("openai", "gpt-4o-mini");
@@ -112,16 +112,10 @@ export const writeSpecifications = async (
       emitter,
     }
   );
-  specifications = newSpecifications + specifications;
+
   // Save the code task to the database
   let codeTask;
   if (existingCodeTask) {
-    // Update existing code task
-    console.log(
-      "🚀 | updating existing code task",
-      validatedInput.codeTaskId,
-      specifications
-    );
     codeTask = await db.updateSpecifications({
       codeTaskId: validatedInput.codeTaskId,
       specifications,

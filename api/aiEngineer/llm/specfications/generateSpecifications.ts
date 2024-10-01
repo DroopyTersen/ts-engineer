@@ -30,17 +30,13 @@ export const createCachedProjectMessageTextContents = (projectContext: {
   fileContents: string[];
 }) => {
   return [
-    { type: "text", text: `<title>${projectContext.title}</title>` },
-    projectContext.summary
-      ? getCachedMessageContent(
-          `<summary>${
-            projectContext.summary || "No summary provided"
-          }</summary>`
-        )
-      : null,
-    getCachedMessageContent(
-      `<file_structure>${projectContext.fileStructure}</file_structure>`
-    ),
+    {
+      type: "text",
+      text: `<title>${projectContext.title}</title>
+  <summary>${projectContext.summary || "No summary provided"}</summary>
+<file_structure>${projectContext.fileStructure}</file_structure>
+    `,
+    },
     getCachedMessageContent(
       `<file_contents>${projectContext.fileContents.join(
         "\n\n"
@@ -98,7 +94,9 @@ export const generateSpecifications = async (
       emitter,
     }
   );
-
+  if (result.experimental_providerMetadata) {
+    console.log("🚀 | LLMCache Usage:", result.experimental_providerMetadata);
+  }
   return parseSpecifications(result.text.trim());
 };
 
@@ -109,8 +107,12 @@ const parseSpecifications = (
   const match = specText.match(titleRegex);
   const title = match ? match[1].trim() : "Untitled";
 
-  // Remove the title from the specifications
-  const specifications = specText.replace(titleRegex, "").trim();
+  // Extract the content of the <specifications> tag
+  const specificationsRegex = /<specifications>([\s\S]*?)<\/specifications>/;
+  const specificationsMatch = specText.match(specificationsRegex);
+  const specifications = specificationsMatch
+    ? specificationsMatch[1].trim()
+    : "";
 
   return { title, specifications };
 };
