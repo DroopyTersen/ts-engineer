@@ -10,6 +10,7 @@ import {
   CardTitle,
 } from "~/shadcn/components/ui/card";
 import { ScrollArea } from "~/shadcn/components/ui/scroll-area";
+import { TooltipWrapper } from "~/shadcn/components/ui/TooltipWrapper";
 import { cn } from "~/shadcn/utils";
 import { OpenInCursorButton } from "../projects.$id/OpenInCursorButton";
 
@@ -43,20 +44,24 @@ export function CodeSearchResultItem({
         <CardTitle className="flex flex-col">
           <div className="flex gap-2 justify-between items-center">
             <div className="flex gap-2 items-center">
-              <Link
-                to={`/projects/${item?.project_id}`}
-                className={cn("text-base hover:underline")}
-              >
-                {item.project?.name}
-              </Link>
+              <TooltipWrapper tooltip={<p>Go to Project</p>}>
+                <Link
+                  to={`/projects/${item?.project_id}`}
+                  className={cn("text-base hover:underline")}
+                >
+                  {item.project?.name}
+                </Link>
+              </TooltipWrapper>
               <span className="text-gray-400 text-sm">/</span>
-              <Button
-                className="text-lg font-mono"
-                variant={"ghost"}
-                onClick={() => viewFile(item.id)}
-              >
-                {item.filename || item.filepath.split("/").pop()}
-              </Button>
+              <TooltipWrapper tooltip={<p>View Code</p>}>
+                <Button
+                  className="text-lg font-mono"
+                  variant={"ghost"}
+                  onClick={() => viewFile(item.id)}
+                >
+                  {item.filename || item.filepath.split("/").pop()}
+                </Button>
+              </TooltipWrapper>
             </div>
             <OpenInCursorButton
               absolutePath={item.project?.absolute_path!}

@@ -51,7 +51,13 @@ export const FileViewer = ({
   }, [codeHtml]);
 
   return (
-    <div className={cn("bg-[#222] text-gray-100 h-full", className)}>
+    <div
+      className={cn(
+        "bg-[#222] text-gray-100 h-full transition-opacity duration-500",
+        className,
+        codeHtml ? "opacity-100" : "opacity-0"
+      )}
+    >
       <div className="px-4 py-2 flex items-center justify-between border-b border-white/10 sticky top-0 bg-[#222]">
         <div className="flex items-center">
           <Button
@@ -94,9 +100,11 @@ export const FileViewer = ({
           <span className="font-mono">Cursor</span>
         </OpenInCursorButton>
       </div>
-      <div className="flex">
+      <div className={cn("flex")}>
         <div
-          className="text-gray-500 text-right pt-4 select-none text-xs font-mono bg-[#222]"
+          className={cn(
+            "text-gray-500 text-right pt-4 select-none text-xs font-mono bg-[#222]"
+          )}
           style={{
             minWidth: "3em",
             userSelect: "none",
@@ -110,7 +118,7 @@ export const FileViewer = ({
           ))}
         </div>
         <div
-          className="text-sm [&>pre]:p-4 flex-grow"
+          className={cn("text-sm [&>pre]:p-4 flex-grow")}
           dangerouslySetInnerHTML={{ __html: codeHtml }}
         />
       </div>

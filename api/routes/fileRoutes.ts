@@ -50,6 +50,7 @@ app.get("/:projectId/file-viewer", async (c) => {
     });
     console.log("🚀 | app.get | html:", html.slice(0, 100));
 
+    c.header("Cache-Control", "public, max-age=180"); // Cache for 3 minutes
     return c.html(html);
   } catch (error) {
     console.log("🚀 | app.get | error:", error);

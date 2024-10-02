@@ -7,7 +7,7 @@ import { createSearchCodeSnippetsTool } from "../tools/searchCodeSnippets.tool";
 import { searchWebTool } from "../tools/searchWeb.tool";
 import { createCachedProjectMessageTextContents } from "./specfications/generateSpecifications";
 
-export const chatWithProject = async (
+export const generateProjectChatResponse = async (
   messages: CoreMessage[],
   projectContext: {
     absolutePath: string;
@@ -28,7 +28,7 @@ export const chatWithProject = async (
     summary: projectContext.summary || "No summary provided",
     title: projectContext.title,
   });
-  let llm = getLLM("anthropic", "claude-3-5-sonnet-20240620");
+  let llm = options.llm || getLLM("anthropic", "claude-3-5-sonnet-20240620");
   const result = await llm.runTools(
     {
       messages: [

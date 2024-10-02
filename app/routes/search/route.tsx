@@ -39,6 +39,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
 export default function SearchRoute() {
   const { results, criteria, projects } = useLoaderData<typeof loader>();
+  console.log("🚀 | SearchRoute | criteria:", criteria);
   let [drawerFileId, setDrawerFileId] = useState("");
   let isHydrated = useIsHydrated();
   let drawerFile = drawerFileId

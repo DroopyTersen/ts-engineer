@@ -20,6 +20,7 @@ export const searchCode = async (
   } else if ("query" in criteria) {
     queries = [criteria.query];
   }
+
   const searchPromises = queries.map(async (query) => {
     let queryClassfication = memoryCache.get(query);
     if (queryClassfication) {
@@ -107,7 +108,7 @@ export const searchCode = async (
     criteria.limit || 50
   );
 
-  return { results: finalResults };
+  return { results: finalResults, criteria };
 };
 
 const generateHash = (contents: string) => {

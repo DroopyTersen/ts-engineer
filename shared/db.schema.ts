@@ -73,7 +73,11 @@ export const ConversationMessage = z.object({
   content: z.string(),
   id: z.string().optional(),
   selectedFiles: z.array(z.string()).optional(),
-  data: z.record(z.unknown()).optional(), // Add this line
+  toolCalls: z.array(z.record(z.unknown())).optional(),
+  toolUses: z.array(z.record(z.unknown())).optional(),
+  toolResults: z.array(z.record(z.unknown())).optional(),
+  logs: z.array(z.record(z.unknown())).optional(),
+  data: z.array(z.record(z.unknown())).optional(), // Add this line
 });
 
 export const ConversationDbItem = z.object({

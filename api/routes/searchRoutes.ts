@@ -1,3 +1,4 @@
+import { getProjects } from "api/aiEngineer/api/getProjects.api";
 import { searchCode } from "api/aiEngineer/api/searchCode";
 import { Hono } from "hono";
 import { createEventStreamDataStream } from "~/toolkit/ai/streams/createLLMEventStream";
@@ -24,9 +25,13 @@ app.get("/", async (c) => {
   if (c.req.query("extension")) {
     criteria.extension = c.req.query("extension");
   }
+  let projects = await getProjects();
   let results = await searchCode(criteria);
 
-  return c.json(results);
+  return c.json({
+    ...results,
+    projects,
+  });
 });
 
 app.post("/answer-question", async (c) => {

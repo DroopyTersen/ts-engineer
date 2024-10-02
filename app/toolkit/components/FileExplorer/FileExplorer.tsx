@@ -13,10 +13,12 @@ export function FileExplorer({
   files,
   selectedFiles = [],
   onSelection,
+  viewFile,
 }: {
   files: string[];
   selectedFiles?: string[];
   onSelection: (selectedFiles: string[]) => void;
+  viewFile: (filepath: string) => void;
 }) {
   const [treeData, setTreeData] = useState<FSNode[]>(() =>
     createTreeStructure(files, selectedFiles)
@@ -101,6 +103,7 @@ export function FileExplorer({
         nodes={filteredTreeData}
         onSelect={toggleSelect}
         onExpand={toggleExpanded}
+        viewFile={viewFile}
       />
     </div>
   );
@@ -110,16 +113,23 @@ function Tree({
   nodes,
   onSelect,
   onExpand,
+  viewFile,
 }: {
   nodes: FSNode[];
   onSelect: (node: FSNode) => void;
   onExpand: (node: FSNode) => void;
+  viewFile: (filepath: string) => void;
 }) {
   return (
     <div className="grid gap-0">
       {nodes.map((item, index) => (
         <div key={item.id}>
-          <TreeItem item={item} onSelect={onSelect} onFolderExpand={onExpand} />
+          <TreeItem
+            item={item}
+            onSelect={onSelect}
+            onFolderExpand={onExpand}
+            viewFile={viewFile}
+          />
           {item.type === "folder" && item.children && (
             <div
               className={`tree-item-children pl-4 ${
@@ -130,6 +140,7 @@ function Tree({
                 nodes={item.children}
                 onSelect={onSelect}
                 onExpand={onExpand}
+                viewFile={viewFile}
               />
             </div>
           )}

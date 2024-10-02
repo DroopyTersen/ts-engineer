@@ -9,12 +9,14 @@ export type LLMEventsChatOptions<TInputData = any> = {
   apiPath: string;
   bodyInput?: TInputData;
   initialMessages?: LLMDataMessage[];
+  onFinish?: (messages: LLMDataMessage[]) => void;
 };
 
 export const useLLMEventsChat = <TInputData = any>({
   initialMessages,
   bodyInput,
   apiPath,
+  onFinish,
 }: LLMEventsChatOptions) => {
   let [events, setEvents] = useState<LLMEvent[]>([]);
   let lastStreamIdRef = useRef<string>("");
@@ -58,13 +60,24 @@ export const useLLMEventsChat = <TInputData = any>({
   useEffect(() => {});
 
   useUpdateEffect(() => {
+    console.log(
+      "🚀 | useUpdateEffect | eventStream.status:",
+      eventStream.status
+    );
     if (eventStream.status === "idle" && events?.length > 0) {
       let mostRecentMessage: LLMDataMessage = {
         role: "assistant",
         id: lastStreamIdRef.current || generateId("stream"),
         ...parseLLMEvents(events),
       };
-      setMessages((prev) => [...prev, mostRecentMessage]);
+      console.log(
+        "🚀 | useLLMEventsChat | mostRecentMessage:",
+        mostRecentMessage
+      );
+      onFinish?.([...messages, mostRecentMessage]);
+      setMessages((prev) => {
+        return [...prev, mostRecentMessage];
+      });
       setEvents([]);
     }
   }, [eventStream.id]);
@@ -103,14 +116,29 @@ export const useLLMEventsChat = <TInputData = any>({
       setMessages([]);
       setEvents([]);
     },
-    editMessage: (msgIndex: number) => {
+    editMessage: (msgIndex: number, newContent: string) => {
+      console.log("🚀 | newContent:", newContent);
+      console.log("🚀 | msgIndex:", msgIndex);
       // find the target message
       let targetMessage = messages[msgIndex];
-      if (eventStream.status !== "loading" && targetMessage.role === "user") {
-        inputRef.current?.setInputValue(targetMessage.content);
-        // update the messages state
+      console.log("🚀 | targetMessage:", targetMessage);
+      targetMessage.content = newContent;
+
+      // if the roles is user, then we want to chop off the rest of the messages
+      // and then submit
+      if (targetMessage.role === "user") {
         setMessages((prevMessages) => {
           return [...prevMessages.slice(0, msgIndex)];
+        });
+        actions.submit(newContent, {});
+      } else if (targetMessage.role === "assistant") {
+        // replace the content of the target message and the set the messages
+        // but don't chop off the rest of the messages
+        targetMessage.content = newContent;
+        setMessages((prevMessages) => {
+          return prevMessages.map((msg, index) =>
+            index === msgIndex ? targetMessage : msg
+          );
         });
       }
     },
@@ -121,6 +149,10 @@ export const useLLMEventsChat = <TInputData = any>({
     inputRef,
     actions,
     isStreaming: eventStream.status === "loading",
+    setMessages: (newMessages: LLMDataMessage[]) => {
+      setEvents([]);
+      setMessages(newMessages);
+    },
     messages: [
       ...messages,
       mostRecentMessage ? mostRecentMessage : undefined,

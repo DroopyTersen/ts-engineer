@@ -30,7 +30,7 @@ let useStream = <TInputData>(
       console.error("🚀 | generate | err:", err?.message);
       setStatus("error");
     });
-
+    setStreamId("");
     setStatus("idle");
     return;
   };

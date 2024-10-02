@@ -13,11 +13,13 @@ import { ScrollArea } from "~/shadcn/components/ui/scroll-area";
 import { Link } from "@remix-run/react";
 import { BsMarkdown } from "react-icons/bs";
 import { Button } from "~/shadcn/components/ui/button";
+import { MyDrawer } from "~/toolkit/components/Drawer/Drawer";
 import { FileExplorer } from "~/toolkit/components/FileExplorer/FileExplorer";
 import { jsonRequest } from "~/toolkit/http/fetch.utils";
 import { proxyApiRequestAsJson } from "~/toolkit/http/proxyApiRequest";
 import { useIsHydrated } from "~/toolkit/remix/useIsHydrated";
 import { formatNumber } from "~/toolkit/utils/formatNumber";
+import { FileViewer } from "../api.syntax-highlight/FileViewer";
 import { ProjectHeader } from "./ProjectHeader";
 import ProjectTabs from "./ProjectTabs";
 
@@ -65,8 +67,9 @@ function useSelectedFiles(project: CodeProject) {
   return { selectedFiles, setSelectedFiles, tokenCount, selectionKey };
 }
 
-export default function ProjectRoute() {
+export default function ProjectLayoutRoute() {
   let data = useLoaderData<typeof loader>();
+  let [drawerFilePath, setDrawerFilePath] = useState("");
   let project = data?.project;
   const { selectedFiles, setSelectedFiles, tokenCount, selectionKey } =
     useSelectedFiles(project);
@@ -78,10 +81,26 @@ export default function ProjectRoute() {
     return <div>Project not found</div>;
   }
   const showMarkdownButton = selectedFiles.length > 0;
-
+  let drawerFile = project.filepaths?.find((fp) => fp === drawerFilePath);
   return (
     <div className="grid grid-rows-[70px_1fr] h-screen">
       <ProjectHeader project={project} />
+      <MyDrawer
+        isOpen={!!drawerFile}
+        onClose={() => setDrawerFilePath("")}
+        className="px-4 py-4"
+      >
+        <div className="max-w-5xl w-[1024px]">
+          {drawerFile && (
+            <FileViewer
+              project={project}
+              filepath={drawerFilePath}
+              onClose={() => setDrawerFilePath("")}
+              className="rounded-lg"
+            />
+          )}
+        </div>
+      </MyDrawer>
       <ResizablePanelGroup direction="horizontal" className="w-full h-full">
         <ResizablePanel defaultSize={20} minSize={15}>
           <ScrollArea type="auto" className=" h-full px-4 py-4">
@@ -103,12 +122,13 @@ export default function ProjectRoute() {
               files={project.filepaths || []}
               selectedFiles={selectedFiles}
               onSelection={setSelectedFiles}
+              viewFile={setDrawerFilePath}
             />
           </ScrollArea>
         </ResizablePanel>
         <ResizableHandle withHandle />
         <ResizablePanel>
-          <div className="overflow-y-auto h-full">
+          <div className="overflow-y-auto h-full" id="project-scroll-container">
             <ProjectTabs projectId={project.id} selectedFiles={selectedFiles} />
             <Outlet context={{ project, selectedFiles, setSelectedFiles }} />
           </div>

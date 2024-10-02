@@ -1,4 +1,4 @@
-import React from "react";
+import { useRef } from "react";
 import { Drawer } from "vaul";
 import { ScrollArea } from "~/shadcn/components/ui/scroll-area";
 import { cn } from "~/shadcn/utils";
@@ -18,6 +18,10 @@ export const MyDrawer = ({
   direction = "right",
   className,
 }: DrawerProps) => {
+  let prevContentsRef = useRef<React.ReactNode | null>(null);
+  if (isOpen && children) {
+    prevContentsRef.current = children;
+  }
   return (
     <Drawer.Root
       direction={direction}
@@ -25,10 +29,10 @@ export const MyDrawer = ({
       onOpenChange={(open) => !open && onClose()}
     >
       <Drawer.Portal>
-        <Drawer.Overlay className="fixed inset-0 bg-black/40" />
+        <Drawer.Overlay className="fixed inset-0 bg-black/40 z-20" />
         <Drawer.Content
           className={cn(
-            "bg-white flex flex-col fixed outline-none py-8 px-8 ",
+            "bg-white flex flex-col fixed outline-none py-8 px-8 z-30 ",
             direction === "left" && "left-0",
             direction === "right" && "right-0 bottom-0 top-0 rounded-l-lg",
             direction === "top" && "top-0",
@@ -36,7 +40,7 @@ export const MyDrawer = ({
             className
           )}
         >
-          <ScrollArea>{children}</ScrollArea>
+          <ScrollArea>{children || prevContentsRef.current}</ScrollArea>
         </Drawer.Content>
       </Drawer.Portal>
     </Drawer.Root>

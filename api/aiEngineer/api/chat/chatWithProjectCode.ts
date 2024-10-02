@@ -1,11 +1,11 @@
 import { CoreMessage } from "ai";
-import { chatWithProject } from "api/aiEngineer/llm/chatWithProject";
+import { generateProjectChatResponse } from "api/aiEngineer/llm/generateProjectChatResponse";
 import { getLLM } from "~/toolkit/ai/llm/getLLM";
 import { LLMEventEmitter } from "~/toolkit/ai/streams/LLMEventEmitter";
 import { db } from "../../db/db.server";
 import { getProjectCodeContext } from "../codeTask/getProjectCodeContext";
 
-export const sendMessage = async ({
+export const chatWithProjectCode = async ({
   projectId,
   conversationId,
   messages,
@@ -29,34 +29,47 @@ export const sendMessage = async ({
       ),
       db.getConversation(conversationId),
     ]);
-    console.log(
-      "🚀 | projectContext:",
-      projectContext.fileContents.map((fc) => fc.slice(0, 100)).join("\n")
-    );
-    let aiResponse = await chatWithProject(messages, projectContext, {
-      emitter,
-    });
+    // console.log(
+    //   "🚀 | projectContext:",
+    //   projectContext.fileContents.map((fc) => fc.slice(0, 100)).join("\n")
+    // );
     emitter.emit("data", {
       type: "selectedFiles",
       selectedFiles: projectContext.filepaths,
     });
-    let newMessages = [...messages, { role: "assistant", content: aiResponse }];
-    let title =
-      existingConversation?.title ||
-      (await generateTitle(newMessages as any[]));
-    let newConversation = await db.saveConversation({
-      id: conversationId,
-      project_id: projectId,
-      messages: [
-        ...(messages as any[]),
-        {
-          role: "assistant",
-          content: aiResponse,
-          selectedFiles: projectContext.filepaths,
-        },
-      ],
-      title: title,
-    });
+    let aiResponse = await generateProjectChatResponse(
+      messages,
+      projectContext,
+      {
+        emitter,
+        llm: getLLM("openai", "gpt-4o-mini"),
+      }
+    );
+
+    // let newMessages = [
+    //   ...messages,
+    //   {
+    //     role: "assistant",
+    //     content: aiResponse,
+    //     selectedFiles: projectContext.filepaths,
+    //   },
+    // ];
+    // console.log("🚀 | START NEW MESSAGES:!!");
+    // newMessages.forEach((m) => {
+    //   console.log(`${m.role}: ${m.content.slice(0, 25)}...`);
+    // });
+    // console.log("🚀 | END NEW MESSAGES:!!");
+
+    // let title =
+    //   existingConversation?.title ||
+    //   (await generateConversationTitle(newMessages as any[]));
+
+    // let newConversation = await db.saveConversation({
+    //   id: conversationId,
+    //   project_id: projectId,
+    //   messages: newMessages as any[],
+    //   title: title,
+    // });
 
     return aiResponse;
   } catch (error) {
@@ -66,7 +79,7 @@ export const sendMessage = async ({
   }
 };
 
-const generateTitle = async (messages: CoreMessage[]) => {
+export const generateConversationTitle = async (messages: CoreMessage[]) => {
   let llm = getLLM("openai", "gpt-4o-mini");
   let transcript = messages
     .map((msg) => `${msg.role}: ${msg.content}`)
@@ -89,5 +102,5 @@ const generateTitle = async (messages: CoreMessage[]) => {
   if (title.startsWith('"') && title.endsWith('"')) {
     title = title.slice(1, -1);
   }
-  return response.text;
+  return title;
 };

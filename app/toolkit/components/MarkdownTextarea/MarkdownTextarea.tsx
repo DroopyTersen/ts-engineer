@@ -11,13 +11,16 @@ export const MarkdownTextarea = (props: {
   value: string;
   name: string;
   hint?: string;
+  defaultMode?: "edit" | "preview";
   textareaProps: Omit<
     React.ComponentProps<typeof Textarea>,
     "value" | "onChange" | "name"
   >;
   onChanged: (value: string) => void;
 }) => {
-  let [mode, setMode] = useState<"edit" | "preview">("edit");
+  let [mode, setMode] = useState<"edit" | "preview">(
+    props.defaultMode || "edit"
+  );
   let rows = props.textareaProps.rows || 12;
   let minHeight = rows * 20 + 18;
 

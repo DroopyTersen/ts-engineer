@@ -1,6 +1,9 @@
+import {
+  chatWithProjectCode,
+  generateConversationTitle,
+} from "api/aiEngineer/api/chat/chatWithProjectCode";
 import { deleteConversation } from "api/aiEngineer/api/chat/deleteConversation";
 import { getConversations } from "api/aiEngineer/api/chat/getConversations";
-import { sendMessage } from "api/aiEngineer/api/chat/sendMessage";
 import { db } from "api/aiEngineer/db/db.server";
 import { Hono } from "hono";
 import { createEventStreamDataStream } from "~/toolkit/ai/streams/createLLMEventStream";
@@ -15,7 +18,7 @@ app.post("/:projectId/chat/:conversationId", async (c) => {
   const dataStream = createEventStreamDataStream(c.req.raw.signal);
   const emitter = dataStream.createEventEmitter();
 
-  sendMessage({
+  chatWithProjectCode({
     projectId,
     conversationId,
     messages,
@@ -25,6 +28,25 @@ app.post("/:projectId/chat/:conversationId", async (c) => {
   }).finally(() => dataStream.close());
 
   return dataStream.toResponse();
+});
+
+app.post("/:projectId/conversations/:conversationId", async (c) => {
+  const projectId = c.req.param("projectId");
+  const conversationId = c.req.param("conversationId");
+  let { messages, selectedFiles } = await c.req.json();
+  let lastMessage = messages.pop();
+  lastMessage.selectedFiles = selectedFiles;
+  messages = [...messages, lastMessage];
+  let existingConversation = await db.getConversation(conversationId);
+  let title =
+    existingConversation?.title || (await generateConversationTitle(messages));
+  await db.saveConversation({
+    id: conversationId,
+    project_id: projectId,
+    messages,
+    title: title,
+  });
+  return c.json({ success: true });
 });
 
 app.get("/:projectId/conversations", async (c) => {

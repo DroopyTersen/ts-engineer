@@ -10,10 +10,12 @@ export const TreeItem = ({
   item,
   onSelect,
   onFolderExpand,
+  viewFile,
 }: {
   item: FSNode;
   onSelect: (item: FSNode) => void;
   onFolderExpand: (item: FSNode) => void;
+  viewFile: (filepath: string) => void;
 }) => {
   let [searchParams, setSearchParams] = useSearchParams();
   let activeFile = searchParams.get("file");
@@ -36,7 +38,7 @@ export const TreeItem = ({
       {item.type === "folder" ? (
         <FolderContent item={item} onFolderExpand={onFolderExpand} />
       ) : (
-        <FileContent item={item} />
+        <FileContent item={item} viewFile={viewFile} />
       )}
     </div>
   );
@@ -71,13 +73,22 @@ const FolderContent = ({
   </>
 );
 
-const FileContent = ({ item }: { item: FSNode }) => {
+const FileContent = ({
+  item,
+  viewFile,
+}: {
+  item: FSNode;
+  viewFile: (filepath: string) => void;
+}) => {
   let projectId = (useRouteData((r) => r?.data?.project) as any)?.id;
   return (
     <>
       <Link
-        prefetch="intent"
-        to={`/projects/${projectId}/file-viewer?file=${item.fullPath}`}
+        onClick={(e) => {
+          e.preventDefault();
+          viewFile(item.fullPath);
+        }}
+        to={`#`}
         className={`pl-0 hover:underline`}
       >
         {item.name}

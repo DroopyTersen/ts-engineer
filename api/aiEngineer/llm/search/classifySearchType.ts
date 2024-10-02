@@ -66,6 +66,8 @@ Respond with a JSON object in the following format:
   - Usually contain specific code snippets, function names, or error messages.
   - Often include special characters like parentheses, brackets, or quotation marks.
   - Typically short and precise.
+  - Use a keyword search to find exact matches.
+  - use a keyword search if the query is a single Classname or function name.
 
 - Hybrid queries:
   - Combine specific terms with broader concepts.
@@ -94,6 +96,9 @@ Output: {"type": "keyword"}
 
 Input: "how does this app manage state with react?"
 Output: {"type": "hybrid", "keywordQuery": "state react"}
+
+Input: "AzureADSessionProvider"
+Output: {"type": "keyword"}
 
 Input: "create a custom hook for form validation"
 Output: {"type": "hybrid", "keywordQuery": "form validation"}
