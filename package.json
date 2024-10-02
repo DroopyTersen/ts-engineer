@@ -14,7 +14,9 @@
     "build": "remix vite:build",
     "prestart:app": "bun run build",
     "start:app": "remix-serve build/server/index.js",
-    "test": "bun test"
+    "test": "bun test",
+    "backup": "bun run tasks/backup.ts",
+    "restore": "bun run tasks/restore.ts"
   },
   "repository": {
     "type": "git",
