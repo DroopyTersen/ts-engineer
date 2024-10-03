@@ -1,6 +1,6 @@
 import { FileDbItem, FileSearchResultItem } from "@shared/db.schema";
 import { z } from "zod";
-import { embedTexts } from "~/toolkit/ai/openai/openai.sdk";
+import { embedTexts } from "~/toolkit/ai/llm/embedTexts";
 import { AsyncReturnType, Prettify } from "~/toolkit/utils/typescript.utils";
 import { getDb } from "./pglite/pglite.server";
 
