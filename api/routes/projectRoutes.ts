@@ -52,14 +52,22 @@ app.get("/:projectId/markdown", async (c) => {
   const project = await getProject(c.req.param("projectId"));
   const files = c.req.query("files");
   const filesToProcess = files ? files.split(",") : project.filepaths;
-  let markdown = await filesToMarkdown(filesToProcess, project.absolute_path);
+  let markdown = await filesToMarkdown(filesToProcess, {
+    projectPath: project.absolute_path,
+    maxTokens: 100_000,
+    maxLinesPerFile: 250,
+  });
   return c.text(markdown);
 });
 app.post("/:projectId/markdown", async (c) => {
   const project = await getProject(c.req.param("projectId"));
   let body = await c.req.json();
   let filesToProcess = body?.files || project.filepaths;
-  let markdown = await filesToMarkdown(filesToProcess, project.absolute_path);
+  let markdown = await filesToMarkdown(filesToProcess, {
+    projectPath: project.absolute_path,
+    maxTokens: 100_000,
+    maxLinesPerFile: filesToProcess?.length < 50 ? 500 : 250,
+  });
   return c.json({ markdown });
 });
 

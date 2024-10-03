@@ -2,19 +2,20 @@ import { getLLM, LLM } from "~/toolkit/ai/llm/getLLM";
 import { LLMEventEmitter } from "~/toolkit/ai/streams/LLMEventEmitter";
 import { wait } from "~/toolkit/utils/wait";
 
-export async function summarizeProjectMarkdown(
+export async function generateProjectSummary(
   projectContext: {
-    title: string;
+    title?: string;
     summary?: string;
     fileStructure: string;
     fileContents: string[];
   },
   options: {
+    delayInMs?: number;
     llm?: LLM;
     emitter?: LLMEventEmitter;
   }
 ) {
-  console.log("🚀 | summarizeProjectMarkdown:", projectContext.title);
+  console.log("🚀 | generateProjectSummary:", projectContext.title);
   const systemMessage = {
     role: "system" as const,
     content: summarizeProjectPrompt(
@@ -45,7 +46,7 @@ export async function summarizeProjectMarkdown(
           delta,
         });
       });
-      await wait(index * 300);
+      await wait(index * (options.delayInMs || 300));
       let result = await llm.streamText(
         {
           messages: [

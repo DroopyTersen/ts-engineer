@@ -33,11 +33,11 @@ export async function getProjectCodeContext(
     filepaths = relevantFiles.filepaths;
   }
 
-  let fileContents = await getFileContents(
-    filepaths,
-    project.absolute_path,
-    70_000
-  );
+  let fileContents = await getFileContents(filepaths, {
+    projectPath: project.absolute_path,
+    maxTokens: 70_000,
+    maxLinesPerFile: 300,
+  });
 
   const fileStructure = formatFileStructure(project.filepaths);
   return {

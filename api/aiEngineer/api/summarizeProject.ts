@@ -1,7 +1,7 @@
 import { LLMEventEmitter } from "~/toolkit/ai/streams/LLMEventEmitter";
 import { db } from "../db/db.server";
 import { formatFileStructure, getFileContents } from "../fs/filesToMarkdown";
-import { summarizeProjectMarkdown } from "../llm/summary/generateProjectSummary";
+import { generateProjectSummary } from "../llm/summary/generateProjectSummary";
 import { getProject } from "./getProject";
 
 export const summarizeProject = async (
@@ -10,12 +10,12 @@ export const summarizeProject = async (
 ) => {
   let project = await getProject(projectId);
   const fileStructure = formatFileStructure(project.filepaths);
-  const fileContents = await getFileContents(
-    project.filepaths,
-    project.absolute_path,
-    100_000
-  );
-  let summary = await summarizeProjectMarkdown(
+  const fileContents = await getFileContents(project.filepaths, {
+    projectPath: project.absolute_path,
+    maxTokens: 100_000,
+    maxLinesPerFile: 300,
+  });
+  let summary = await generateProjectSummary(
     {
       title: project.name,
       summary: project.summary,

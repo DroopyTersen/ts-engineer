@@ -1,8 +1,19 @@
 import { createAnthropic } from "@ai-sdk/anthropic";
+import { createAzure } from "@ai-sdk/azure";
 import { createOpenAI } from "@ai-sdk/openai";
 import "./bunPolyfill";
 
 export const MODEL_PROVIDERS = {
+  azure: {
+    create: createAzure({
+      apiKey: process.env.AZURE_OPENAI_API_KEY!,
+      resourceName: process.env.AZURE_OPENAI_API_INSTANCE_NAME!,
+    }),
+    models: {
+      "gpt-4o": process.env.AZURE_OPENAI_LLM_DEPLOYMENT_NAME!,
+      "gpt-4o-mini": process.env.AZURE_OPENAI_FAST_LLM_DEPLOYMENT_NAME!,
+    },
+  },
   deepseek: {
     create: createOpenAI({
       baseURL: "https://api.deepseek.com",

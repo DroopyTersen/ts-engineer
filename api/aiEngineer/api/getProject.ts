@@ -19,7 +19,11 @@ export async function getProject(
     filepaths = await getProjectFiles(project);
   }
 
-  let markdown = await filesToMarkdown(filepaths, project.absolute_path);
+  let markdown = await filesToMarkdown(filepaths, {
+    projectPath: project.absolute_path,
+    maxTokens: 100_000,
+    maxLinesPerFile: 300,
+  });
   let largestFiles = (
     await sortFilesByLargest(filepaths, project.absolute_path)
   ).slice(0, 10);
