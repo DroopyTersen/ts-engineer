@@ -48,7 +48,7 @@ export default function ProjectsRoute() {
         </div>
       </header>
       <ScrollArea>
-        <div className="p-4 mt-8 max-w-[1200px] mx-auto">
+        <div className="p-4 mt-8 max-w-[1400px] mx-auto">
           <ProjectsTable projects={projects} />
         </div>
       </ScrollArea>

@@ -2,6 +2,7 @@ import { ActionFunctionArgs, json, redirect } from "@remix-run/node";
 import { Form, Link, useOutletContext } from "@remix-run/react";
 import { CodeProject } from "api/aiEngineer/api/getProject";
 import { useEffect, useState } from "react";
+import { ProjectClassificationDropdown } from "~/components/ProjectClassificationDropdown";
 import { useApiUrl } from "~/root";
 import { Button } from "~/shadcn/components/ui/button";
 import { Input } from "~/shadcn/components/ui/input";
@@ -99,6 +100,13 @@ export default function EditProject() {
           <p className="text-sm text-gray-500">
             Comma-separated list of exclusions
           </p>
+        </div>
+        <div>
+          <Label htmlFor="classification">Classification</Label>
+          <ProjectClassificationDropdown
+            defaultValue={project.classification}
+            name="classification"
+          />
         </div>
         <div>
           <div className="mt-6 flex justify-end gap-2">

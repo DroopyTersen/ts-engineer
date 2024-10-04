@@ -10,10 +10,9 @@ const app = new Hono();
 app.post("/:projectId/code-map", async (c) => {
   let dataStream = createEventStreamDataStream(c.req.raw.signal);
   let emitter = dataStream.createEventEmitter();
-  let documentedFiles = await documentProject(
-    c.req.param("projectId"),
-    emitter
-  );
+  let documentedFiles = await documentProject(c.req.param("projectId"), {
+    emitter,
+  });
   return c.text(
     documentedFiles
       .map((file) => `${file.filepath}\n${file.documentation}`)

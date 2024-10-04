@@ -3,6 +3,7 @@ import { createProjectGit } from "./gitCommands";
 // Array of file extensions to exclude from processing
 export const DEFAULT_EXCLUSIONS: string[] = [
   "**/*.lockb",
+  "**/*.lock",
   "**/:memory:/*",
   "**/*.png",
   "**/*.webp",
@@ -21,6 +22,7 @@ export const DEFAULT_EXCLUSIONS: string[] = [
   "**/data/**",
   "**/.DS_Store",
   "**/public/**",
+  "**/migrations/meta/**",
   "**/*.patch",
 ];
 

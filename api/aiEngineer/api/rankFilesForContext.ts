@@ -1,4 +1,5 @@
-import { getLLM } from "~/toolkit/ai/llm/getLLM";
+import { getLLM, LLM } from "~/toolkit/ai/llm/getLLM";
+import { LLMEventEmitter } from "~/toolkit/ai/streams/LLMEventEmitter";
 import { wait } from "~/toolkit/utils/wait";
 import { getFileContent } from "../fs/getFileContent";
 import { scoreFileRelevancy } from "../llm/scoreFileRelevancy";
@@ -8,6 +9,10 @@ export const rankFilesForContext = async (input: {
   project: { absolute_path: string; summary?: string; filepaths: string[] };
   selectedFiles?: string[];
   minScore?: number;
+  options?: {
+    llm?: LLM;
+    emitter?: LLMEventEmitter;
+  };
 }) => {
   console.log("🚀 | rankFilesForContext:", input);
   const files = input.selectedFiles?.length
@@ -41,7 +46,7 @@ export const rankFilesForContext = async (input: {
         projectSummary: input.project?.summary?.substring(0, 12_000),
       },
       {
-        llm: getLLM("deepseek", "deepseek-coder"),
+        llm: input.options?.llm || getLLM("deepseek", "deepseek-coder"),
       }
     );
     console.log("🚀 | processFile | score:", score, filepath);

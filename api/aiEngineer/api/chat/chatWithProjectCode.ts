@@ -33,6 +33,10 @@ export const chatWithProjectCode = async ({
     //   "🚀 | projectContext:",
     //   projectContext.fileContents.map((fc) => fc.slice(0, 100)).join("\n")
     // );
+    let llm =
+      projectContext.classification === "work"
+        ? getLLM("azure", "gpt-4o")
+        : getLLM("anthropic", "claude-3-5-sonnet");
     emitter.emit("data", {
       type: "selectedFiles",
       selectedFiles: projectContext.filepaths,
@@ -42,7 +46,7 @@ export const chatWithProjectCode = async ({
       projectContext,
       {
         emitter,
-        llm: getLLM("openai", "gpt-4o-mini"),
+        llm,
       }
     );
 

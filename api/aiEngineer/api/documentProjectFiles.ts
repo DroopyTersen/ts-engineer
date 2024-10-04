@@ -1,15 +1,18 @@
 import { CodeProjectFile } from "@shared/db.schema";
-import { getLLM } from "~/toolkit/ai/llm/getLLM";
+import { getLLM, LLM } from "~/toolkit/ai/llm/getLLM";
 import { LLMEventEmitter } from "~/toolkit/ai/streams/LLMEventEmitter";
 import { AsyncQueue } from "~/toolkit/data-structures/AsyncQueue";
-import { db } from "../db/db.server";
 import { getFileContent } from "../fs/getFileContent";
 import { documentCodeFile } from "../llm/documentCodeFile";
 import { getProject } from "./getProject";
 
 async function _documentCodeFile(
   filepath: string,
-  projectPath: string
+  projectPath: string,
+  options?: {
+    llm?: LLM;
+    emitter?: LLMEventEmitter;
+  }
 ): Promise<CodeProjectFile> {
   let fileContent = await getFileContent(filepath, projectPath);
   if (!fileContent) {
@@ -28,7 +31,7 @@ async function _documentCodeFile(
   }
   // Use an LLM to summarize/document the file
   let documentation = await documentCodeFile(fileContent, projectPath, {
-    llm: getLLM("deepseek", "deepseek-coder"),
+    llm: options?.llm || getLLM("deepseek", "deepseek-coder"),
   });
   return {
     filepath,
@@ -37,7 +40,10 @@ async function _documentCodeFile(
 }
 export const documentProject = async (
   projectId: string,
-  emitter?: LLMEventEmitter
+  options?: {
+    llm?: LLM;
+    emitter?: LLMEventEmitter;
+  }
 ) => {
   let project = await getProject(projectId);
   let queue = new AsyncQueue(10);
@@ -46,7 +52,7 @@ export const documentProject = async (
       return queue
         .run(() => _documentCodeFile(filepath, project.absolute_path))
         .then((result) => {
-          emitter?.emit(
+          options?.emitter?.emit(
             "content",
             `${result.filepath}\n${result.documentation}\n\n`
           );
@@ -54,15 +60,5 @@ export const documentProject = async (
         });
     })
   );
-
-  await await db.updateProject({
-    id: project.id,
-    name: project.name,
-    absolute_path: project.absolute_path,
-    summary: project.summary,
-    // files: files,
-    test_code_command: project.test_code_command,
-    exclusions: project.exclusions,
-  });
   return files;
 };

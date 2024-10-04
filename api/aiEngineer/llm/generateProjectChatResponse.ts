@@ -1,5 +1,5 @@
 import { CoreMessage } from "ai";
-import { getLLM, LLM } from "~/toolkit/ai/llm/getLLM";
+import { LLM } from "~/toolkit/ai/llm/getLLM";
 import { LLMEventEmitter } from "~/toolkit/ai/streams/LLMEventEmitter";
 import { createReadFilesTool } from "../tools/readFiles.tool";
 import { readUrlTool } from "../tools/readUrl.tool";
@@ -17,18 +17,19 @@ export const generateProjectChatResponse = async (
     fileContents: string[];
   },
   options: {
-    llm?: LLM;
+    llm: LLM;
     emitter?: LLMEventEmitter;
   }
 ) => {
-  const { emitter } = options;
+  const { emitter, llm } = options;
   let userMessageTextContents = createCachedProjectMessageTextContents({
     fileContents: projectContext.fileContents,
     fileStructure: projectContext.fileStructure,
     summary: projectContext.summary || "No summary provided",
     title: projectContext.title,
   });
-  let llm = options.llm || getLLM("anthropic", "claude-3-5-sonnet-20240620");
+  // let llm = options.llm || getLLM("anthropic", "claude-3-5-sonnet-20240620");
+  console.log("LLM Model for chat:", llm._model?.modelId);
   const result = await llm.runTools(
     {
       messages: [
@@ -41,10 +42,6 @@ export const generateProjectChatResponse = async (
           content: userMessageTextContents,
         },
         ...messages,
-        {
-          role: "user",
-          content: "Hi there!",
-        },
       ],
       temperature: 0,
       maxTokens: 1800,

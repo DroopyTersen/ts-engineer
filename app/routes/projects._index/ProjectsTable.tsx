@@ -4,6 +4,7 @@ import dayjs from "dayjs";
 import { useState } from "react";
 import { IoWarningOutline } from "react-icons/io5";
 import { useApiUrl } from "~/root";
+import { Badge } from "~/shadcn/components/ui/badge";
 import { Button } from "~/shadcn/components/ui/button";
 import {
   Table,
@@ -13,6 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from "~/shadcn/components/ui/table";
+import { cn } from "~/shadcn/utils";
 import { OpenInCursorButton } from "../projects.$id/OpenInCursorButton";
 
 export function ProjectsTable({ projects }: { projects: ProjectListItem[] }) {
@@ -30,6 +32,7 @@ export function ProjectsTable({ projects }: { projects: ProjectListItem[] }) {
           <TableHead>Project</TableHead>
           <TableHead>Updated</TableHead>
           <TableHead>GIT Status</TableHead>
+          <TableHead>Classification</TableHead>
           <TableHead className="text-right"></TableHead>
         </TableRow>
       </TableHeader>
@@ -82,6 +85,21 @@ export function ProjectsTable({ projects }: { projects: ProjectListItem[] }) {
                   ""
                 )}
               </div>
+            </TableCell>
+
+            <TableCell>
+              <Badge
+                className={cn(
+                  "uppercase",
+                  project.classification === "public" &&
+                    "text-white bg-emerald-600",
+                  project.classification === "private" &&
+                    "text-white bg-cyan-600",
+                  project.classification === "work" && "text-white bg-rose-700"
+                )}
+              >
+                {project.classification}
+              </Badge>
             </TableCell>
 
             <TableCell className="text-right">

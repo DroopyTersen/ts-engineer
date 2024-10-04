@@ -48,7 +48,6 @@ export const writeSpecifications = async (
   emitter?.emit("content", newSpecifications);
 
   llm = llm || getLLM("anthropic", "claude-3-5-sonnet-20240620");
-  // llm = llm || getLLM("deepseek", "deepseek-coder");
   // Classify the code task
   const taskType = await classifyCodeTask(validatedInput.input, {
     llm,

@@ -5,7 +5,8 @@ export const CodeProjectFile = z.object({
   documentation: z.string(),
 });
 export type CodeProjectFile = z.infer<typeof CodeProjectFile>;
-
+export const ProjectClassification = z.enum(["work", "private", "public"]);
+export type ProjectClassification = z.infer<typeof ProjectClassification>;
 export const CodeProjectDbItem = z.object({
   id: z.string(),
   name: z.string(),
@@ -19,6 +20,7 @@ export const CodeProjectDbItem = z.object({
     ),
   exclusions: z.string().default(""),
   test_code_command: z.string().default("bun run build"),
+  classification: ProjectClassification.default("private"),
 });
 
 export type CodeProjectDbItem = z.infer<typeof CodeProjectDbItem>;

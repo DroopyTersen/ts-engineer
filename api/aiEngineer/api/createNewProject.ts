@@ -1,3 +1,4 @@
+import { ProjectClassification } from "@shared/db.schema";
 import { z } from "zod";
 import { validateSchema } from "~/toolkit/remix/validateSchema";
 import { generateId } from "~/toolkit/utils/generateId";
@@ -7,6 +8,7 @@ const CreateNewProjectInput = z.object({
   name: z.string().optional(),
   absolutePath: z.string(),
   test_code_command: z.string().optional(),
+  classification: ProjectClassification.optional(),
 });
 export type CreateNewProjectInput = z.infer<typeof CreateNewProjectInput>;
 export const createNewProject = async (
@@ -28,6 +30,7 @@ export const createNewProject = async (
     summary: "",
     files: [],
     exclusions: DEFAULT_EXCLUSIONS.join("\n"),
+    classification: userInput.classification || "private",
     test_code_command: userInput?.test_code_command || "bun run build",
   };
   let existingProject = await db.getProjectByAbsolutePath(

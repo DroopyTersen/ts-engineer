@@ -1,3 +1,4 @@
+import { ProjectClassification } from "@shared/db.schema";
 import {
   formatFileStructure,
   getFileContents,
@@ -12,6 +13,7 @@ export interface ProjectCodeContext {
   fileStructure: string;
   fileContents: string[];
   filepaths: string[];
+  classification?: ProjectClassification;
 }
 
 export async function getProjectCodeContext(
@@ -41,6 +43,7 @@ export async function getProjectCodeContext(
 
   const fileStructure = formatFileStructure(project.filepaths);
   return {
+    classification: project.classification,
     absolutePath: project.absolute_path,
     title: project.name,
     summary: project.summary,

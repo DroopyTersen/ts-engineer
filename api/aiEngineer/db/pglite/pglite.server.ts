@@ -18,7 +18,7 @@ export const initDb = async (dataDir?: string) => {
       },
     });
 
-    await applyMigrations(pg);
+    // await applyMigrations(pg);
     return pg;
   });
   return _pg;
@@ -32,7 +32,7 @@ export const getDb = () => {
 };
 
 const MIGRATIONS_DIR = "api/aiEngineer/db/pglite/migrations";
-const applyMigrations = async (pg: PGlite) => {
+export const applyMigrations = async (pg: PGlite) => {
   // Get all SQL files in the current directory
   const migrationFiles = readdirSync(MIGRATIONS_DIR)
     .filter((file) => file.endsWith(".sql"))

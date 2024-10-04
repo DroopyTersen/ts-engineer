@@ -40,8 +40,8 @@ const updateProject = async (input: CodeProjectDbItem) => {
     const { rows } = await getDb().query(
       `
       UPDATE code_projects
-      SET name = $1, absolute_path = $2, summary = $3, exclusions = $4, test_code_command = $5
-      WHERE id = $6
+      SET name = $1, absolute_path = $2, summary = $3, exclusions = $4, test_code_command = $5, classification = $6
+      WHERE id = $7
       RETURNING *
     `,
       [
@@ -50,6 +50,7 @@ const updateProject = async (input: CodeProjectDbItem) => {
         validatedInput.summary,
         validatedInput.exclusions,
         validatedInput.test_code_command,
+        validatedInput.classification,
         validatedInput.id,
       ]
     );
@@ -66,8 +67,8 @@ const insertProject = async (input: CodeProjectDbItem) => {
 
     const { rows } = await getDb().query(
       `
-      INSERT INTO code_projects (id, name, absolute_path, summary, exclusions, test_code_command)
-      VALUES ($1, $2, $3, $4, $5, $6)
+      INSERT INTO code_projects (id, name, absolute_path, summary, exclusions, test_code_command, classification)
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
       RETURNING *
     `,
       [
@@ -77,6 +78,7 @@ const insertProject = async (input: CodeProjectDbItem) => {
         validatedInput.summary,
         validatedInput.exclusions,
         validatedInput.test_code_command,
+        validatedInput.classification,
       ]
     );
 

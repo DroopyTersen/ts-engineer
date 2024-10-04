@@ -1,4 +1,4 @@
-import { getLLM, LLM } from "~/toolkit/ai/llm/getLLM";
+import { LLM } from "~/toolkit/ai/llm/getLLM";
 import { LLMEventEmitter } from "~/toolkit/ai/streams/LLMEventEmitter";
 import { wait } from "~/toolkit/utils/wait";
 
@@ -11,7 +11,7 @@ export async function generateProjectSummary(
   },
   options: {
     delayInMs?: number;
-    llm?: LLM;
+    llm: LLM;
     emitter?: LLMEventEmitter;
   }
 ) {
@@ -24,7 +24,7 @@ export async function generateProjectSummary(
     ),
   };
   let emitter = options.emitter || undefined;
-  let llm = options.llm || getLLM("deepseek", "deepseek-coder");
+  let llm = options.llm;
 
   let sectionMessages = projectSummarySections.map((section) => ({
     role: "user" as const,

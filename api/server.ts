@@ -1,3 +1,4 @@
+import { serve } from "bun";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { initDb } from "./aiEngineer/db/pglite/pglite.server";
@@ -38,4 +39,7 @@ app.get("/healthcheck", async (c) => {
   return c.json({ status: "ok" });
 });
 
-export default app;
+serve({
+  fetch: app.fetch,
+  port: 3334,
+});

@@ -2,6 +2,7 @@ import { Label } from "@radix-ui/react-label";
 import { type ActionFunctionArgs, redirect } from "@remix-run/node";
 import { Form, Link } from "@remix-run/react";
 import { CodeProjectDbItem } from "@shared/db.schema";
+import { ProjectClassificationDropdown } from "~/components/ProjectClassificationDropdown";
 import { ChevronRightIcon, SearchIcon } from "~/shadcn/components/icons";
 import { Button } from "~/shadcn/components/ui/button.js";
 import { Input } from "~/shadcn/components/ui/input.js";
@@ -92,6 +93,16 @@ export default function NewProject() {
               <Button type="submit" size={"lg"} className="w-40">
                 Add
               </Button>
+            </div>
+            <div className="grid gap-3 mt-6">
+              <Label htmlFor="classification">Classification</Label>
+              <ProjectClassificationDropdown
+                name="classification"
+                defaultValue="private"
+              />
+              <p className="text-xs text-slate-500" data-description>
+                Choose the visibility level for your project.
+              </p>
             </div>
           </Form>
         </div>

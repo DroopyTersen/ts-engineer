@@ -12,4 +12,7 @@ export default defineConfig({
     tsconfigPaths(),
     remix(),
   ],
-})
+  server: {
+    port: 3333,
+  },
+});

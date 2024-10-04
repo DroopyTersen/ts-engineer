@@ -4,6 +4,7 @@ import { BsX } from "react-icons/bs";
 import { useApiUrl } from "~/root";
 import { Button } from "~/shadcn/components/ui/button";
 import { cn } from "~/shadcn/utils";
+import { CopyToClipboardButton } from "~/toolkit/components/buttons/CopyToClipboardButton";
 import { useAsyncData } from "~/toolkit/hooks/useAsyncData";
 import { OpenInCursorButton } from "../projects.$id/OpenInCursorButton";
 
@@ -55,7 +56,8 @@ export const FileViewer = ({
       className={cn(
         "bg-[#222] text-gray-100 h-full transition-opacity duration-500",
         className,
-        codeHtml ? "opacity-100" : "opacity-0"
+        codeHtml ? "opacity-100" : "opacity-0",
+        "select-text" // Ensure text can be selected
       )}
     >
       <div className="px-4 py-2 flex items-center justify-between border-b border-white/10 sticky top-0 bg-[#222]">
@@ -91,14 +93,20 @@ export const FileViewer = ({
             <BsX className="w-5 h-5" />
           </Button>
         </div>
-        <OpenInCursorButton
-          className="hover:bg-gray-500"
-          projectId={id!}
-          absolutePath={project.absolute_path}
-          filepath={filepath!}
-        >
-          <span className="font-mono">Cursor</span>
-        </OpenInCursorButton>
+        <div className="flex gap-2 items-center">
+          <CopyToClipboardButton
+            className="hover:bg-gray-500"
+            html={codeHtml}
+          />
+          <OpenInCursorButton
+            className="hover:bg-gray-500"
+            projectId={id!}
+            absolutePath={project.absolute_path}
+            filepath={filepath!}
+          >
+            <span className="font-mono">Cursor</span>
+          </OpenInCursorButton>
+        </div>
       </div>
       <div className={cn("flex")}>
         <div
