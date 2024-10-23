@@ -15,7 +15,6 @@ export async function generateProjectSummary(
     emitter?: LLMEventEmitter;
   }
 ) {
-  console.log("🚀 | generateProjectSummary:", projectContext.title);
   const systemMessage = {
     role: "system" as const,
     content: summarizeProjectPrompt(
@@ -218,13 +217,69 @@ Then diagram the architecture with Mermaid. Try to show a sophisticated enterpri
 
 `,
   },
+  {
+    title: "Data Model",
+    template: `Describe the core entities in the system and their relationships. Include:
+- Main entities/tables and their purpose
+- Key fields for each entity
+- Relationships between entities (one-to-many, many-to-many, etc.)
+- Any important constraints or business rules
 
+If possible, include a Mermaid class diagram to visually represent the data model. Use the following format:
+
+\`\`\`mermaid
+classDiagram
+    class Entity1 {
+        +field1: type
+        +field2: type
+    }
+    class Entity2 {
+        +field1: type
+        +field2: type
+    }
+    Entity1 "1" -- "*" Entity2 : relationship
+\`\`\`
+
+
+Here is an example of a good description of entities and their purpose:
+<example>
+- **Chat Conversations**:
+
+  - Each conversation is private and only visible to the user who created it.
+  - A conversation consists of multiple messages.
+  - Each message within a conversation is associated with a specific assistant.
+    - You can switch between assistants in the chat to get answers from different "personalities" or "knowledge bases".
+
+- **Assistants**:
+
+  - Assistants come with custom instructions, Tools, and Data Sources.
+  - Users can select which assistant they are talking to in a conversation.
+  - Assistants can be public or private.
+  - Public assistants are visible to all users.
+  - Private assistants are only visible to users who have been granted **Assistant Permissions** permissions.
+
+- **Data Sources**:
+  - Data sources are used to provide the assistant with information relevant to the conversation, a knowledge base.
+  - When an Assistant is responding it will perform a hybrid search (keyword and vector search) across all of the Assistant's Data Sources to find information relevant to the conversation.
+  - Data sources can be added by users and are specific to assistants.
+  - Only users with access to the Assistant can view data in from those Data Sources.
+
+- **Tool Instances**:
+
+  - Each assistant has specific tool instances configured.
+  - These tools are used to enhance the assistant's capabilities and provide custom functionalities during the conversation.
+  - A Tool Instance is a specific instance of a configured **Tool Definition**.
+
+</example>
+
+If the project doesn't have a data model, just say "None" and move on.
+`,
+  },
   {
     title: "Data Access",
     template: `Explain the data storage and access patterns used in the project. If provided cover the following:
 - Database(s) used and their purpose
 - ORM or data access libraries employed, data access patterns (e.g., repositories, data mappers). Show code examples.
-- Key data models or schemas. Show the data models/entities as a Mermaid UML or Class diagram 
 - Handling of database migrations or schema changes
 - If the project doesn't have any data access just say "None" and move on.
 
@@ -232,6 +287,7 @@ For any code snippets, focus just on the important elements and put a comment li
 ".
 `,
   },
+
   {
     title: "External APIs",
     template: `List any any 3rd party/external APIs that are called. This could be direct HTTP calls or SDKs that communicated with external services. For example any API calls we make to things like LLMs, CMSs etc... Only list hosted services and APIs, don't mention tools and code libraries, or databases that are owned by this project. Basically any HTTP Api requests we are making to something outside our project. If the project doesn't have any external API calls just say "None" and move on.

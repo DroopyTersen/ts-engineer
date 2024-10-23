@@ -21,6 +21,7 @@ export const chatWithProjectCode = async ({
   emitter: LLMEventEmitter;
 }) => {
   try {
+    console.log("🚀 | messages:", messages);
     let [projectContext, existingConversation] = await Promise.all([
       getProjectCodeContext(
         JSON.stringify(messages.slice(-3), null, 2),
@@ -36,11 +37,12 @@ export const chatWithProjectCode = async ({
     let llm =
       projectContext.classification === "work"
         ? getLLM("azure", "gpt-4o")
-        : getLLM("anthropic", "claude-3-5-sonnet");
+        : getLLM("anthropic", "claude-3-5-sonnet-20241022");
     emitter.emit("data", {
       type: "selectedFiles",
       selectedFiles: projectContext.filepaths,
     });
+    console.log("🚀 | messages:", messages);
     let aiResponse = await generateProjectChatResponse(
       messages,
       projectContext,

@@ -45,7 +45,7 @@ export const writeCodingPlan = async (
   console.log("🚀 | existingCodeTask:", existingCodeTask);
 
   // llm = llm || getLLM("openai", "gpt-4o-mini");
-  llm = llm || getLLM("anthropic", "claude-3-5-sonnet-20240620");
+  llm = llm || getLLM("anthropic", "claude-3-5-sonnet-20241022");
 
   let codingPlan: string;
   let generateFn = validatedInput.followUpInput

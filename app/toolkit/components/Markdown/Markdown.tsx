@@ -1,5 +1,5 @@
 import MarkdownToJSX from "markdown-to-jsx";
-import React from "react";
+import React, { useRef } from "react";
 import { cn } from "~/shadcn/utils";
 import { ChartRenderer } from "./ChartRenderer";
 import { MermaidDiagram } from "./MermaidDiagram";
@@ -15,8 +15,11 @@ export const Markdown = React.memo(
     className?: string;
     id?: string;
   }) => {
+    const contentRef = useRef<HTMLDivElement>(null);
+
     return (
       <div
+        ref={contentRef}
         className={cn(
           "prose max-w-4xl [&_table_th]:text-left [&>div>*]:mt-0 whitespace-pre-wrap ",
           className
@@ -26,17 +29,6 @@ export const Markdown = React.memo(
         <MarkdownToJSX
           options={{
             overrides: {
-              // code: {
-              //   component: ({ className, children }) => {
-              //     const language = className?.split("-")[1];
-              //     if (language === "mermaid") {
-              //       return <MermaidDiagram>{children}</MermaidDiagram>;
-              //     } else if (language === "chart") {
-              //       return <ChartRenderer config={children} />;
-              //     }
-              //     return <code className={className}>{children}</code>;
-              //   },
-              // },
               thought: {
                 component: ThoughtBox,
               },
@@ -71,6 +63,11 @@ export const Markdown = React.memo(
                   }
                   return <pre className={className}>{children}</pre>;
                 },
+              },
+              p: {
+                component: ({ children, ...props }) => (
+                  <div {...props}>{children}</div>
+                ),
               },
             },
           }}

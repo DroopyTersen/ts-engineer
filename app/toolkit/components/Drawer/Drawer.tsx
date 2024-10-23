@@ -26,6 +26,7 @@ export const MyDrawer = ({
     <Drawer.Root
       direction={direction}
       open={isOpen}
+      handleOnly
       onOpenChange={(open) => !open && onClose()}
     >
       <Drawer.Portal>

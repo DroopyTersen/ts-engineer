@@ -72,7 +72,7 @@ export default function ChatRoute() {
           )}
           <DynamicMessageInput
             className="shadow-lg max-w-4xl"
-            ref={inputRef}
+            // ref={inputRef}
             handleSubmit={(input) => actions.submit(input, {})}
             placeholder="Ask about the code..."
             autoFocus

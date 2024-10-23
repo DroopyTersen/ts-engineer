@@ -5,6 +5,11 @@ export const DEFAULT_EXCLUSIONS: string[] = [
   "**/*.lockb",
   "**/*.lock",
   "**/:memory:/*",
+  "**/*.docx",
+  "**/*.xlsx",
+  "**/*.xls",
+  "**/*.pptx",
+  "**/*.ppt",
   "**/*.png",
   "**/*.webp",
   "**/*.jpg",
@@ -24,6 +29,7 @@ export const DEFAULT_EXCLUSIONS: string[] = [
   "**/public/**",
   "**/migrations/meta/**",
   "**/*.patch",
+  "**/*.Designer.cs",
 ];
 
 export async function getProjectFiles({

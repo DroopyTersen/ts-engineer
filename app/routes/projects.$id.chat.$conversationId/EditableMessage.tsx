@@ -6,8 +6,8 @@ import { Button } from "~/shadcn/components/ui/button";
 import { Textarea } from "~/shadcn/components/ui/textarea";
 import { cn, tw } from "~/shadcn/utils";
 import { LLMDataMessage } from "~/toolkit/ai/streams/LLMDataStream";
-import { Markdown } from "~/toolkit/components/Markdown/Markdown";
 import { CopyToClipboardButton } from "~/toolkit/components/buttons/CopyToClipboardButton";
+import { Markdown } from "~/toolkit/components/Markdown/Markdown";
 interface ChatMessageProps {
   message: LLMDataMessage;
   editMessage: (index: number, newContents: string) => void;
@@ -48,7 +48,7 @@ export const EditableMessage = ({
     <ChatMessageContainer
       className={role === "AI" ? "justify-start" : "justify-end"}
     >
-      {mode === "display" ? (
+      {mode === "display" && !isStreaming ? (
         <ChatMessageContent
           className={role === "AI" ? "bg-white" : "bg-[#1F1F1F]"}
         >
@@ -74,6 +74,7 @@ export const EditableMessage = ({
         <Textarea
           ref={textAreaRef}
           autoFocus
+          disabled={isStreaming}
           defaultValue={message.content}
           className="p-4 rounded-lg text-base resize-y"
           onKeyDown={(e: React.KeyboardEvent) => {

@@ -1,15 +1,24 @@
+import pathUtils from "path";
 import { parseArgs } from "util";
 import {
   formatFileStructure,
   getFileContents,
 } from "../api/aiEngineer/fs/filesToMarkdown";
+import { filterFilePaths } from "../api/aiEngineer/fs/filterFilePaths";
 import { getProjectFiles } from "../api/aiEngineer/fs/getProjectFiles";
 import { generateProjectSummary } from "../api/aiEngineer/llm/summary/generateProjectSummary";
 import { getLLM } from "../app/toolkit/ai/llm/getLLM";
 import { LLMEventEmitter } from "../app/toolkit/ai/streams/LLMEventEmitter";
 
-export const summarizeFolder = async (absolutePath: string) => {
+const summarizeFolder = async (
+  absolutePath: string,
+  exclude: string[] = []
+) => {
   let filepaths = await getProjectFiles({ absolute_path: absolutePath });
+
+  // Apply the exclude filter
+  filepaths = filterFilePaths(filepaths, [], exclude);
+
   let fileContents = await getFileContents(filepaths, {
     projectPath: absolutePath,
     maxTokens: 100_000,
@@ -17,9 +26,8 @@ export const summarizeFolder = async (absolutePath: string) => {
   });
   let title = absolutePath.split("/").pop();
   let fileStructure = formatFileStructure(filepaths);
-  console.log("FILE STRUCTURE", fileStructure);
-  console.log("FILE CONTENTS\n", fileContents.join("\n\n"));
-  let llm = getLLM("azure", "gpt-4o");
+  console.log("🚀 | fileStructure:", fileStructure);
+  let llm = getLLM("azure", "gpt-4o-mini");
   let emitter = new LLMEventEmitter();
   let totalTokens = (fileContents.join("").length + fileStructure.length) / 4;
   console.log(
@@ -39,7 +47,7 @@ export const summarizeFolder = async (absolutePath: string) => {
     },
     {
       // Wait 10 seconds between each section
-      delayInMs: 10_000,
+      delayInMs: llm._model.modelId === "gpt-4o-mini" ? 1000 : 10_000,
       llm,
       emitter,
     }
@@ -55,17 +63,29 @@ const main = async () => {
       path: {
         type: "string",
       },
+      exclude: {
+        type: "string",
+        multiple: true,
+      },
     },
     strict: true,
     allowPositionals: true,
   });
   let path = values.path;
+  let excludes = (values.exclude as string[]) || [];
+  excludes = excludes.map((exclude) => {
+    if (!exclude.startsWith("*")) {
+      return `**/${exclude}/**`;
+    }
+    return exclude;
+  });
+
   if (!path) {
     console.error("Error: --path argument is required.");
     process.exit(1);
   }
 
-  if (!path.startsWith("/")) {
+  if (!pathUtils.isAbsolute(path)) {
     console.error("Error: The provided path must be an absolute path.");
     process.exit(1);
   }
@@ -74,7 +94,8 @@ const main = async () => {
     console.error(`Error: The path "${path}" does not exist.`);
     process.exit(1);
   }
-  await summarizeFolder(path);
+  excludes.push("**/AI_SUMMARY.md");
+  await summarizeFolder(path, excludes);
 };
 
 main().catch(console.error);

@@ -23,11 +23,11 @@ export const generateProjectChatResponse = async (
 ) => {
   const { emitter, llm } = options;
   let userMessageTextContents = createCachedProjectMessageTextContents({
-    fileContents: projectContext.fileContents,
-    fileStructure: projectContext.fileStructure,
+    fileContents: projectContext.fileContents.filter(Boolean),
+    fileStructure: projectContext.fileStructure || "No file structure provided",
     summary: projectContext.summary || "No summary provided",
-    title: projectContext.title,
-  });
+    title: projectContext.title || "No title provided",
+  }).filter((contentBlock) => contentBlock.text);
   // let llm = options.llm || getLLM("anthropic", "claude-3-5-sonnet-20240620");
   console.log("LLM Model for chat:", llm._model?.modelId);
   const result = await llm.runTools(
