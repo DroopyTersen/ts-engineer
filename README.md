@@ -7,18 +7,6 @@ This is a tool I'm building for myself to:
 
 It only runs locally and directly reads and writes files on my files system.
 
-- It can do [cool stuff](##Cool-Stuff) like:
-  - Hybrid search (fulltext search + semantic search) for code across all of my projects
-  - Chat with my code
-  - Generate documentation with code snippets and diagrams
-  - Automatically do basic/intermediate coding tasks for me
-    - I enter the raw task description
-    - It generates specifications and requirements
-    - Then it writes a coding plan
-    - Then it uses apple script to lauch the project in Cursor and execute the Coding Plan using Cursor Composer.
-  - Surgical context selection
-    - Using the file explorer, I can select files and my selection is automatically concatenated into single giant block of markdown containing the file contents. Perfect for then pasting into ChatGPT or Claude or any other third party tool.
-
 ## Cool Stuff
 
 ### Chat with your codebase
@@ -27,7 +15,7 @@ It only runs locally and directly reads and writes files on my files system.
 - Supports rendering Mermaid diagrams, chartjs charts, and syntax highlighted code blocks.
 - Great for getting familiar with a codebase or documenting a new feature.
 
-![Chat with your codebase](https://public-files.droopy.dev/chat-with-code.gif)
+![Chat with your codebase](docs/assets/chat-with-code.png)
 
 ### AI Powered Code Tasks
 
@@ -62,22 +50,29 @@ We can decide based on the privacy classifcation of the project. For example, wo
 
 ![Project Classifications](docs/assets/project-classifications.png)
 
+### Cross Project Semantic Code Search
+
+- Semantic search - fulltext search + vector search
+- Uses PGVector + `tsvector` on a local PGLite Postgres DB
+- The local flexiblity of SQLite with the power of Postgres
+
+![Hybrid search screenshot](docs/assets/hybrid-search.png)
+
 ## Tech Stack
 
-| **Name**                                                   | **What is it?**                                                                                    |
-| ---------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| [React](https://www.npmjs.com/package/react)               | A JavaScript library for building user interfaces.                                                 |
-| [Remix](https://www.npmjs.com/package/@remix-run/react)    | A framework for building React applications with server-side rendering.                            |
-| [Bun](https://www.npmjs.com/package/bun)                   | A fast JavaScript runtime like Node.js.                                                            |
-| [Hono](https://www.npmjs.com/package/hono)                 | A small, simple, and ultrafast web framework for the Edge.                                         |
-| [OpenAI](https://www.npmjs.com/package/openai)             | A library for interacting with OpenAI's API.                                                       |
-| [Langfuse](https://www.npmjs.com/package/langfuse-vercel)  | A tool for managing and visualizing AI model telemetry.                                            |
-| [Shiki](https://www.npmjs.com/package/shiki)               | A syntax highlighter for code blocks.                                                              |
-| [Zod](https://www.npmjs.com/package/zod)                   | A TypeScript-first schema declaration and validation library.                                      |
-| [Chart.js](https://www.npmjs.com/package/chart.js)         | A simple yet flexible JavaScript charting library.                                                 |
-| [Day.js](https://www.npmjs.com/package/dayjs)              | A lightweight JavaScript date library for parsing, validating, manipulating, and formatting dates. |
-| [Lucide React](https://www.npmjs.com/package/lucide-react) | A library of simple and consistent icons for React.                                                |
-| [Madge](https://www.npmjs.com/package/madge)               | A tool for generating visualizations of module dependencies.                                       |
+| **Name**                                                  | **What is it?**                                                         |
+| --------------------------------------------------------- | ----------------------------------------------------------------------- |
+| [React](https://www.npmjs.com/package/react)              | A JavaScript library for building user interfaces.                      |
+| [Remix](https://www.npmjs.com/package/@remix-run/react)   | A framework for building React applications with server-side rendering. |
+| [Bun](https://www.npmjs.com/package/bun)                  | A fast JavaScript runtime like Node.js.                                 |
+| [Hono](https://www.npmjs.com/package/hono)                | A small, simple, and ultrafast web framework for the Edge.              |
+| [OpenAI](https://www.npmjs.com/package/openai)            | A library for interacting with OpenAI's API.                            |
+| [Drizzle](https://orm.drizzle.team)                       | A TypeScript ORM that's lightweight and SQL-first.                      |
+| [PGlite](https://pglite.dev)                              | An embedded PostgreSQL database that runs in Node.js and the browser.   |
+| [Langfuse](https://www.npmjs.com/package/langfuse-vercel) | A tool for managing and visualizing AI model telemetry.                 |
+| [Shiki](https://www.npmjs.com/package/shiki)              | A syntax highlighter for code blocks.                                   |
+| [Zod](https://www.npmjs.com/package/zod)                  | A TypeScript-first schema declaration and validation library.           |
+| [Madge](https://www.npmjs.com/package/madge)              | A tool for generating visualizations of module dependencies.            |
 
 ## Project Structure
 
