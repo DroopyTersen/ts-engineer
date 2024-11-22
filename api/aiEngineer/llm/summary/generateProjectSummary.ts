@@ -105,6 +105,7 @@ ${fileContents.join("\n\n").slice(0, 110_000 * 4)}
 
 Remember to base your analysis solely on the provided codebase, avoiding assumptions or speculation about features or functionalities not explicitly present in the code. Always prefer to use formatted text whenever possible (tables, bullets, bolds etc..), write in the style of a README.md file. 
 `;
+
 const projectSummarySections = [
   {
     title: "Purpose",

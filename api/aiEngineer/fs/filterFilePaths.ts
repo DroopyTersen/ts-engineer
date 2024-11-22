@@ -1,11 +1,13 @@
-import { Glob } from "bun";
+import { minimatch } from "minimatch";
 
 export function testGlobs(filepath: string, globs: string[]) {
-  let hasMatch = globs.some((glob) => {
-    let g = new Glob(glob.toLowerCase());
-    return g.match(filepath.toLowerCase());
+  return globs.some((glob) => {
+    return minimatch(filepath, glob, {
+      dot: true, // Add this to match files starting with dots
+      matchBase: true, // Add this to match basename
+      nocase: true,
+    });
   });
-  return hasMatch;
 }
 
 export function filterFilePaths(

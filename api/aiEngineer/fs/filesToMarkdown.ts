@@ -33,11 +33,16 @@ export const getFileContents = async (
     filePaths,
     options?.projectPath,
     (filepath, content) => {
-      totalChars += content.length;
+      let trimmedContent = formatFileContent(
+        filepath,
+        content,
+        maxLinesPerFile
+      );
+      totalChars += trimmedContent.length;
       if (totalChars / 4 > maxTokens) {
         return null;
       }
-      return formatFileContent(filepath, content, maxLinesPerFile);
+      return trimmedContent;
     }
   );
   return fileContents.filter(Boolean) as string[];

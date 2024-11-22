@@ -65,7 +65,6 @@ export const generateSpecifications = async (
   });
 
   let finalPrompt = createFinalPrompt(codeTask);
-
   const result = await llm.runTools(
     {
       label: "generateSpecifications",
@@ -79,6 +78,8 @@ export const generateSpecifications = async (
           projectContext.absolutePath
         ),
       },
+      startSequence: "<specifications>",
+      stopSequences: ["</specifications>"],
       messages: [
         { role: "system", content: systemPrompt },
         {
@@ -107,14 +108,7 @@ const parseSpecifications = (
   const match = specText.match(titleRegex);
   const title = match ? match[1].trim() : "Untitled";
 
-  // Extract the content of the <specifications> tag
-  const specificationsRegex = /<specifications>([\s\S]*?)<\/specifications>/;
-  const specificationsMatch = specText.match(specificationsRegex);
-  const specifications = specificationsMatch
-    ? specificationsMatch[1].trim()
-    : "";
-
-  return { title, specifications };
+  return { title, specifications: specText };
 };
 
 const createSystemPrompt = (taskType: string) => {

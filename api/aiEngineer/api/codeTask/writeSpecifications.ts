@@ -73,13 +73,14 @@ export const writeSpecifications = async (
   // Save the code task to the database
   let codeTask;
   if (existingCodeTask) {
+    console.log("🚀 | title: update specifications", specifications);
     codeTask = await db.updateSpecifications({
       codeTaskId: validatedInput.codeTaskId,
       specifications,
       selected_files: projectContext.filepaths,
     });
   } else {
-    console.log("🚀 | title:", title);
+    console.log("🚀 | title: save new code task", specifications);
     codeTask = await db.createNewCodeTask({
       id: validatedInput.codeTaskId,
       project_id: validatedInput.projectId,
@@ -91,6 +92,8 @@ export const writeSpecifications = async (
       file_changes: null,
     });
   }
+  let savedCodeTask = await db.getCodeTaskById(codeTask.id);
+  console.log("🚀 | savedCodeTask:", savedCodeTask?.specifications);
   return {
     specifications,
     title,

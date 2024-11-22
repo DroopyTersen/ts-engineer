@@ -79,6 +79,7 @@ export type GenerateDataParams<T extends z.ZodTypeAny> = Prettify<
 export type StreamTextParams = Prettify<
   Omit<Parameters<typeof vercelStreamText>[0], "model"> & {
     label?: string;
+    startSequence?: string; // Add new parameter
   }
 >;
 
@@ -158,7 +159,10 @@ type StreamTextResult = NonNullable<
   : never;
 
 const _streamText = async (
-  params: Parameters<typeof vercelStreamText>[0] & { label?: string },
+  params: Parameters<typeof vercelStreamText>[0] & {
+    label?: string;
+    startSequence?: string; // Add new parameter
+  },
   asyncOptions?: AsyncOptions
 ): Promise<StreamTextResult> => {
   const { signal, emitter } = asyncOptions || {};
@@ -167,6 +171,10 @@ const _streamText = async (
   return new Promise(async (resolve, reject) => {
     emitter?.emit("llm_start", { requestId, ...params });
     try {
+      // Add buffer tracking if startSequence is provided
+      let buffer = "";
+      let foundStartSequence = !params.startSequence; // true if no startSequence
+
       const stream = await vercelStreamText({
         abortSignal: signal,
         ...params,
@@ -182,12 +190,45 @@ const _streamText = async (
             }
           }
           emitter?.emit("llm_end", { requestId, ...result });
+
+          if (params.startSequence && result.text) {
+            const startIndex = result.text.indexOf(params.startSequence);
+            if (startIndex !== -1) {
+              result.text = result.text.slice(
+                startIndex + params.startSequence.length
+              );
+            }
+          }
+
           resolve(result);
         },
       });
 
       for await (const chunk of stream.textStream) {
-        emitter?.emit("content", chunk);
+        if (params.startSequence) {
+          buffer += chunk;
+
+          if (!foundStartSequence) {
+            if (buffer.includes(params.startSequence)) {
+              foundStartSequence = true;
+              // Emit only the content after the start sequence
+              const content = buffer.slice(
+                buffer.indexOf(params.startSequence) +
+                  params.startSequence.length
+              );
+              if (content) emitter?.emit("content", content);
+            }
+            // Prevent buffer overflow
+            if (buffer.length > params.startSequence.length * 2) {
+              buffer = buffer.slice(-params.startSequence.length * 2);
+            }
+          } else {
+            emitter?.emit("content", chunk);
+          }
+        } else {
+          // Original behavior when no startSequence
+          emitter?.emit("content", chunk);
+        }
       }
     } catch (err: any) {
       console.error("🚀 | streamText err:", err);
@@ -247,7 +288,10 @@ const _streamData = async <TSchema extends z.ZodType>(
 };
 
 const _streamTextWithTools = async (
-  params: Parameters<typeof vercelStreamText>[0] & { maxLoops?: number },
+  params: Parameters<typeof vercelStreamText>[0] & {
+    maxLoops?: number;
+    startSequence?: string;
+  },
   asyncOptions?: AsyncOptions
 ): Promise<StreamTextResult> => {
   const { signal, emitter } = asyncOptions || {};
@@ -258,12 +302,16 @@ const _streamTextWithTools = async (
 
   return new Promise(async (resolve, reject) => {
     emitter?.emit("llm_start", { requestId, ...params });
-
+    let { startSequence, ...restParams } = params;
     const attemptStream = async (retryCount = 0): Promise<void> => {
       try {
         let finalContent = "";
+        // Add buffer tracking
+        let buffer = "";
+        let foundStartSequence = !startSequence; // true if no startSequence
+
         const stream = await vercelStreamText({
-          ...params,
+          ...restParams,
           messages,
           maxRetries: 1,
           abortSignal: signal,
@@ -351,6 +399,15 @@ const _streamTextWithTools = async (
               });
             } else {
               emitter?.emit("final_content", finalContent);
+              // Add startSequence handling to final result
+              if (startSequence && result.text) {
+                const startIndex = result.text.indexOf(startSequence);
+                if (startIndex !== -1) {
+                  result.text = result.text.slice(
+                    startIndex + startSequence.length
+                  );
+                }
+              }
               resolve(result);
             }
           },
@@ -358,8 +415,34 @@ const _streamTextWithTools = async (
 
         for await (const chunk of stream.fullStream) {
           if (chunk.type === "text-delta") {
-            finalContent += chunk.textDelta;
-            emitter?.emit("content", chunk.textDelta);
+            if (startSequence) {
+              buffer += chunk.textDelta;
+
+              if (!foundStartSequence) {
+                if (buffer.includes(startSequence)) {
+                  foundStartSequence = true;
+                  // Emit only the content after the start sequence
+                  const content = buffer.slice(
+                    buffer.indexOf(startSequence) + startSequence.length
+                  );
+                  if (content) {
+                    emitter?.emit("content", content);
+                    finalContent += content;
+                  }
+                }
+                // Prevent buffer overflow
+                if (buffer.length > startSequence.length * 2) {
+                  buffer = buffer.slice(-startSequence.length * 2);
+                }
+              } else {
+                emitter?.emit("content", chunk.textDelta);
+                finalContent += chunk.textDelta;
+              }
+            } else {
+              // Original behavior when no startSequence
+              finalContent += chunk.textDelta;
+              emitter?.emit("content", chunk.textDelta);
+            }
           } else if (chunk.type === "tool-call") {
             emitter?.emit("tool_call", {
               id: chunk.toolCallId,

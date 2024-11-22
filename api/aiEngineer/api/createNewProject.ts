@@ -3,7 +3,7 @@ import { z } from "zod";
 import { validateSchema } from "~/toolkit/remix/validateSchema";
 import { generateId } from "~/toolkit/utils/generateId";
 import { db } from "../db/db.server";
-import { DEFAULT_EXCLUSIONS } from "../fs/getProjectFiles";
+import { DEFAULT_EXCLUSIONS } from "../fs/DEFAULT_EXCLUSIONS";
 const CreateNewProjectInput = z.object({
   name: z.string().optional(),
   absolutePath: z.string(),

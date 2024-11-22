@@ -1,37 +1,6 @@
+import { DEFAULT_EXCLUSIONS } from "./DEFAULT_EXCLUSIONS";
 import { filterFilePaths } from "./filterFilePaths";
 import { createProjectGit } from "./gitCommands";
-// Array of file extensions to exclude from processing
-export const DEFAULT_EXCLUSIONS: string[] = [
-  "**/*.lockb",
-  "**/*.lock",
-  "**/:memory:/*",
-  "**/*.docx",
-  "**/*.xlsx",
-  "**/*.xls",
-  "**/*.pptx",
-  "**/*.ppt",
-  "**/*.png",
-  "**/*.webp",
-  "**/*.jpg",
-  "**/*.svg",
-  "**/*.pdf",
-  "**/*.ico",
-  "**/node_modules/**",
-  "**/dist/**",
-  "**/build/**",
-  "**/*.excalidraw",
-  "**/requirements.txt",
-  "**/package-lock.json",
-  "**/.gitignore",
-  "**/.vscode/**",
-  "**/data/**",
-  "**/.DS_Store",
-  "**/public/**",
-  "**/migrations/meta/**",
-  "**/*.patch",
-  "**/*.Designer.cs",
-];
-
 export async function getProjectFiles({
   absolute_path,
   exclusions = DEFAULT_EXCLUSIONS.join("\n"),
@@ -41,9 +10,11 @@ export async function getProjectFiles({
 }) {
   let git = createProjectGit(absolute_path);
   let excludes = exclusions
-    .split("\n")
-    .map((s) => s.trim())
-    .filter(Boolean);
+    ? exclusions
+        .split("\n")
+        .map((s) => s.trim())
+        .filter(Boolean)
+    : DEFAULT_EXCLUSIONS;
   let files = await git.listFiles();
 
   files = files.filter((file) => {
