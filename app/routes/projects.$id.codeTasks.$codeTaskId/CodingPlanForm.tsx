@@ -54,6 +54,11 @@ export const CodingPlanForm = ({
           placeholder: "AI-generated coding plan will appear here...",
           readOnly: codingPlanStream?.isStreaming,
         }}
+        defaultMode={
+          codingPlanStream?.isStreaming || !codingPlan?.trim()
+            ? "edit"
+            : "preview"
+        }
         hint={
           codingPlanStream?.isStreaming
             ? "AI is generating the coding plan..."

@@ -2,7 +2,11 @@ import { matchSorter } from "match-sorter";
 import { useMemo, useState } from "react";
 import { useDebouncedValue } from "./useDebounce";
 
-export const useFilteredItemsByText = (allItems, properties, initialFilterText = "") => {
+export const useFilteredItemsByText = <TItem>(
+  allItems: Array<TItem>,
+  properties: Array<keyof TItem>,
+  initialFilterText = ""
+) => {
   const [filterText, setFilterText] = useState(initialFilterText);
 
   const debouncedFilterText = useDebouncedValue(filterText, 250);
@@ -13,7 +17,7 @@ export const useFilteredItemsByText = (allItems, properties, initialFilterText =
         return allItems;
       }
       const items = matchSorter(allItems, debouncedFilterText, {
-        keys: properties,
+        keys: properties as string[],
         threshold: matchSorter.rankings.CONTAINS,
       });
       return items;

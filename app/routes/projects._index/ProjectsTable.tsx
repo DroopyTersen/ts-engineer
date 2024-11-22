@@ -20,11 +20,21 @@ import { OpenInCursorButton } from "../projects.$id/OpenInCursorButton";
 export function ProjectsTable({ projects }: { projects: ProjectListItem[] }) {
   let apiUrl = useApiUrl();
   let [indexingProjectId, setIndexingProjectId] = useState("");
+
+  if (projects.length === 0) {
+    return (
+      <div className="text-center py-8 text-gray-500">
+        <p className="text-lg">No matching projects found</p>
+      </div>
+    );
+  }
+
   const indexProject = async (projectId: string) => {
     setIndexingProjectId(projectId);
     await fetch(apiUrl + `/projects/${projectId}/reindex`);
     setIndexingProjectId("");
   };
+
   return (
     <Table className="text-base">
       <TableHeader>

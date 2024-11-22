@@ -5,16 +5,25 @@ import { ChevronRightIcon, SearchIcon } from "~/shadcn/components/icons";
 import { Button } from "~/shadcn/components/ui/button";
 import { Input } from "~/shadcn/components/ui/input";
 import { ScrollArea } from "~/shadcn/components/ui/scroll-area";
+import { useFilteredItemsByText } from "~/toolkit/hooks/useFilteredItemsByText";
 import { proxyApiRequestAsJson } from "~/toolkit/http/proxyApiRequest";
 import { ProjectsTable } from "./ProjectsTable";
+
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const projects = await proxyApiRequestAsJson<ProjectListItem[]>(request);
   return {
     projects,
   };
 };
+
 export default function ProjectsRoute() {
   const { projects } = useLoaderData<typeof loader>();
+  const { filteredItems, setFilterText, filterText } = useFilteredItemsByText(
+    projects,
+    ["name", "absolute_path"],
+    ""
+  );
+
   return (
     <div className="grid grid-rows-[70px_1fr] h-screen">
       <header className="bg-background w-full flex items-center justify-between px-4 md:px-6 h-16 shadow">
@@ -49,7 +58,25 @@ export default function ProjectsRoute() {
       </header>
       <ScrollArea>
         <div className="p-4 mt-8 max-w-[1400px] mx-auto">
-          <ProjectsTable projects={projects} />
+          <div className="mb-6 flex gap-4 items-center">
+            <div className="relative max-w-md">
+              <div className="absolute inset-y-0 left-2 flex items-center justify-center">
+                <SearchIcon className="h-5 w-5 text-muted-foreground" />
+              </div>
+              <Input
+                type="search"
+                placeholder="Filter projects..."
+                value={filterText}
+                onChange={(e) => setFilterText(e.target.value)}
+                className="w-full pl-8"
+                aria-label="Filter projects"
+              />
+            </div>
+            <div className="text-sm text-muted-foreground mt-2">
+              Showing {filteredItems.length} of {projects.length} projects
+            </div>
+          </div>
+          <ProjectsTable projects={filteredItems} />
         </div>
       </ScrollArea>
     </div>

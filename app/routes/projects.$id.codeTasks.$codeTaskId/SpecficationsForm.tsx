@@ -49,6 +49,11 @@ export const SpecificationsForm = ({
           placeholder: "AI-generated specifications will appear here...",
           readOnly: specificationsStream?.isStreaming,
         }}
+        defaultMode={
+          specificationsStream?.isStreaming || !specifications?.trim()
+            ? "edit"
+            : "preview"
+        }
         hint={
           specificationsStream?.isStreaming
             ? "AI is generating specifications..."
