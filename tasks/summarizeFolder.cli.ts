@@ -1,10 +1,10 @@
 import pathUtils from "path";
 import { parseArgs } from "util";
+import { filterFilePaths } from "../api/aiEngineer/fs/filterFilePaths";
 import {
   formatFileStructure,
   getFileContents,
-} from "../api/aiEngineer/fs/filesToMarkdown";
-import { filterFilePaths } from "../api/aiEngineer/fs/filterFilePaths";
+} from "../api/aiEngineer/fs/getFileContent";
 import { getProjectFiles } from "../api/aiEngineer/fs/getProjectFiles";
 import { generateProjectSummary } from "../api/aiEngineer/llm/summary/generateProjectSummary";
 import { getLLM } from "../app/toolkit/ai/llm/getLLM";

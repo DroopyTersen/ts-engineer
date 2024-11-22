@@ -73,6 +73,7 @@ export const DEFAULT_EXCLUSIONS: string[] = [
   "**/target/**",
   "**/.next/**",
   "**/vendor/**",
+  "**/_generated/**",
 
   // IDE and editor files
   "**/.idea/**",

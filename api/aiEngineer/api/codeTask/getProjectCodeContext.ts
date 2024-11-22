@@ -2,7 +2,7 @@ import { ProjectClassification } from "@shared/db.schema";
 import {
   formatFileStructure,
   getFileContents,
-} from "api/aiEngineer/fs/filesToMarkdown";
+} from "api/aiEngineer/fs/getFileContent";
 import { getProject } from "../getProject";
 import { getRelevantFiles } from "./getRelevantFiles";
 

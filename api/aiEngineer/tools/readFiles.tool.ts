@@ -1,7 +1,6 @@
 import { tool } from "ai";
 import { z } from "zod";
-import { formatFileContent } from "../fs/filesToMarkdown";
-import { processFileContents } from "../fs/getFileContent";
+import { formatFileContent, processFileContents } from "../fs/getFileContent";
 
 export const createReadFilesTool = (absolutePath: string) => {
   return tool({

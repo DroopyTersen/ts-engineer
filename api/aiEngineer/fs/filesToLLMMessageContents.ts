@@ -1,6 +1,9 @@
 import { getCachedMessageContent } from "~/toolkit/ai/llm/getLLM";
-import { formatFileContent, formatFileStructure } from "./filesToMarkdown";
-import { processFileContents } from "./getFileContent";
+import {
+  formatFileContent,
+  formatFileStructure,
+  processFileContents,
+} from "./getFileContent";
 
 export async function filesToLLMMessageContents(
   filePaths: string[],

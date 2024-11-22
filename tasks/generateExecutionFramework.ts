@@ -5,7 +5,10 @@ import { exec } from "child_process";
 import { readFile, writeFile } from "fs/promises";
 import { basename, join } from "path";
 import { promisify } from "util";
-
+import {
+  formatFileContent,
+  formatFileStructure,
+} from "../api/aiEngineer/fs/getFileContent";
 function testGlobs(filepath: string, globs: string[]) {
   let hasMatch = globs.some((glob) => {
     let g = new Glob(glob.toLowerCase());
@@ -111,29 +114,6 @@ const getFileContents = async (
 
   return fileContents;
 };
-
-const formatFileContent = (
-  filepath: string,
-  content: string,
-  maxLines: number
-) => {
-  const firstNLines = content.split("\n").slice(0, maxLines).join("\n");
-  const fileExtension = filepath.split(".").pop() || "";
-  return `
-${filepath}
-\`\`\`${fileExtension}
-${firstNLines}
-\`\`\`
-`;
-};
-
-const formatFileStructure = (filePaths: string[]) => `
-## File Structure
-
-\`\`\`
-${filePaths.join("\n")}
-\`\`\`
-`;
 
 const generateProjectSummary = async (projectContext: {
   title: string;

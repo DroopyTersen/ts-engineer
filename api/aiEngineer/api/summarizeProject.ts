@@ -1,7 +1,7 @@
 import { getLLM } from "~/toolkit/ai/llm/getLLM";
 import { LLMEventEmitter } from "~/toolkit/ai/streams/LLMEventEmitter";
 import { db } from "../db/db.server";
-import { formatFileStructure, getFileContents } from "../fs/filesToMarkdown";
+import { formatFileStructure, getFileContents } from "../fs/getFileContent";
 import { generateProjectSummary } from "../llm/summary/generateProjectSummary";
 import { getProject } from "./getProject";
 

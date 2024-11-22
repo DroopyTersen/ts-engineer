@@ -1,3 +1,4 @@
+import { filesToMarkdown } from "api/aiEngineer/fs/getFileContent";
 import { Hono } from "hono";
 import { createEventStreamDataStream } from "~/toolkit/ai/streams/createLLMEventStream";
 import { createNewProject } from "../aiEngineer/api/createNewProject";
@@ -6,7 +7,6 @@ import { getProjects } from "../aiEngineer/api/getProjects.api";
 import { indexProject } from "../aiEngineer/api/indexProject";
 import { summarizeProject } from "../aiEngineer/api/summarizeProject";
 import { updateProject } from "../aiEngineer/api/updateProject.api";
-import { filesToMarkdown } from "../aiEngineer/fs/filesToMarkdown";
 import { openProjectInCursor } from "../aiEngineer/fs/openProjectInCursor";
 
 const app = new Hono();
@@ -55,7 +55,7 @@ app.get("/:projectId/markdown", async (c) => {
   let markdown = await filesToMarkdown(filesToProcess, {
     projectPath: project.absolute_path,
     maxTokens: 100_000,
-    maxLinesPerFile: 250,
+    maxLinesPerFile: filesToProcess?.length < 50 ? 500 : 150,
   });
   return c.text(markdown);
 });

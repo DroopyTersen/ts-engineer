@@ -1,4 +1,4 @@
-import { filesToMarkdown } from "api/aiEngineer/fs/filesToMarkdown";
+import { filesToMarkdown } from "api/aiEngineer/fs/getFileContent";
 import { getTsModuleDependencies } from "api/aiEngineer/fs/getTsModuleDependencies";
 
 export const exportDependencyTree = async (

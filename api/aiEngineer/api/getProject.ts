@@ -2,7 +2,7 @@ import { estimateTokenCost } from "~/toolkit/ai/utils/token.utils";
 import { AsyncReturnType } from "~/toolkit/utils/typescript.utils";
 import { db } from "../db/db.server";
 import { DEFAULT_EXCLUSIONS } from "../fs/DEFAULT_EXCLUSIONS";
-import { filesToMarkdown } from "../fs/filesToMarkdown";
+import { filesToMarkdown } from "../fs/getFileContent";
 import { getProjectFiles } from "../fs/getProjectFiles";
 import { sortFilesByLargest } from "../fs/sortFilesByLargest";
 
