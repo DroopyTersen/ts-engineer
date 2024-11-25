@@ -1,3 +1,4 @@
+import { stat } from "node:fs/promises";
 import pathUtils from "node:path";
 import { runShellCommand } from "./runShellCommand";
 
@@ -11,11 +12,17 @@ const GIT_COMMANDS = {
 };
 export const createProjectGit = (absolutePath: string) => {
   const runGitCommand = async (command: string) => {
-    return runShellCommand(absolutePath, command);
+    try {
+      return await runShellCommand(absolutePath, command);
+    } catch (error) {
+      // Return null for git commands that fail
+      return null;
+    }
   };
 
   const getUncommittedChanges = async () => {
     let output = await runGitCommand(GIT_COMMANDS.unCommittedChanges);
+    if (!output) return [];
     // Process the output into a JSON array of { status, statusCode, filepath }
     const changes = output.split("\n").filter(Boolean).map(parseGitStatusItem);
     return changes;
@@ -31,14 +38,36 @@ export const createProjectGit = (absolutePath: string) => {
     );
   };
   const getLastModifiedFile = async () => {
+    // Try git first
     let output = await runGitCommand(GIT_COMMANDS.lastFileModified);
-    if (!output) return null;
-    const [timestamp, ...filePathParts] = output.split(" ");
-    const filepath = filePathParts.join(" ");
-    return {
-      updatedAt: new Date(parseInt(timestamp) * 1000).toISOString(),
-      filepath,
-    };
+
+    if (output) {
+      const [timestamp, ...filePathParts] = output.split(" ");
+      const filepath = filePathParts.join(" ");
+      return {
+        updatedAt: new Date(parseInt(timestamp) * 1000).toISOString(),
+        filepath,
+      };
+    }
+
+    try {
+      // Fall back to checking first file's timestamp
+      const files = await listFiles();
+      if (!files.length) return null;
+
+      const filepath = files[0];
+      const fullPath = pathUtils.join(absolutePath, filepath);
+      const stats = await stat(fullPath);
+
+      return {
+        updatedAt: new Date(
+          Math.max(stats.mtimeMs, stats.ctimeMs)
+        ).toISOString(),
+        filepath,
+      };
+    } catch (error) {
+      return null;
+    }
   };
   const getStatus = async () => {
     let [changes, branch] = await Promise.all([
@@ -62,6 +91,7 @@ export const createProjectGit = (absolutePath: string) => {
   };
   const listFiles = async () => {
     let output = await runGitCommand(GIT_COMMANDS.listFiles);
+    if (!output) return [];
     let files = output.split("\n").filter(Boolean);
     // Foreach file, ensure it actually exists.
     // there could have been a move or rename that hasn't been committed.

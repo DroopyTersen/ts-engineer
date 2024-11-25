@@ -4,6 +4,11 @@ import dayjs from "dayjs";
 import { useState } from "react";
 import { IoWarningOutline } from "react-icons/io5";
 import { useApiUrl } from "~/root";
+import {
+  ArrowDownIcon,
+  ArrowUpDownIcon,
+  ArrowUpIcon,
+} from "~/shadcn/components/icons";
 import { Badge } from "~/shadcn/components/ui/badge";
 import { Button } from "~/shadcn/components/ui/button";
 import {
@@ -15,11 +20,27 @@ import {
   TableRow,
 } from "~/shadcn/components/ui/table";
 import { cn } from "~/shadcn/utils";
+import { useSorting } from "~/toolkit/hooks/useSorting";
 import { OpenInCursorButton } from "../projects.$id/OpenInCursorButton";
 
 export function ProjectsTable({ projects }: { projects: ProjectListItem[] }) {
   let apiUrl = useApiUrl();
   let [indexingProjectId, setIndexingProjectId] = useState("");
+
+  const { sortedItems, onSort, sortKey, sortDir } = useSorting(projects, {
+    sortKey: "lastUpdate.updatedAt", // Default sort by last update
+    sortDir: "DESC", // Default to most recent first
+  });
+
+  const getSortIcon = (columnKey: string) => {
+    if (sortKey !== columnKey)
+      return <ArrowUpDownIcon className="w-4 h-4 ml-1" />;
+    return sortDir === "ASC" ? (
+      <ArrowUpIcon className="w-4 h-4 ml-1" />
+    ) : (
+      <ArrowDownIcon className="w-4 h-4 ml-1" />
+    );
+  };
 
   if (projects.length === 0) {
     return (
@@ -39,15 +60,51 @@ export function ProjectsTable({ projects }: { projects: ProjectListItem[] }) {
     <Table className="text-base">
       <TableHeader>
         <TableRow>
-          <TableHead>Project</TableHead>
-          <TableHead>Updated</TableHead>
+          <TableHead
+            onClick={() => onSort("name")}
+            className={cn(
+              "cursor-pointer select-none",
+              sortKey === "name" && "text-primary"
+            )}
+            aria-sort={
+              sortKey === "name"
+                ? sortDir === "ASC"
+                  ? "ascending"
+                  : "descending"
+                : "none"
+            }
+          >
+            <div className="flex items-center">
+              Project
+              {getSortIcon("name")}
+            </div>
+          </TableHead>
+          <TableHead
+            onClick={() => onSort("lastUpdate.updatedAt")}
+            className={cn(
+              "cursor-pointer select-none",
+              sortKey === "lastUpdate.updatedAt" && "text-primary"
+            )}
+            aria-sort={
+              sortKey === "lastUpdate.updatedAt"
+                ? sortDir === "ASC"
+                  ? "ascending"
+                  : "descending"
+                : "none"
+            }
+          >
+            <div className="flex items-center">
+              Updated
+              {getSortIcon("lastUpdate.updatedAt")}
+            </div>
+          </TableHead>
           <TableHead>GIT Status</TableHead>
           <TableHead>Classification</TableHead>
           <TableHead className="text-right"></TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
-        {projects.map((project) => (
+        {sortedItems.map((project) => (
           <TableRow key={project.id}>
             <TableCell className="font-medium">
               <div>

@@ -1,6 +1,5 @@
 import getValue from "just-safe-get";
 import { useEffect, useMemo, useRef, useState } from "react";
-
 function defaultSortMethod<T>(
   items: T[],
   sortKey: string,
@@ -10,14 +9,21 @@ function defaultSortMethod<T>(
   if (!sortKey) return items;
 
   const sortItems = [...items];
-  sortItems.sort((a, b) => {
+  sortItems.sort((a: any, b: any) => {
     let lhs = getValue(a, sortKey);
-    lhs = lhs !== null && lhs !== undefined ? lhs : "";
-
     let rhs = getValue(b, sortKey);
-    rhs = rhs !== null && rhs !== undefined ? rhs : "";
 
-    if (lhs.localeCompare && rhs.localeCompare) {
+    // Handle null/undefined/empty values
+    const lhsEmpty = lhs === null || lhs === undefined || lhs === "";
+    const rhsEmpty = rhs === null || rhs === undefined || rhs === "";
+
+    // Always put empty values last regardless of sort direction
+    if (lhsEmpty && !rhsEmpty) return 1;
+    if (!lhsEmpty && rhsEmpty) return -1;
+    if (lhsEmpty && rhsEmpty) return 0;
+
+    // Both values are non-empty, do normal comparison
+    if (typeof lhs === "string" && typeof rhs === "string") {
       // Perform string comparison
       return sortDir === "ASC"
         ? lhs.localeCompare(rhs)

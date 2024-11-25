@@ -60,6 +60,7 @@
     "hono": "^4.5.3",
     "install": "^0.13.0",
     "isbot": "^4.4.0",
+    "just-safe-get": "^4.2.0",
     "langfuse-vercel": "^3.19.0",
     "lucide-react": "^0.424.0",
     "madge": "^8.0.0",
