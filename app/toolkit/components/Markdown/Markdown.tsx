@@ -1,5 +1,5 @@
 import MarkdownToJSX from "markdown-to-jsx";
-import React, { useRef } from "react";
+import React from "react";
 import { cn } from "~/shadcn/utils";
 import { ChartRenderer } from "./ChartRenderer";
 import { MermaidDiagram } from "./MermaidDiagram";
@@ -15,59 +15,9 @@ export const Markdown = React.memo(
     className?: string;
     id?: string;
   }) => {
-    const contentRef = useRef<HTMLDivElement>(null);
-    // we want to tweak the markdown a little to add an extra line break before and after any
-    // code blocks if it isn't already there
-    /**
-3. Route Implementation:
-```typescript
-// Example route implementation
-export default function DataSourceRoute() {
-  const { dataSourceId } = useParams();
-  const { content, isLoading, loadContent } = useDataSourceContent(dataSourceId);
-  
-  useEffect(() => {
-    loadContent();
-  }, [dataSourceId]);
-
-  if (isLoading) return <LoadingIndicator />;
-  
-  return <DataSourceView content={content} />;
-}
-```
-
-Should become:
-3. Route Implementation:
-
-```typescript
-// Example route implementation
-export default function DataSourceRoute() {
-  const { dataSourceId } = useParams();
-  const { content, isLoading, loadContent } = useDataSourceContent(dataSourceId);
-  
-  useEffect(() => {
-    loadContent();
-  }, [dataSourceId]);
-
-  if (isLoading) return <LoadingIndicator />;
-  
-  return <DataSourceView content={content} />;
-}
-```
-     */
-    const addNewlinesAroundCodeBlocks = (markdown: string) => {
-      // Match code blocks that aren't preceded by a newline
-      // Using negative lookbehind (?<!\n) to ensure no newline before
-      return markdown.replace(
-        /(?<!\n)```(\w+)?\n([\s\S]*?)```/g,
-        "\n```$1\n$2```"
-      );
-    };
-
     const processedMarkdown = addNewlinesAroundCodeBlocks(children);
     return (
       <div
-        ref={contentRef}
         className={cn(
           "prose max-w-4xl [&_table_th]:text-left [&>div>*]:mt-0 whitespace-pre-wrap ",
           className
@@ -137,3 +87,48 @@ const ThoughtBox = React.memo(({ children }: { children: React.ReactNode }) => {
     </div>
   );
 });
+
+// we want to tweak the markdown a little to add an extra line break before and after any
+// code blocks if it isn't already there
+/**
+3. Route Implementation:
+```typescript
+// Example route implementation
+export default function DataSourceRoute() {
+  const { dataSourceId } = useParams();
+  const { content, isLoading, loadContent } = useDataSourceContent(dataSourceId);
+  
+  useEffect(() => {
+    loadContent();
+  }, [dataSourceId]);
+
+  if (isLoading) return <LoadingIndicator />;
+  
+  return <DataSourceView content={content} />;
+}
+```
+
+Should become:
+3. Route Implementation:
+
+```typescript
+// Example route implementation
+export default function DataSourceRoute() {
+  const { dataSourceId } = useParams();
+  const { content, isLoading, loadContent } = useDataSourceContent(dataSourceId);
+  
+  useEffect(() => {
+    loadContent();
+  }, [dataSourceId]);
+
+  if (isLoading) return <LoadingIndicator />;
+  
+  return <DataSourceView content={content} />;
+}
+```
+     */
+const addNewlinesAroundCodeBlocks = (markdown: string) => {
+  // Match code blocks that aren't preceded by a newline
+  // Using negative lookbehind (?<!\n) to ensure no newline before
+  return markdown.replace(/(?<!\n)```(\w+)?\n([\s\S]*?)```/g, "\n```$1\n$2```");
+};

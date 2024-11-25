@@ -1,12 +1,8 @@
 import { LoaderFunctionArgs } from "@remix-run/node";
 import { useLoaderData, useParams } from "@remix-run/react";
 import type { ConversationDbItem } from "@shared/db.schema";
-import { LuArrowDown } from "react-icons/lu";
-import { Button } from "~/shadcn/components/ui/button";
 import { cn } from "~/shadcn/utils";
 import { DynamicMessageInput } from "~/toolkit/ai/ui/DynamicMessageInput";
-import { useScrollToBottom } from "~/toolkit/ai/ui/useScrollToBottom";
-import { useUpdateEffect } from "~/toolkit/hooks/useUpdateEffect";
 import { proxyApiRequestAsJson } from "~/toolkit/http/proxyApiRequest";
 import { useProjectContext } from "../projects.$id/route";
 import { EditableMessage } from "./EditableMessage";
@@ -26,19 +22,20 @@ export default function ChatRoute() {
   const { actions, messages, isStreaming, inputRef } =
     useProjectChat(conversation);
   let { project } = useProjectContext();
-  let { scrollToBottom, isAtBottom } = useScrollToBottom(
-    isStreaming,
-    "#project-scroll-container"
-  );
-  useUpdateEffect(() => {
-    if (
-      messages.length > 0 &&
-      messages.length > (conversation?.messages?.length || 0)
-    ) {
-      scrollToBottom();
-    }
-  }, [messages.length]);
-
+  // let { scrollToBottom, isAtBottom } = useScrollToBottom(
+  //   isStreaming,
+  //   "#project-scroll-container"
+  // );
+  // useUpdateEffect(() => {
+  //   if (
+  //     messages.length > 0 &&
+  //     messages.length > (conversation?.messages?.length || 0)
+  //   ) {
+  //     scrollToBottom();
+  //   }
+  // }, [messages.length]);
+  const isAtBottom = true;
+  console.log("🚀 | ChatRoute ~ messages:", messages);
   return (
     <div
       className={cn(
@@ -50,7 +47,7 @@ export default function ChatRoute() {
         <div className="p-4 space-y-4 min-h-44">
           {messages.map((message, index) => (
             <EditableMessage
-              key={index}
+              key={message.id || index}
               index={index}
               editMessage={actions.editMessage}
               message={message}
@@ -79,7 +76,7 @@ export default function ChatRoute() {
           />
         </div>
       </div>
-      <Button
+      {/* <Button
         className={cn(
           "fixed bottom-8 right-8 rounded-full transition-opacity duration-500 shadow-lg",
           isAtBottom ? "opacity-0" : "opacity-100",
@@ -89,7 +86,7 @@ export default function ChatRoute() {
         onClick={() => scrollToBottom()}
       >
         <LuArrowDown size={20} />
-      </Button>
+      </Button> */}
     </div>
   );
 }

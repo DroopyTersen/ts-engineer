@@ -48,7 +48,7 @@ export const EditableMessage = ({
     <ChatMessageContainer
       className={role === "AI" ? "justify-start" : "justify-end"}
     >
-      {mode === "display" && !isStreaming ? (
+      {mode === "display" ? (
         <ChatMessageContent
           className={role === "AI" ? "bg-white" : "bg-[#1F1F1F]"}
         >
