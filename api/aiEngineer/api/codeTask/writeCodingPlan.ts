@@ -36,11 +36,11 @@ export const writeCodingPlan = async (
   const selectedFiles = validatedInput.selectedFiles?.length
     ? validatedInput.selectedFiles
     : existingCodeTask?.selected_files || [];
-  let projectContext = await getProjectCodeContext(
-    existingCodeTask?.input + existingCodeTask?.specifications,
-    validatedInput.projectId,
-    selectedFiles
-  );
+  let projectContext = await getProjectCodeContext({
+    input: existingCodeTask?.input + existingCodeTask?.specifications,
+    projectId: validatedInput.projectId,
+    selectedFiles,
+  });
 
   console.log("🚀 | existingCodeTask:", existingCodeTask);
 

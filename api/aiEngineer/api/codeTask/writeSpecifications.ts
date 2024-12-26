@@ -35,11 +35,11 @@ export const writeSpecifications = async (
 
   const selectedFiles =
     validatedInput.selectedFiles || existingCodeTask?.selected_files || [];
-  let projectContext = await getProjectCodeContext(
-    validatedInput.input,
-    validatedInput.projectId,
-    selectedFiles
-  );
+  let projectContext = await getProjectCodeContext({
+    input: validatedInput.input,
+    projectId: validatedInput.projectId,
+    selectedFiles,
+  });
 
   let newSpecifications = `<files>\n${projectContext.filepaths.join(
     "\n"

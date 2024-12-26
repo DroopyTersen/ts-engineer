@@ -61,14 +61,23 @@ export const formatFileContent = (
   content: string,
   maxLines: number = 300
 ) => {
-  let firstNLines = content.split("\n").slice(0, maxLines).join("\n");
+  const lines = content.split("\n");
+  const totalLines = lines.length;
+  let firstNLines = lines.slice(0, maxLines).join("\n");
   let fileExtension = filepath.split(".").pop() || "";
-  return `
+
+  let output = `
 ${filepath}
 \`\`\`${fileExtension}
 ${firstNLines}
-\`\`\`
-`;
+\`\`\``;
+
+  if (totalLines > maxLines) {
+    const remainingLines = totalLines - maxLines;
+    output += `\n\n*${remainingLines} lines omitted for brevity, please call the readFileContents tool to view the entire file*`;
+  }
+
+  return output;
 };
 
 export const formatFileStructure = (filePaths: string[]) => {

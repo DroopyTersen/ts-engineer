@@ -1,3 +1,4 @@
+import fs from "fs/promises";
 import { estimateTokenCost } from "~/toolkit/ai/utils/token.utils";
 import { AsyncReturnType } from "~/toolkit/utils/typescript.utils";
 import { db } from "../db/db.server";
@@ -11,10 +12,18 @@ export async function getProject(
   selectedFiles: string[] = [],
   config?: { traceId?: string }
 ) {
-  const project = await await db.getProjectById(id);
+  const project = await db.getProjectById(id);
   if (!project) {
     throw new Error("Project not found");
   }
+
+  let pathExists = true;
+  try {
+    await fs.access(project.absolute_path);
+  } catch {
+    pathExists = false;
+  }
+
   let filepaths = selectedFiles;
   if (!filepaths?.length) {
     filepaths = await getProjectFiles(project);
@@ -44,6 +53,7 @@ export async function getProject(
     exclusions: project.exclusions || DEFAULT_EXCLUSIONS.join("\n"),
     usageEstimate,
     filepaths,
+    pathExists,
   };
 }
 

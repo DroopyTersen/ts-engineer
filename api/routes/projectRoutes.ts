@@ -7,6 +7,7 @@ import { getProjects } from "../aiEngineer/api/getProjects.api";
 import { indexProject } from "../aiEngineer/api/indexProject";
 import { summarizeProject } from "../aiEngineer/api/summarizeProject";
 import { updateProject } from "../aiEngineer/api/updateProject.api";
+import { projectsDb } from "../aiEngineer/db/projects.db";
 import { openProjectInCursor } from "../aiEngineer/fs/openProjectInCursor";
 
 const app = new Hono();
@@ -94,6 +95,12 @@ app.post("/:projectId/selection-usage", async (c) => {
     usageEstimate: project.usageEstimate,
     selectedFiles: selectedFiles,
   });
+});
+
+app.delete("/:projectId", async (c) => {
+  const projectId = c.req.param("projectId");
+  await projectsDb.deleteProject(projectId);
+  return c.json({ success: true });
 });
 
 export default app;

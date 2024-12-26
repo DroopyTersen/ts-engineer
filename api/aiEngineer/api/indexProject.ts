@@ -35,7 +35,8 @@ export const indexProject = async (
       summary: summarization,
       projectId,
       filepath,
-      content,
+      // max 8k tokens
+      content: content.slice(0, 7000 * 4),
     });
   };
 

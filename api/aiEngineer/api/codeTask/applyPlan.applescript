@@ -1,28 +1,26 @@
 -- Delay for 1 second
-delay 0.5
+delay 0.75
 
-
--- Simulate pressing Ctrl+Shift+Alt+Cmd+U
+-- Simulate pressing Cmd+I
 tell application "System Events"
-    keystroke "u" using {control down, shift down, option down, command down}
+    keystroke "i" using {command down}
 end tell
 
-delay 0.8
+delay 1.5
+
+-- Simulate pressing Cmd+N
+tell application "System Events"
+    keystroke "n" using {command down}
+end tell
+
+delay 0.5
 
 -- Perform paste operation (Command+V)
 tell application "System Events"
     keystroke "v" using {command down}
 end tell
 
-
 delay 0.5
-
--- Simulate pressing Cmd+Shift+I
-tell application "System Events"
-    keystroke "i" using {command down, shift down}
-end tell
-
-delay 1
 
 -- Simulate pressing Enter
 tell application "System Events"

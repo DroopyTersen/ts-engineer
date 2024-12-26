@@ -1,8 +1,9 @@
 import { CoreMessage } from "ai";
+import { db } from "api/aiEngineer/db/db.server";
 import { generateProjectChatResponse } from "api/aiEngineer/llm/generateProjectChatResponse";
+import { getLLMByClassification } from "api/aiEngineer/llm/getLLMByClassification";
 import { getLLM } from "~/toolkit/ai/llm/getLLM";
 import { LLMEventEmitter } from "~/toolkit/ai/streams/LLMEventEmitter";
-import { db } from "../../db/db.server";
 import { getProjectCodeContext } from "../codeTask/getProjectCodeContext";
 
 export const chatWithProjectCode = async ({
@@ -22,27 +23,19 @@ export const chatWithProjectCode = async ({
 }) => {
   try {
     console.log("🚀 | messages:", messages);
-    let [projectContext, existingConversation] = await Promise.all([
-      getProjectCodeContext(
-        JSON.stringify(messages.slice(-3), null, 2),
-        projectId,
-        selectedFiles
-      ),
-      db.getConversation(conversationId),
-    ]);
-    // console.log(
-    //   "🚀 | projectContext:",
-    //   projectContext.fileContents.map((fc) => fc.slice(0, 100)).join("\n")
-    // );
-    let llm =
-      projectContext.classification === "work"
-        ? getLLM("azure", "gpt-4o")
-        : getLLM("anthropic", "claude-3-5-sonnet-20241022");
+    let project = await db.getProjectById(projectId);
+    let llm = getLLMByClassification(project.classification);
+    let projectContext = await getProjectCodeContext({
+      input: JSON.stringify(messages.slice(-3), null, 2),
+      projectId,
+      selectedFiles,
+      maxTokens: llm._model.modelId === "deepseek-chat" ? 64_000 : 100_000,
+    });
     emitter.emit("data", {
       type: "selectedFiles",
       selectedFiles: projectContext.filepaths,
     });
-    console.log("🚀 | messages:", messages);
+
     let aiResponse = await generateProjectChatResponse(
       messages,
       projectContext,
@@ -51,31 +44,6 @@ export const chatWithProjectCode = async ({
         llm,
       }
     );
-
-    // let newMessages = [
-    //   ...messages,
-    //   {
-    //     role: "assistant",
-    //     content: aiResponse,
-    //     selectedFiles: projectContext.filepaths,
-    //   },
-    // ];
-    // console.log("🚀 | START NEW MESSAGES:!!");
-    // newMessages.forEach((m) => {
-    //   console.log(`${m.role}: ${m.content.slice(0, 25)}...`);
-    // });
-    // console.log("🚀 | END NEW MESSAGES:!!");
-
-    // let title =
-    //   existingConversation?.title ||
-    //   (await generateConversationTitle(newMessages as any[]));
-
-    // let newConversation = await db.saveConversation({
-    //   id: conversationId,
-    //   project_id: projectId,
-    //   messages: newMessages as any[],
-    //   title: title,
-    // });
 
     return aiResponse;
   } catch (error) {

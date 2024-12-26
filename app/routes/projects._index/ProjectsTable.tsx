@@ -1,4 +1,4 @@
-import { Link } from "@remix-run/react";
+import { Link, useNavigate } from "@remix-run/react";
 import { ProjectListItem } from "api/aiEngineer/api/getProjects.api";
 import dayjs from "dayjs";
 import { useState } from "react";
@@ -26,6 +26,8 @@ import { OpenInCursorButton } from "../projects.$id/OpenInCursorButton";
 export function ProjectsTable({ projects }: { projects: ProjectListItem[] }) {
   let apiUrl = useApiUrl();
   let [indexingProjectId, setIndexingProjectId] = useState("");
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   const { sortedItems, onSort, sortKey, sortDir } = useSorting(projects, {
     sortKey: "lastUpdate.updatedAt", // Default sort by last update
@@ -54,6 +56,23 @@ export function ProjectsTable({ projects }: { projects: ProjectListItem[] }) {
     setIndexingProjectId(projectId);
     await fetch(apiUrl + `/projects/${projectId}/reindex`);
     setIndexingProjectId("");
+  };
+
+  const handleDelete = async (id: string) => {
+    setDeletingId(id);
+    try {
+      const response = await fetch(`${apiUrl}/projects/${id}`, {
+        method: "DELETE",
+      });
+      if (response.ok) {
+        navigate(".", { replace: true });
+      } else {
+        console.error("Failed to delete project");
+      }
+    } catch (error) {
+      console.error("Error deleting project:", error);
+    }
+    setDeletingId(null);
   };
 
   return (
@@ -105,7 +124,10 @@ export function ProjectsTable({ projects }: { projects: ProjectListItem[] }) {
       </TableHeader>
       <TableBody>
         {sortedItems.map((project) => (
-          <TableRow key={project.id}>
+          <TableRow
+            key={project.id}
+            className={cn(!project.lastUpdate && "bg-red-50")}
+          >
             <TableCell className="font-medium">
               <div>
                 <Link
@@ -173,6 +195,14 @@ export function ProjectsTable({ projects }: { projects: ProjectListItem[] }) {
               <div className="flex flex-col justify-end gap-1">
                 <Button variant={"outline"} size="sm" asChild>
                   <Link to={`/projects/${project.id}/edit`}>Edit</Link>
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  disabled={!!deletingId}
+                  onClick={() => handleDelete(project.id)}
+                >
+                  {deletingId === project.id ? "Deleting..." : "Delete"}
                 </Button>
                 <Button
                   disabled={!!indexingProjectId}

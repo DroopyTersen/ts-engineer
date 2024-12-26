@@ -90,10 +90,22 @@ const insertProject = async (input: CodeProjectDbItem) => {
   }
 };
 
+const deleteProject = async (id: string) => {
+  try {
+    await getDb().query("DELETE FROM code_projects WHERE id = $1", [
+      id.toUpperCase(),
+    ]);
+  } catch (error) {
+    console.error("Error deleting project:", error);
+    throw new Error("Failed to delete project from database");
+  }
+};
+
 export const projectsDb = {
   getProjects,
   getProjectById,
   getProjectByAbsolutePath,
   insertProject,
   updateProject,
+  deleteProject,
 };

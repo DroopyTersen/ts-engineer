@@ -16,11 +16,19 @@ export interface ProjectCodeContext {
   classification?: ProjectClassification;
 }
 
-export async function getProjectCodeContext(
-  input: string,
-  projectId: string,
-  selectedFiles: string[]
-): Promise<ProjectCodeContext> {
+interface GetProjectCodeContextParams {
+  input: string;
+  projectId: string;
+  selectedFiles: string[];
+  maxTokens?: number;
+}
+
+export async function getProjectCodeContext({
+  input,
+  projectId,
+  selectedFiles,
+  maxTokens = 64_000,
+}: GetProjectCodeContextParams): Promise<ProjectCodeContext> {
   const project = await getProject(projectId);
   let filepaths: string[] = selectedFiles;
 
@@ -37,7 +45,7 @@ export async function getProjectCodeContext(
 
   let fileContents = await getFileContents(filepaths, {
     projectPath: project.absolute_path,
-    maxTokens: 70_000,
+    maxTokens,
     maxLinesPerFile: 300,
   });
 

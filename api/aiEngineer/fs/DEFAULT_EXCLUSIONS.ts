@@ -122,6 +122,7 @@ export const DEFAULT_EXCLUSIONS: string[] = [
   "**/*.edmx",
   "**/*.vbproj",
   "**/*.csproj",
+  "**/*.xlsb",
 
   // Log and cache files
   "**/*.log",
