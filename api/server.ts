@@ -41,5 +41,7 @@ app.get("/healthcheck", async (c) => {
 
 serve({
   fetch: app.fetch,
+  // @ts-ignore
+  idleTimeout: 255,
   port: 3334,
 });

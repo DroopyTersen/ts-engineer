@@ -19,9 +19,10 @@ export const generateProjectChatResponse = async (
   options: {
     llm: LLM;
     emitter?: LLMEventEmitter;
+    signal?: AbortSignal;
   }
 ) => {
-  const { emitter, llm } = options;
+  const { emitter, llm, signal } = options;
   let userMessageTextContents = createCachedProjectMessageTextContents({
     fileContents: projectContext.fileContents.filter(Boolean),
     fileStructure: projectContext.fileStructure || "No file structure provided",
@@ -54,7 +55,7 @@ export const generateProjectChatResponse = async (
         readUrlContents: readUrlTool,
       },
     },
-    { emitter }
+    { emitter, signal }
   );
 
   return result.text;

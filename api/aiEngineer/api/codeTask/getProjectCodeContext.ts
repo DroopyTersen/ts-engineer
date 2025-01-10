@@ -27,7 +27,7 @@ export async function getProjectCodeContext({
   input,
   projectId,
   selectedFiles,
-  maxTokens = 64_000,
+  maxTokens = 54_000,
 }: GetProjectCodeContextParams): Promise<ProjectCodeContext> {
   const project = await getProject(projectId);
   let filepaths: string[] = selectedFiles;

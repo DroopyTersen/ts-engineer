@@ -13,6 +13,7 @@ export const chatWithProjectCode = async ({
   model,
   selectedFiles,
   emitter,
+  signal,
 }: {
   projectId: string;
   conversationId: string;
@@ -20,16 +21,18 @@ export const chatWithProjectCode = async ({
   model: string;
   selectedFiles: string[];
   emitter: LLMEventEmitter;
+  signal: AbortSignal;
 }) => {
   try {
     console.log("🚀 | messages:", messages);
     let project = await db.getProjectById(projectId);
     let llm = getLLMByClassification(project.classification);
+    console.log("🚀 | llm:", llm._model.modelId);
     let projectContext = await getProjectCodeContext({
       input: JSON.stringify(messages.slice(-3), null, 2),
       projectId,
       selectedFiles,
-      maxTokens: llm._model.modelId === "deepseek-chat" ? 64_000 : 100_000,
+      maxTokens: llm._model.modelId === "deepseek-chat" ? 54_000 : 100_000,
     });
     emitter.emit("data", {
       type: "selectedFiles",
@@ -42,6 +45,7 @@ export const chatWithProjectCode = async ({
       {
         emitter,
         llm,
+        signal,
       }
     );
 

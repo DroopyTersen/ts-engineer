@@ -37,7 +37,10 @@ app.post("/:projectId/codeTasks/:codeTaskId/specifications", async (c) => {
     {
       emitter,
     }
-  ).finally(() => dataStream.close());
+  ).finally(() => {
+    console.log("Closing data stream");
+    dataStream.close();
+  });
   return dataStream.toResponse();
 });
 

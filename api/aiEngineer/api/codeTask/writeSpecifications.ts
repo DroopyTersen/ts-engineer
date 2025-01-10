@@ -1,9 +1,10 @@
 import { z } from "zod";
-import { getLLM, LLM } from "~/toolkit/ai/llm/getLLM";
+import { LLM } from "~/toolkit/ai/llm/getLLM";
 import { LLMEventEmitter } from "~/toolkit/ai/streams/LLMEventEmitter";
 import { classifyCodeTask } from "../../llm/specfications/classifyCodeTask";
 
 import { db } from "api/aiEngineer/db/db.server";
+import { getLLMByClassification } from "api/aiEngineer/llm/getLLMByClassification";
 import { generateSpecifications } from "api/aiEngineer/llm/specfications/generateSpecifications";
 import { getProjectCodeContext } from "./getProjectCodeContext";
 
@@ -32,6 +33,8 @@ export const writeSpecifications = async (
 ) => {
   const validatedInput = WriteSpecificationsInput.parse(rawInput);
   let existingCodeTask = await db.getCodeTaskById(validatedInput.codeTaskId);
+  let project = await db.getProjectById(validatedInput.projectId);
+  llm = llm || getLLMByClassification(project.classification);
 
   const selectedFiles =
     validatedInput.selectedFiles || existingCodeTask?.selected_files || [];
@@ -39,6 +42,7 @@ export const writeSpecifications = async (
     input: validatedInput.input,
     projectId: validatedInput.projectId,
     selectedFiles,
+    maxTokens: llm._model.modelId === "deepseek-chat" ? 54_000 : 100_000,
   });
 
   let newSpecifications = `<files>\n${projectContext.filepaths.join(
@@ -47,7 +51,6 @@ export const writeSpecifications = async (
 
   emitter?.emit("content", newSpecifications);
 
-  llm = llm || getLLM("anthropic", "claude-3-5-sonnet-20241022");
   // Classify the code task
   const taskType = await classifyCodeTask(validatedInput.input, {
     llm,

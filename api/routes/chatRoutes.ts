@@ -25,7 +25,11 @@ app.post("/:projectId/chat/:conversationId", async (c) => {
     model,
     selectedFiles,
     emitter,
-  }).finally(() => dataStream.close());
+    signal: c.req.raw.signal,
+  }).finally(() => {
+    console.log("Closing data stream");
+    dataStream.close();
+  });
 
   return dataStream.toResponse();
 });

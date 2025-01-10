@@ -19,7 +19,22 @@ app.post("/:projectId/code-map", async (c) => {
       .join("\n\n")
   );
 });
-
+// A list of file extensions that should be mapped to xml syntax highlighting
+let xmlMappings = [
+  "xsd",
+  "xsl",
+  "xml",
+  "xslt",
+  "xslx",
+  "csproj",
+  "vbproj",
+  "fsproj",
+  "pom",
+  "gradle",
+  "sbt",
+  "build.gradle",
+  "build.sbt",
+];
 app.get("/:projectId/file-viewer", async (c) => {
   let filepath = c.req.query("file");
   if (!filepath) {
@@ -33,6 +48,9 @@ app.get("/:projectId/file-viewer", async (c) => {
     let fileContents = await getFileContent(filepath, project.absolute_path);
     let fileExtension =
       filepath.split(".").pop()?.replace(".", "") || "plaintext";
+    if (xmlMappings.includes(fileExtension)) {
+      fileExtension = "xml";
+    }
     let html = await codeToHtml(fileContents, {
       lang: fileExtension,
       theme: "slack-dark",
@@ -40,7 +58,7 @@ app.get("/:projectId/file-viewer", async (c) => {
       console.log("🚀 | app.get | err1:", err);
       let secondTry = await codeToHtml(fileContents, {
         theme: "slack-dark",
-        lang: "md",
+        lang: "txt",
       }).catch((err) => {
         console.log("🚀 | app.get | err3:", err);
         return `<pre class="shiki">${fileContents}</pre>`;
