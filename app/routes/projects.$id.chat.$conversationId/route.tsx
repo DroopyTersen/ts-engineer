@@ -40,7 +40,7 @@ export default function ChatRoute() {
     <div
       className={cn(
         "w-full transition-colors duration-300",
-        messages && messages?.length > 1 ? "bg-gray-100" : "bg-white"
+        messages && messages?.length > 1 ? "bg-gray-50" : "bg-white"
       )}
     >
       <div className="w-full relative grid grid-rows-[1fr_auto] max-w-4xl mx-auto ">

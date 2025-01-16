@@ -8,6 +8,7 @@ import { cn, tw } from "~/shadcn/utils";
 import { LLMDataMessage } from "~/toolkit/ai/streams/LLMDataStream";
 import { CopyToClipboardButton } from "~/toolkit/components/buttons/CopyToClipboardButton";
 import { Markdown } from "~/toolkit/components/Markdown/Markdown";
+
 interface ChatMessageProps {
   message: LLMDataMessage;
   editMessage: (index: number, newContents: string) => void;
@@ -16,7 +17,10 @@ interface ChatMessageProps {
 }
 
 const ChatMessageContainer = tw("div", "relative w-full");
-const ChatMessageContent = tw("div", "p-6 rounded-lg border");
+const ChatMessageContent = tw(
+  "div",
+  "p-6 rounded-lg border shadow-sm transition-colors duration-200"
+);
 const StrongLabel = tw("strong", "");
 
 export const EditableMessage = ({
@@ -46,17 +50,23 @@ export const EditableMessage = ({
 
   return (
     <ChatMessageContainer
-      className={role === "AI" ? "justify-start" : "justify-end"}
+      className={cn(role === "AI" ? "justify-start" : "justify-end", "group")}
     >
       {mode === "display" ? (
         <ChatMessageContent
-          className={role === "AI" ? "bg-white" : "bg-[#1F1F1F]"}
+          className={cn(
+            "transition-colors",
+            role === "AI"
+              ? "bg-white hover:bg-gray-50"
+              : "bg-gray-100 hover:bg-gray-100 "
+          )}
         >
           <Markdown
             id={messageId}
-            className={
-              role === "AI" ? "prose-base" : "prose-base text-gray-100"
-            }
+            className={cn(
+              "prose-base",
+              role === "AI" ? "text-gray-900" : "text-gray-800"
+            )}
           >
             {message.content || ""}
           </Markdown>
@@ -76,7 +86,7 @@ export const EditableMessage = ({
           autoFocus
           disabled={isStreaming}
           defaultValue={message.content}
-          className="p-4 rounded-lg text-base resize-y"
+          className="p-4 rounded-lg text-base resize-y border-gray-200 focus:border-blue-200 focus:ring-blue-200"
           onKeyDown={(e: React.KeyboardEvent) => {
             if (e.key === "Enter" && !e.shiftKey) {
               e.preventDefault();
@@ -97,7 +107,7 @@ export const EditableMessage = ({
             variant="ghost"
             size="icon"
             onClick={toggleMode}
-            className="mt-4 hover:bg-white transition-colors rounded-full group"
+            className="mt-4 hover:bg-gray-100 transition-colors rounded-full group"
           >
             <StrongLabel className="opacity-100 group-hover:opacity-0">
               {role === "AI" ? "AI" : "ME"}
@@ -113,7 +123,7 @@ export const EditableMessage = ({
               variant="ghost"
               size="icon"
               onClick={toggleMode}
-              className="hover:bg-white transition-colors rounded-full group"
+              className="hover:bg-gray-100 transition-colors rounded-full group"
             >
               <BsX size={24} />
             </Button>
