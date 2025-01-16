@@ -4,7 +4,7 @@ import { Button } from "~/shadcn/components/ui/button";
 import { TooltipWrapper } from "~/shadcn/components/ui/TooltipWrapper";
 import { jsonRequest } from "~/toolkit/http/fetch.utils";
 import { copyTextToClipboard } from "~/toolkit/utils/clipboard.utils.client";
-import { CURSOR_PREFIX } from "../../../api/aiEngineer/llm/codingPlan/generateCodingPlan";
+import { CURSOR_PREFIX } from "../../../api/aiEngineer/llm/codingPlan/cursorPrefix";
 
 type ApplyInCursorButtonProps = {
   projectId: string;

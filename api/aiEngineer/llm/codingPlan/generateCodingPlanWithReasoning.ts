@@ -1,7 +1,7 @@
 import OpenAI from "openai";
 import { getCachedMessageContent, LLM } from "~/toolkit/ai/llm/getLLM";
 import { LLMEventEmitter } from "~/toolkit/ai/streams/LLMEventEmitter";
-import { CURSOR_PREFIX } from "./generateCodingPlan";
+import { CURSOR_PREFIX } from "./cursorPrefix";
 
 export const generateCodingPlanWithReasoning = async (
   {
