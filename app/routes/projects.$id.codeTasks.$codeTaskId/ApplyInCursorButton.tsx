@@ -4,6 +4,7 @@ import { Button } from "~/shadcn/components/ui/button";
 import { TooltipWrapper } from "~/shadcn/components/ui/TooltipWrapper";
 import { jsonRequest } from "~/toolkit/http/fetch.utils";
 import { copyTextToClipboard } from "~/toolkit/utils/clipboard.utils.client";
+import { CURSOR_PREFIX } from "../../../api/aiEngineer/llm/codingPlan/generateCodingPlan";
 
 type ApplyInCursorButtonProps = {
   projectId: string;
@@ -25,6 +26,7 @@ export const ApplyInCursorButton = ({
     setIsApplying(true);
     try {
       await copyTextToClipboard(codePlan);
+      await copyTextToClipboard(CURSOR_PREFIX + codePlan);
       await jsonRequest(
         `${apiUrl}/projects/${projectId}/codeTasks/${codeTaskId}/applyPlan`,
         {
