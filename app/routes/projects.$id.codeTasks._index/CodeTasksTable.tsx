@@ -46,11 +46,11 @@ export function CodeTasksTable({ codeTasks, projectId }: CodeTasksTableProps) {
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>ID</TableHead>
-          <TableHead>Title</TableHead>
-          <TableHead>Input</TableHead>
-          <TableHead>Created At</TableHead>
-          <TableHead>Actions</TableHead>
+          <TableHead className="w-[80px]">ID</TableHead>
+          <TableHead className="w-[30%]">Title</TableHead>
+          <TableHead className="w-[35%]">Input</TableHead>
+          <TableHead className="w-[15%]">Created At</TableHead>
+          <TableHead className="w-[10%]">Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -61,8 +61,12 @@ export function CodeTasksTable({ codeTasks, projectId }: CodeTasksTableProps) {
                 {codeTask.id}
               </Link>
             </TableCell>
-            <TableCell>{codeTask.title || "Untitled"}</TableCell>
-            <TableCell>{codeTask.input.substring(0, 50)}...</TableCell>
+            <TableCell className="font-medium">
+              {codeTask.title || "Untitled"}
+            </TableCell>
+            <TableCell>
+              <p className="line-clamp-3">{codeTask.input.substring(0, 500)}</p>
+            </TableCell>
             <TableCell>
               {new Date(codeTask.created_at).toLocaleString()}
             </TableCell>
