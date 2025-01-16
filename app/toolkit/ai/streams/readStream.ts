@@ -1,9 +1,5 @@
 import { JSONValue } from "ai";
-import {
-  createParser,
-  type ParsedEvent,
-  type ReconnectInterval,
-} from "eventsource-parser";
+import { createParser, EventSourceMessage } from "eventsource-parser";
 import { fetchStream } from "~/toolkit/http/fetch.utils";
 
 export async function fetchTextStream(
@@ -108,22 +104,26 @@ export async function readEventStream(
   onEvent: (event: { event: string; data: JSONValue }) => void,
   signal?: AbortSignal
 ) {
-  function onParseEvent(event: ParsedEvent | ReconnectInterval) {
-    if (event?.type === "event") {
-      try {
-        const data = event.data;
-        if (data === "[DONE]") {
-          return;
-        }
-        const json = tryParseEventDataJson(data);
-        let payload = { event: event.event || "message", data: json };
-        onEvent(payload);
-      } catch (e) {
-        console.error("🚀 | onParse | error", e);
+  function onParseEvent(event: EventSourceMessage) {
+    try {
+      const data = event.data;
+      if (data === "[DONE]") {
+        return;
       }
+      const json = tryParseEventDataJson(data);
+      let payload = { event: event.event || "message", data: json };
+      onEvent(payload);
+    } catch (e) {
+      console.error("🚀 | onParse | error", e);
     }
   }
-  const parser = createParser(onParseEvent);
+  const parser = createParser({
+    onEvent: onParseEvent,
+    onError: (error) => {
+      console.error("🚀 | onParse | error", error);
+      throw error;
+    },
+  });
 
   return readTextStream(response, parser.feed, signal);
 }

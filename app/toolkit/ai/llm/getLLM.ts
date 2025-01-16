@@ -1,8 +1,10 @@
 import {
+  CoreMessage,
   generateId,
-  GenerateObjectResult,
   generateObject as vercelGenerateObject,
+  GenerateObjectResult as VercelGenerateObjectResult,
   generateText as vercelGenerateText,
+  GenerateTextResult as VercelGenerateTextResult,
   streamObject as vercelStreamObject,
   streamText as vercelStreamText,
 } from "ai";
@@ -17,10 +19,19 @@ export const getLLM = <T extends ModelProvider>(
   provider: T,
   modelName: keyof (typeof MODEL_PROVIDERS)[T]["models"]
 ) => {
+  let structuredOutputs = false;
+  if (modelName.toString().endsWith("-structured")) {
+    structuredOutputs = false;
+    modelName = modelName
+      .toString()
+      .replace(
+        "-structured",
+        ""
+      ) as keyof (typeof MODEL_PROVIDERS)[T]["models"];
+  }
   let _model = MODEL_PROVIDERS[provider].create(modelName as string, {
-    cacheControl: true,
+    structuredOutputs,
   });
-
   return {
     _model,
     generateText: async (
@@ -33,7 +44,10 @@ export const getLLM = <T extends ModelProvider>(
       params: GenerateDataParams<TSchema>,
       asyncOptions?: AsyncOptions
     ) => {
-      return _generateData({ ...params, model: _model }, asyncOptions);
+      return _generateData(
+        { ...params, model: _model, maxRetries: 3 },
+        asyncOptions
+      );
     },
     streamText: async (
       params: StreamTextParams,
@@ -47,7 +61,7 @@ export const getLLM = <T extends ModelProvider>(
     ) => {
       return _streamTextWithTools({ ...params, model: _model }, asyncOptions);
     },
-    streamData: async <TSchema extends z.ZodType>(
+    streamData: async <TSchema extends z.ZodTypeAny>(
       params: StreamDataParams<TSchema>,
       asyncOptions?: AsyncOptions
     ) => {
@@ -73,18 +87,23 @@ export type GenerateDataParams<T extends z.ZodTypeAny> = Prettify<
   > & {
     schema: T;
     label?: string;
+    schemaName?: string;
+    schemaDescription?: string;
   }
 >;
 
 export type StreamTextParams = Prettify<
   Omit<Parameters<typeof vercelStreamText>[0], "model"> & {
     label?: string;
-    startSequence?: string; // Add new parameter
+    startSequence?: string;
   }
 >;
 
-export type StreamDataParams<T extends z.ZodType> = Prettify<
-  Omit<Parameters<typeof vercelStreamObject>[0], "model"> & {
+export type StreamDataParams<T extends z.ZodTypeAny> = Prettify<
+  Omit<
+    Parameters<typeof vercelStreamObject>[0],
+    "model" | "schema" | "output"
+  > & {
     schema: T;
     label?: string;
   }
@@ -95,14 +114,17 @@ const _generateText = async (
   asyncOptions?: AsyncOptions
 ) => {
   const { signal, emitter } = asyncOptions || {};
-  let requestId = generateId(12);
+  let requestId = generateId();
   emitter?.emit("llm_start", { requestId, ...params });
 
   let result = await vercelGenerateText({
     ...params,
     abortSignal: signal,
   });
-  emitter?.emit("llm_end", { requestId, ...result });
+  emitter?.emit("llm_end", {
+    requestId,
+    ...result,
+  });
 
   return result;
 };
@@ -115,14 +137,17 @@ export type VercelChatParams =
 
 export type VercelChatResult = Prettify<
   Partial<
-    Omit<StreamDataResult, "rawResponse"> &
-      Omit<StreamTextResult, "rawResponse"> &
-      Omit<AsyncReturnType<typeof _generateData>, "rawResponse"> &
-      Omit<AsyncReturnType<typeof _generateText>, "rawResponse">
+    VercelGenerateObjectResult<any> | VercelGenerateTextResult<any, any>
+    // | VercelStreamObjectResult<any, any, any>
+    // | VercelStreamTextResult<any>
   >
 >;
 
-export type VercelUsage = GenerateObjectResult<any>["usage"];
+export type VercelUsage = VercelGenerateObjectResult<any>["usage"];
+export type VercelChatMessages = NonNullable<
+  Parameters<typeof vercelGenerateObject>[0]["messages"]
+>;
+export type VercelChatMessage = VercelChatMessages[number];
 
 export const _generateData = async <TSchema extends z.ZodTypeAny>(
   params: Omit<
@@ -135,12 +160,12 @@ export const _generateData = async <TSchema extends z.ZodTypeAny>(
   asyncOptions?: AsyncOptions
 ) => {
   const { signal, emitter } = asyncOptions || {};
-  let requestId = generateId(12);
+  let requestId = generateId();
   emitter?.emit("llm_start", {
     requestId,
     ...params,
   });
-  let { rawResponse, ...result } = await vercelGenerateObject({
+  let result = await vercelGenerateObject<z.infer<TSchema>>({
     ...params,
     abortSignal: signal,
   });
@@ -152,30 +177,31 @@ export const _generateData = async <TSchema extends z.ZodTypeAny>(
   > & { object: z.infer<TSchema> };
 };
 
-type StreamTextResult = NonNullable<
+export type StreamTextResult = NonNullable<
   Parameters<typeof vercelStreamText>[0]["onFinish"]
 > extends (event: infer E) => any
   ? E
   : never;
 
+export type GenerateTextResult = AsyncReturnType<typeof _generateText>;
+
 const _streamText = async (
   params: Parameters<typeof vercelStreamText>[0] & {
     label?: string;
-    startSequence?: string; // Add new parameter
+    startSequence?: string;
   },
   asyncOptions?: AsyncOptions
 ): Promise<StreamTextResult> => {
   const { signal, emitter } = asyncOptions || {};
-  let requestId = generateId(12);
+  let requestId = generateId();
 
   return new Promise(async (resolve, reject) => {
     emitter?.emit("llm_start", { requestId, ...params });
     try {
-      // Add buffer tracking if startSequence is provided
       let buffer = "";
-      let foundStartSequence = !params.startSequence; // true if no startSequence
+      let foundStartSequence = !params.startSequence;
 
-      const stream = await vercelStreamText({
+      const stream = vercelStreamText({
         abortSignal: signal,
         ...params,
         onFinish: (result) => {
@@ -189,17 +215,20 @@ const _streamText = async (
               });
             }
           }
-          emitter?.emit("llm_end", { requestId, ...result });
 
           if (params.startSequence && result.text) {
             const startIndex = result.text.indexOf(params.startSequence);
             if (startIndex !== -1) {
-              result.text = result.text.slice(
-                startIndex + params.startSequence.length
-              );
+              result = {
+                ...result,
+                text: result.text.slice(
+                  startIndex + params.startSequence.length
+                ),
+              };
             }
           }
 
+          emitter?.emit("llm_end", { requestId, ...result });
           resolve(result);
         },
       });
@@ -211,14 +240,12 @@ const _streamText = async (
           if (!foundStartSequence) {
             if (buffer.includes(params.startSequence)) {
               foundStartSequence = true;
-              // Emit only the content after the start sequence
               const content = buffer.slice(
                 buffer.indexOf(params.startSequence) +
                   params.startSequence.length
               );
               if (content) emitter?.emit("content", content);
             }
-            // Prevent buffer overflow
             if (buffer.length > params.startSequence.length * 2) {
               buffer = buffer.slice(-params.startSequence.length * 2);
             }
@@ -226,12 +253,11 @@ const _streamText = async (
             emitter?.emit("content", chunk);
           }
         } else {
-          // Original behavior when no startSequence
           emitter?.emit("content", chunk);
         }
       }
     } catch (err: any) {
-      console.error("🚀 | streamText err:", err);
+      console.error("❌ | streamText err:", err);
       emitter?.emit("error", err);
       reject(err);
     }
@@ -245,21 +271,20 @@ type StreamDataResult = NonNullable<
   : never;
 
 const _streamData = async <TSchema extends z.ZodType>(
-  params: Parameters<typeof vercelStreamObject>[0] & {
+  params: Omit<Parameters<typeof vercelStreamObject>[0], "output"> & {
     schema: TSchema;
     label?: string;
   },
   asyncOptions?: AsyncOptions
 ): Promise<StreamDataResult> => {
   const { signal, emitter } = asyncOptions || {};
-  let requestId = generateId(12);
+  let requestId = generateId();
 
   return new Promise(async (resolve, reject) => {
     emitter?.emit("llm_start", { requestId, ...params });
     try {
-      const stream = await vercelStreamObject<z.infer<TSchema>>({
+      const stream = vercelStreamObject<z.infer<TSchema>>({
         abortSignal: signal,
-        // @ts-ignore
         output: "object",
         ...params,
         onFinish: (result) => {
@@ -272,15 +297,10 @@ const _streamData = async <TSchema extends z.ZodType>(
       });
 
       for await (const partialObject of stream.partialObjectStream) {
-        // @ts-ignore
-        emitter?.emit(
-          "partial_data",
-          // @ts-ignore
-          partialObject
-        );
+        emitter?.emit("partial_data", partialObject);
       }
     } catch (err: any) {
-      console.error("🚀 | streamData err:", err);
+      console.error("❌ | streamData err:", err);
       emitter?.emit("error", err);
       reject(err);
     }
@@ -295,42 +315,36 @@ const _streamTextWithTools = async (
   asyncOptions?: AsyncOptions
 ): Promise<StreamTextResult> => {
   const { signal, emitter } = asyncOptions || {};
-  let messages = [...(params.messages || [])];
+  let messages: Array<VercelChatMessage> = params.messages || [];
   let loopCount = 0;
   const maxLoops = params.maxLoops || 5;
-  let requestId = generateId(12);
+  let requestId = generateId();
 
   return new Promise(async (resolve, reject) => {
     emitter?.emit("llm_start", { requestId, ...params });
     let { startSequence, ...restParams } = params;
-    const attemptStream = async (retryCount = 0): Promise<void> => {
+
+    const attemptStream = async (): Promise<void> => {
+      let forcedResponse: StreamTextResult | GenerateTextResult | null = null;
       try {
         let finalContent = "";
-        // Add buffer tracking
         let buffer = "";
-        let foundStartSequence = !startSequence; // true if no startSequence
+        let foundStartSequence = !startSequence;
 
-        const stream = await vercelStreamText({
+        const stream = vercelStreamText({
           ...restParams,
-          messages,
-          maxRetries: 1,
+          messages: messages as VercelChatMessages,
+          maxRetries: 3,
           abortSignal: signal,
           onFinish: async (result) => {
-            console.log(
-              "🚀 | run tools experimental_providerMetadata:",
-              result.experimental_providerMetadata
-            );
             emitter?.emit("llm_end", { requestId, ...result });
             if (
               result.toolCalls &&
               result.toolCalls.length > 0 &&
               loopCount < maxLoops
             ) {
-              // Add the assistant message with tool calls
-
-              // Wait for tool results before proceeding
               if (result.toolResults) {
-                const assistantMessage = {
+                const assistantMessage: CoreMessage = {
                   role: "assistant" as const,
                   content: result.toolCalls
                     .filter(
@@ -351,61 +365,77 @@ const _streamTextWithTools = async (
                 if (assistantMessage.content.length > 0) {
                   messages.push(assistantMessage);
                 }
-
                 if (result.toolResults && result.toolResults.length > 0) {
                   const toolResultMessage = {
                     role: "tool" as const,
-                    content: result.toolResults.map((r: any) => ({
-                      type: "tool-result" as const,
-                      toolCallId: r.toolCallId,
-                      toolName: r.toolName,
-                      result: r.result,
-                    })),
+                    content: result.toolResults.map((r: any) => {
+                      let result = r.result;
+                      if (
+                        typeof r.result === "object" &&
+                        "toolHandledResponse" in r.result &&
+                        "text" in r.result.toolHandledResponse
+                      ) {
+                        let {
+                          toolHandledResponse: newToolHandledResponse,
+                          ...rest
+                        } = result;
+                        forcedResponse = newToolHandledResponse;
+                        result = rest;
+                      } else {
+                        console.log(
+                          "🚀 | tool_result is not OJBECT!!!! | result:",
+                          result
+                        );
+                      }
+                      emitter?.emit("tool_result", {
+                        toolCallId: r.toolCallId,
+                        toolName: r.toolName,
+                        result: result,
+                        toolDefinitionId: r.toolName,
+                      });
+                      return {
+                        type: "tool-result" as const,
+                        toolCallId: r.toolCallId,
+                        toolName: r.toolName,
+                        result: result,
+                      };
+                    }),
                   };
-
                   messages.push(toolResultMessage);
-
-                  result.toolResults.forEach((r: any) => {
-                    emitter?.emit("tool_result", {
-                      toolCallId: r.toolCallId,
-                      toolName: r.toolName,
-                      result: r.result,
-                      toolDefinitionId: r.toolName,
-                    });
-                  });
                 }
-              } else {
-                // If no tool results, don't add the assistant message
-                console.warn("Tool calls present but no tool results received");
               }
 
               loopCount++;
-
-              // Recursive call with updated messages
-              const nextResult = await _streamTextWithTools(
-                { ...params, messages, maxLoops: maxLoops - 1 },
-                asyncOptions
-              );
+              const nextResult = forcedResponse
+                ? forcedResponse
+                : await _streamTextWithTools(
+                    {
+                      ...params,
+                      messages: messages as VercelChatMessages,
+                      maxLoops: maxLoops - 1,
+                    },
+                    asyncOptions
+                  );
               resolve({
                 ...nextResult,
                 toolCalls: [
-                  ...(result.toolCalls || []),
-                  ...(nextResult.toolCalls || []),
+                  ...(result?.toolCalls || []),
+                  ...(nextResult?.toolCalls || []),
                 ],
                 toolResults: [
-                  ...(result.toolResults || []),
-                  ...(nextResult.toolResults || []),
+                  ...(result?.toolResults || []),
+                  ...(nextResult?.toolResults || []),
                 ],
               });
             } else {
               emitter?.emit("final_content", finalContent);
-              // Add startSequence handling to final result
               if (startSequence && result.text) {
                 const startIndex = result.text.indexOf(startSequence);
                 if (startIndex !== -1) {
-                  result.text = result.text.slice(
-                    startIndex + startSequence.length
-                  );
+                  result = {
+                    ...result,
+                    text: result.text.slice(startIndex + startSequence.length),
+                  };
                 }
               }
               resolve(result);
@@ -421,7 +451,6 @@ const _streamTextWithTools = async (
               if (!foundStartSequence) {
                 if (buffer.includes(startSequence)) {
                   foundStartSequence = true;
-                  // Emit only the content after the start sequence
                   const content = buffer.slice(
                     buffer.indexOf(startSequence) + startSequence.length
                   );
@@ -430,7 +459,6 @@ const _streamTextWithTools = async (
                     finalContent += content;
                   }
                 }
-                // Prevent buffer overflow
                 if (buffer.length > startSequence.length * 2) {
                   buffer = buffer.slice(-startSequence.length * 2);
                 }
@@ -439,7 +467,6 @@ const _streamTextWithTools = async (
                 finalContent += chunk.textDelta;
               }
             } else {
-              // Original behavior when no startSequence
               finalContent += chunk.textDelta;
               emitter?.emit("content", chunk.textDelta);
             }
@@ -454,36 +481,31 @@ const _streamTextWithTools = async (
         }
       } catch (err: any) {
         console.log("🚀 | attemptStream | err:", err);
-        if (
-          err.name === "RetryError" &&
-          err.errors &&
-          err.errors[0] &&
-          err.errors[0].statusCode === 429
-        ) {
-          if (retryCount < 3) {
-            emitter?.emit(
-              "log",
-              `Rate limit exceeded. Retrying in 4.5 seconds... (Attempt ${
-                retryCount + 1
-              })`
-            );
-            console.log(
-              `Rate limit exceeded. Retrying in 4.5 seconds... (Attempt ${
-                retryCount + 1
-              })`
-            );
-            await new Promise((resolve) => setTimeout(resolve, 4500));
-            return attemptStream(retryCount + 1);
-          }
+        if (err.name === "RetryError") {
+          console.log("🚀 | RetryError:", err.name, "Rate Limit Exceeded");
+          emitter?.emit("log", `ERROR: Rate limit exceeded`);
+          forcedResponse = {
+            text: "Unable to continue: Rate limit exceeded.",
+            toolCalls: [],
+            toolResults: [],
+            finishReason: "error",
+            usage: {
+              promptTokens: 0,
+              completionTokens: 0,
+              totalTokens: 0,
+            },
+          } as any;
+          resolve(forcedResponse as StreamTextResult);
+        } else {
+          throw err;
         }
-        throw err;
       }
     };
 
     try {
       await attemptStream();
     } catch (err: any) {
-      console.error("🚀 | streamTextWithTools err:", err);
+      console.error("❌ | streamTextWithTools err:", err);
       emitter?.emit("error", err);
       reject(err);
     }
