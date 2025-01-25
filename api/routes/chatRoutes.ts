@@ -26,10 +26,15 @@ app.post("/:projectId/chat/:conversationId", async (c) => {
     selectedFiles,
     emitter,
     signal: c.req.raw.signal,
-  }).finally(() => {
-    console.log("Closing data stream");
-    dataStream.close();
-  });
+  })
+    .catch((err) => {
+      console.error("Error in chatWithProjectCode", err);
+      emitter.emit("error", { message: "Failed to process message" });
+    })
+    .finally(() => {
+      console.log("Closing data stream");
+      dataStream.close();
+    });
 
   return dataStream.toResponse();
 });

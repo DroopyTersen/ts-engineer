@@ -1,6 +1,7 @@
 import {
   CoreMessage,
   generateId,
+  LanguageModel,
   generateObject as vercelGenerateObject,
   GenerateObjectResult as VercelGenerateObjectResult,
   generateText as vercelGenerateText,
@@ -31,7 +32,8 @@ export const getLLM = <T extends ModelProvider>(
   }
   let _model = MODEL_PROVIDERS[provider].create(modelName as string, {
     structuredOutputs,
-  });
+  }) as LanguageModel;
+
   return {
     _model,
     generateText: async (
@@ -371,9 +373,11 @@ const _streamTextWithTools = async (
                     content: result.toolResults.map((r: any) => {
                       let result = r.result;
                       if (
-                        typeof r.result === "object" &&
-                        "toolHandledResponse" in r.result &&
-                        "text" in r.result.toolHandledResponse
+                        result &&
+                        typeof result === "object" &&
+                        "toolHandledResponse" in result &&
+                        typeof result.toolHandledResponse === "object" &&
+                        "text" in result.toolHandledResponse
                       ) {
                         let {
                           toolHandledResponse: newToolHandledResponse,
@@ -381,11 +385,6 @@ const _streamTextWithTools = async (
                         } = result;
                         forcedResponse = newToolHandledResponse;
                         result = rest;
-                      } else {
-                        console.log(
-                          "🚀 | tool_result is not OJBECT!!!! | result:",
-                          result
-                        );
                       }
                       emitter?.emit("tool_result", {
                         toolCallId: r.toolCallId,
@@ -416,6 +415,7 @@ const _streamTextWithTools = async (
                     },
                     asyncOptions
                   );
+
               resolve({
                 ...nextResult,
                 toolCalls: [
@@ -426,7 +426,7 @@ const _streamTextWithTools = async (
                   ...(result?.toolResults || []),
                   ...(nextResult?.toolResults || []),
                 ],
-              });
+              } as StreamTextResult);
             } else {
               emitter?.emit("final_content", finalContent);
               if (startSequence && result.text) {
@@ -445,6 +445,7 @@ const _streamTextWithTools = async (
 
         for await (const chunk of stream.fullStream) {
           if (chunk.type === "text-delta") {
+            console.log("🚀 | chunk.textDelta:", chunk.textDelta);
             if (startSequence) {
               buffer += chunk.textDelta;
 

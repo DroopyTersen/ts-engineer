@@ -65,10 +65,13 @@ app.get("/:projectId/file-viewer", async (c) => {
       });
       return secondTry;
     });
-    console.log("🚀 | app.get | html:", html.slice(0, 100));
+
+    // Wrap the final HTML with CDATA
+    const wrappedHtml = html;
+    console.log("🚀 | app.get | html:", wrappedHtml.slice(0, 100));
 
     c.header("Cache-Control", "public, max-age=180"); // Cache for 3 minutes
-    return c.html(html);
+    return c.html(wrappedHtml);
   } catch (error) {
     console.log("🚀 | app.get | error:", error);
     return c.json({ error: "File not found" }, { status: 404 });

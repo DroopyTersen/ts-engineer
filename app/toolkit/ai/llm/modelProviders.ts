@@ -1,5 +1,6 @@
 import { createAnthropic } from "@ai-sdk/anthropic";
 import { createAzure } from "@ai-sdk/azure";
+import { createDeepSeek } from "@ai-sdk/deepseek";
 import { createOpenAI } from "@ai-sdk/openai";
 import "./bunPolyfill";
 
@@ -15,13 +16,12 @@ export const MODEL_PROVIDERS = {
     },
   },
   deepseek: {
-    create: createOpenAI({
-      baseURL: "https://api.deepseek.com",
+    create: createDeepSeek({
       apiKey: process.env.DEEPSEEK_API_KEY!,
     }),
     models: {
       "deepseek-chat": "deepseek-chat",
-      "deepseek-coder": "deepseek-coder",
+      "deepseek-reasoner": "deepseek-reasoner",
     },
   },
   openai: {
