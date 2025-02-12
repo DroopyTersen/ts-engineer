@@ -1,8 +1,8 @@
 import { CoreMessage } from "ai";
 import { db } from "api/aiEngineer/db/db.server";
 import { generateProjectChatResponse } from "api/aiEngineer/llm/generateProjectChatResponse";
-import { getLLMByClassification } from "api/aiEngineer/llm/getLLMByClassification";
 import { getLLM } from "~/toolkit/ai/llm/getLLM";
+import { chooseModel, modelProviders } from "~/toolkit/ai/llm/modelProviders";
 import { LLMEventEmitter } from "~/toolkit/ai/streams/LLMEventEmitter";
 import { getProjectCodeContext } from "../codeTask/getProjectCodeContext";
 
@@ -26,7 +26,7 @@ export const chatWithProjectCode = async ({
   try {
     console.log("🚀 | messages:", messages);
     let project = await db.getProjectById(projectId);
-    let llm = getLLMByClassification(project.classification);
+    let llm = getLLM(chooseModel(project.classification, "tools"));
     console.log("🚀 | llm:", llm._model.modelId);
     let projectContext = await getProjectCodeContext({
       input: JSON.stringify(messages.slice(-3), null, 2),
@@ -58,7 +58,7 @@ export const chatWithProjectCode = async ({
 };
 
 export const generateConversationTitle = async (messages: CoreMessage[]) => {
-  let llm = getLLM("openai", "gpt-4o-mini");
+  let llm = getLLM(modelProviders.openai("gpt-4o-mini"));
   let transcript = messages
     .map((msg) => `${msg.role}: ${msg.content}`)
     .join("\n");

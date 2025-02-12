@@ -1,7 +1,9 @@
+import { ProjectClassification } from "@shared/db.schema";
 import { generateStepBackQuestions } from "api/aiEngineer/llm/generateStepBackQuestions";
 import { telemetry } from "api/telemetry/telemetry.server";
 import { traceLLMEventEmitter } from "api/telemetry/traceLLMEventEmitter";
 import { getLLM } from "~/toolkit/ai/llm/getLLM";
+import { chooseModel } from "~/toolkit/ai/llm/modelProviders";
 import { LLMEventEmitter } from "~/toolkit/ai/streams/LLMEventEmitter";
 import { rankFilesForContext } from "../rankFilesForContext";
 import { searchCode } from "../searchCode";
@@ -20,6 +22,7 @@ export const getRelevantFiles = async ({
     absolute_path: string;
     summary?: string;
     filepaths: string[];
+    classification: ProjectClassification;
   };
   mode?: "search" | "score";
   selectedFiles?: string[];
@@ -66,7 +69,7 @@ export const getRelevantFiles = async ({
         files: project.filepaths,
       },
       {
-        llm: getLLM("openai", "gpt-4o-mini"),
+        llm: getLLM(chooseModel(project.classification, "small")),
         emitter,
       }
     );
@@ -88,6 +91,9 @@ export const getRelevantFiles = async ({
           stepBackQuestions.join("\n"),
         project,
         selectedFiles: selectedFiles?.length ? selectedFiles : projectFilepaths,
+        options: {
+          llm: getLLM(chooseModel(project.classification, "small")),
+        },
       });
 
       filepathsForContext = rankedFiles.results

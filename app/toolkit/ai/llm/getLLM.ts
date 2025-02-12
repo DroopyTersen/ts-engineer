@@ -12,35 +12,18 @@ import {
 import { z } from "zod";
 import { AsyncReturnType, Prettify } from "~/toolkit/utils/typescript.utils";
 import { LLMEventEmitter } from "../streams/LLMEventEmitter";
-import { MODEL_PROVIDERS, ModelProvider } from "./modelProviders";
 
 export type LLM = ReturnType<typeof getLLM>;
 
-export const getLLM = <T extends ModelProvider>(
-  provider: T,
-  modelName: keyof (typeof MODEL_PROVIDERS)[T]["models"]
-) => {
-  let structuredOutputs = false;
-  if (modelName.toString().endsWith("-structured")) {
-    structuredOutputs = false;
-    modelName = modelName
-      .toString()
-      .replace(
-        "-structured",
-        ""
-      ) as keyof (typeof MODEL_PROVIDERS)[T]["models"];
-  }
-  let _model = MODEL_PROVIDERS[provider].create(modelName as string, {
-    structuredOutputs,
-  }) as LanguageModel;
-
+export const getLLM = (model: LanguageModel) => {
+  const _model = model;
   return {
-    _model,
+    _model: model,
     generateText: async (
       params: GenerateTextParams,
       asyncOptions?: AsyncOptions
     ) => {
-      return _generateText({ ...params, model: _model }, asyncOptions);
+      return _generateText({ ...params, model }, asyncOptions);
     },
     generateData: async <TSchema extends z.ZodTypeAny>(
       params: GenerateDataParams<TSchema>,
@@ -55,19 +38,19 @@ export const getLLM = <T extends ModelProvider>(
       params: StreamTextParams,
       asyncOptions?: AsyncOptions
     ) => {
-      return _streamText({ ...params, model: _model }, asyncOptions);
+      return _streamText({ ...params, model }, asyncOptions);
     },
     runTools: async (
       params: StreamTextParams & { maxLoops?: number },
       asyncOptions?: AsyncOptions
     ) => {
-      return _streamTextWithTools({ ...params, model: _model }, asyncOptions);
+      return _streamTextWithTools({ ...params, model }, asyncOptions);
     },
     streamData: async <TSchema extends z.ZodTypeAny>(
       params: StreamDataParams<TSchema>,
       asyncOptions?: AsyncOptions
     ) => {
-      return _streamData({ ...params, model: _model }, asyncOptions);
+      return _streamData({ ...params, model }, asyncOptions);
     },
   };
 };
@@ -445,7 +428,6 @@ const _streamTextWithTools = async (
 
         for await (const chunk of stream.fullStream) {
           if (chunk.type === "text-delta") {
-            console.log("🚀 | chunk.textDelta:", chunk.textDelta);
             if (startSequence) {
               buffer += chunk.textDelta;
 

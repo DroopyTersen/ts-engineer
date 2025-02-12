@@ -2,6 +2,7 @@ import { transformerNotationHighlight } from "@shikijs/transformers";
 import crypto from "crypto";
 import { codeToHtml } from "shiki";
 import { getLLM } from "~/toolkit/ai/llm/getLLM";
+import { modelProviders } from "~/toolkit/ai/llm/modelProviders";
 import { rankFusion } from "~/toolkit/utils/rankFusion";
 import { db } from "../db/db.server";
 import { SearchFilesCriteria } from "../db/files.db";
@@ -28,7 +29,7 @@ export const searchCode = async (
     } else {
       console.log("🚀 | Cache miss for query classification:", query);
       queryClassfication = await classifySearchType(query, {
-        llm: getLLM("openai", "gpt-4o-mini"),
+        llm: getLLM(modelProviders.openai("gpt-4o-mini")),
       });
       console.log("🚀 | Setting cache for query classification:", query);
       memoryCache.set(query, queryClassfication);
@@ -75,7 +76,7 @@ export const searchCode = async (
         const rerankedResults = await rerankSearchResults(
           query,
           resultsToRerank,
-          getLLM("openai", "gpt-4o-mini"),
+          getLLM(modelProviders.openai("gpt-4o-mini")),
           20
         );
         console.log("🚀 | Setting cache for reranked results:", rerankCacheKey);

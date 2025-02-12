@@ -3,7 +3,6 @@ import { createSearchCodeSnippetsTool } from "api/aiEngineer/tools/searchCodeSni
 import { LLM } from "~/toolkit/ai/llm/getLLM";
 import { LLMEventEmitter } from "~/toolkit/ai/streams/LLMEventEmitter";
 import { createCachedProjectMessageTextContents } from "../specfications/generateSpecifications";
-import { CURSOR_PREFIX } from "./cursorPrefix";
 
 type GenerateCodingPlanInput = {
   projectContext: {
@@ -53,7 +52,6 @@ It is VERY IMPORTANT that you update the entire previous plan. Don't be lazy! Ge
           text: `<raw_input>${codeTask.rawInput}</raw_input>\n<specifications>${codeTask.specifications}</specifications>`,
         },
   ];
-  emitter?.emit("content", CURSOR_PREFIX);
 
   const specificationRegex = /<specifications>([\s\S]*?)<\/specifications>/;
   const match = codeTask.specifications.match(specificationRegex);

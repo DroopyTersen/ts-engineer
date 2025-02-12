@@ -4,8 +4,9 @@ import { LLMEventEmitter } from "~/toolkit/ai/streams/LLMEventEmitter";
 import { classifyCodeTask } from "../../llm/specfications/classifyCodeTask";
 
 import { db } from "api/aiEngineer/db/db.server";
-import { getLLMByClassification } from "api/aiEngineer/llm/getLLMByClassification";
 import { generateSpecifications } from "api/aiEngineer/llm/specfications/generateSpecifications";
+import { getLLM } from "~/toolkit/ai/llm/getLLM";
+import { chooseModel } from "~/toolkit/ai/llm/modelProviders";
 import { getProjectCodeContext } from "./getProjectCodeContext";
 
 export const WriteSpecificationsInput = z.object({
@@ -34,7 +35,7 @@ export const writeSpecifications = async (
   const validatedInput = WriteSpecificationsInput.parse(rawInput);
   let existingCodeTask = await db.getCodeTaskById(validatedInput.codeTaskId);
   let project = await db.getProjectById(validatedInput.projectId);
-  llm = llm || getLLMByClassification(project.classification);
+  llm = llm || getLLM(chooseModel(project.classification, "tools"));
 
   const selectedFiles =
     validatedInput.selectedFiles || existingCodeTask?.selected_files || [];

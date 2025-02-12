@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { getLLM, LLM } from "~/toolkit/ai/llm/getLLM";
+import { modelProviders } from "~/toolkit/ai/llm/modelProviders";
 import { LLMEventEmitter } from "~/toolkit/ai/streams/LLMEventEmitter";
 
 export const generateStepBackQuestions = async (
@@ -17,7 +18,9 @@ export const generateStepBackQuestions = async (
   const fileStructure = files.join("\n");
 
   let systemPrompt = getSystemPrompt(fileStructure, projectSummary);
-  let llm = options?.llm || getLLM("anthropic", "claude-3-5-sonnet-20240620");
+  let llm =
+    options?.llm ||
+    getLLM(modelProviders.anthropic("claude-3-5-sonnet-latest"));
   let result = await llm.generateData(
     {
       label: "generateStepBackQuestions",

@@ -29,7 +29,6 @@ export const generateProjectChatResponse = async (
     summary: projectContext.summary || "No summary provided",
     title: projectContext.title || "No title provided",
   }).filter((contentBlock) => contentBlock.text);
-  // let llm = options.llm || getLLM("anthropic", "claude-3-5-sonnet-20240620");
   console.log("LLM Model for chat:", llm._model?.modelId);
   const result = await llm.runTools(
     {
@@ -107,7 +106,7 @@ A: <questions>
 1. Does this application have any authentication or authorization mechanisms in place?
 2. If there is authentication, how is it implemented?
 3. Are there any specific files or components related to authentication?
-4. Is there any user management or session handling visible in the codebase?
+4. Is there any user management or session handling visible in the codebase?;
 </questions>
 
 It appears that this application does have some form of authentication implemented, but it's not a fully-fledged authentication system.

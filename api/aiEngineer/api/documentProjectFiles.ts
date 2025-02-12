@@ -1,5 +1,6 @@
 import { CodeProjectFile } from "@shared/db.schema";
 import { getLLM, LLM } from "~/toolkit/ai/llm/getLLM";
+import { modelProviders } from "~/toolkit/ai/llm/modelProviders";
 import { LLMEventEmitter } from "~/toolkit/ai/streams/LLMEventEmitter";
 import { AsyncQueue } from "~/toolkit/data-structures/AsyncQueue";
 import { getFileContent } from "../fs/getFileContent";
@@ -31,7 +32,7 @@ async function _documentCodeFile(
   }
   // Use an LLM to summarize/document the file
   let documentation = await documentCodeFile(fileContent, projectPath, {
-    llm: options?.llm || getLLM("deepseek", "deepseek-coder"),
+    llm: options?.llm || getLLM(modelProviders.openai("gpt-4o-mini")),
   });
   return {
     filepath,

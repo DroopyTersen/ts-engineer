@@ -31,7 +31,7 @@
   "homepage": "https://github.com/DroopyTersen/ts-engineer",
   "dependencies": {
     "@ai-sdk/anthropic": "^1.1.1",
-    "@ai-sdk/azure": "^1.0.22",
+    "@ai-sdk/azure": "^1.1.9",
     "@ai-sdk/deepseek": "^0.1.1",
     "@ai-sdk/openai": "^1.1.1",
     "@anthropic-ai/sdk": "^0.25.0",
@@ -51,7 +51,7 @@
     "@remix-run/react": "^2.10.3",
     "@remix-run/serve": "^2.10.3",
     "@shikijs/transformers": "^1.17.6",
-    "ai": "^4.1.1",
+    "ai": "^4.1.17",
     "chart.js": "^4.4.4",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",

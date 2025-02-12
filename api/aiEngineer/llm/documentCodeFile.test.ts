@@ -1,6 +1,7 @@
 import { describe, expect, it, setDefaultTimeout } from "bun:test";
 import fs from "fs/promises";
 import { getLLM } from "~/toolkit/ai/llm/getLLM";
+import { modelProviders } from "~/toolkit/ai/llm/modelProviders";
 import { LLMEventEmitter } from "~/toolkit/ai/streams/LLMEventEmitter";
 import { documentCodeFile } from "./documentCodeFile";
 
@@ -17,11 +18,11 @@ describe.skip("llm.documentCodeFile", () => {
     // Act
     const [deepseekResult, gpt4miniResult] = await Promise.all([
       documentCodeFile(filepath, fileContents, {
-        llm: getLLM("deepseek", "deepseek-coder"),
+        llm: getLLM(modelProviders.deepseek("deepseek-chat")),
         // emitter,
       }),
       documentCodeFile(filepath, fileContents, {
-        llm: getLLM("openai", "gpt-4o-mini"),
+        llm: getLLM(modelProviders.openai("gpt-4o-mini")),
         // emitter,
       }),
     ]);

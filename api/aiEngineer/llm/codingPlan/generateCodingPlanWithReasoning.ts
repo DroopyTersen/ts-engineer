@@ -1,7 +1,6 @@
 import OpenAI from "openai";
 import { getCachedMessageContent, LLM } from "~/toolkit/ai/llm/getLLM";
 import { LLMEventEmitter } from "~/toolkit/ai/streams/LLMEventEmitter";
-import { CURSOR_PREFIX } from "./cursorPrefix";
 
 export const generateCodingPlanWithReasoning = async (
   {
@@ -65,8 +64,6 @@ export const generateCodingPlanWithReasoning = async (
           }</specifications>`,
         },
   ];
-
-  emitter?.emit("content", CURSOR_PREFIX);
 
   const specificationRegex = /<specifications>([\s\S]*?)<\/specifications>/;
   const match = codeTask.specifications.match(specificationRegex);

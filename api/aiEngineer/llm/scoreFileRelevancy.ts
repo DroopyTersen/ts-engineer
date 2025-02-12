@@ -1,4 +1,5 @@
 import { getLLM, LLM } from "~/toolkit/ai/llm/getLLM";
+import { modelProviders } from "~/toolkit/ai/llm/modelProviders";
 import { LLMEventEmitter } from "~/toolkit/ai/streams/LLMEventEmitter";
 
 export const scoreFileRelevancy = async (
@@ -11,8 +12,8 @@ export const scoreFileRelevancy = async (
       content: string;
     };
   },
-  options?: {
-    llm?: LLM;
+  options: {
+    llm: LLM;
     emitter?: LLMEventEmitter;
   }
 ): Promise<number> => {
@@ -22,7 +23,7 @@ export const scoreFileRelevancy = async (
     return -1;
   }
   let systemPrompt = getSystemPrompt(input.file, input.fileStructure, "");
-  let llm = options?.llm || getLLM("deepseek", "deepseek-coder");
+  let llm = options?.llm || getLLM(modelProviders.openai("gpt-4o-mini"));
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 6000);

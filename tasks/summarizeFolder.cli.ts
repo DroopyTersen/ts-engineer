@@ -8,8 +8,8 @@ import {
 import { getProjectFiles } from "../api/aiEngineer/fs/getProjectFiles";
 import { generateProjectSummary } from "../api/aiEngineer/llm/summary/generateProjectSummary";
 import { getLLM } from "../app/toolkit/ai/llm/getLLM";
+import { modelProviders } from "../app/toolkit/ai/llm/modelProviders";
 import { LLMEventEmitter } from "../app/toolkit/ai/streams/LLMEventEmitter";
-
 const summarizeFolder = async (
   absolutePath: string,
   exclude: string[] = []
@@ -27,7 +27,7 @@ const summarizeFolder = async (
   let title = absolutePath.split("/").pop();
   let fileStructure = formatFileStructure(filepaths);
   console.log("🚀 | fileStructure:", fileStructure);
-  let llm = getLLM("azure", "gpt-4o-mini");
+  let llm = getLLM(modelProviders.openai("gpt-4o-mini"));
   let emitter = new LLMEventEmitter();
   let totalTokens = (fileContents.join("").length + fileStructure.length) / 4;
   console.log(

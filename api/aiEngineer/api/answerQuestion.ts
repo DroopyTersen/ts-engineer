@@ -1,4 +1,5 @@
 import { getLLM } from "~/toolkit/ai/llm/getLLM";
+import { modelProviders } from "~/toolkit/ai/llm/modelProviders";
 import { LLMEventEmitter } from "~/toolkit/ai/streams/LLMEventEmitter";
 import { getDb } from "../db/pglite/pglite.server";
 import { generateAnswer } from "../llm/generateAnswer";
@@ -27,7 +28,7 @@ export const answerQuestion = async (
     (file): file is NonNullable<typeof file> => file !== null
   );
 
-  const llm = getLLM("anthropic", "claude-3-5-sonnet-20240620");
+  const llm = getLLM(modelProviders.anthropic("claude-3-5-sonnet-latest"));
   const answer = await generateAnswer(
     {
       query: input.query,

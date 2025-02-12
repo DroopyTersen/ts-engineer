@@ -1,4 +1,5 @@
 import { getLLM, LLM } from "~/toolkit/ai/llm/getLLM";
+import { modelProviders } from "~/toolkit/ai/llm/modelProviders";
 import { LLMEventEmitter } from "~/toolkit/ai/streams/LLMEventEmitter";
 import { wait } from "~/toolkit/utils/wait";
 import { getFileContent } from "../fs/getFileContent";
@@ -9,8 +10,8 @@ export const rankFilesForContext = async (input: {
   project: { absolute_path: string; summary?: string; filepaths: string[] };
   selectedFiles?: string[];
   minScore?: number;
-  options?: {
-    llm?: LLM;
+  options: {
+    llm: LLM;
     emitter?: LLMEventEmitter;
   };
 }) => {
@@ -46,7 +47,7 @@ export const rankFilesForContext = async (input: {
         projectSummary: input.project?.summary?.substring(0, 12_000),
       },
       {
-        llm: input.options?.llm || getLLM("deepseek", "deepseek-coder"),
+        llm: input.options?.llm || getLLM(modelProviders.openai("gpt-4o-mini")),
       }
     );
     console.log("🚀 | processFile | score:", score, filepath);

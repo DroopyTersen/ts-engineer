@@ -3,6 +3,7 @@ import { telemetry } from "api/telemetry/telemetry.server";
 import { traceLLMEventEmitter } from "api/telemetry/traceLLMEventEmitter";
 import { afterAll, beforeAll, describe, expect, it } from "bun:test";
 import { getLLM } from "~/toolkit/ai/llm/getLLM";
+import { modelProviders } from "~/toolkit/ai/llm/modelProviders";
 import { LLMEventEmitter } from "~/toolkit/ai/streams/LLMEventEmitter";
 import { wait } from "~/toolkit/utils/wait";
 import { createNewProject } from "../createNewProject";
@@ -53,8 +54,8 @@ describe("writeSpecifications", () => {
         id: "bun:test",
       },
     });
-    let claude = getLLM("anthropic", "claude-3-5-sonnet-20240620");
-    let gpt4omini = getLLM("openai", "gpt-4o-mini");
+    let claude = getLLM(modelProviders.anthropic("claude-3-5-sonnet-latest"));
+    let gpt4omini = getLLM(modelProviders.openai("gpt-4o-mini"));
     let emitter = new LLMEventEmitter();
     // emitter.on("content", (delta) => {
     //   console.log(delta);

@@ -1,4 +1,5 @@
 import { getLLM } from "~/toolkit/ai/llm/getLLM";
+import { chooseModel } from "~/toolkit/ai/llm/modelProviders";
 import { db } from "../db/db.server";
 import { processFileContents } from "../fs/getFileContent";
 import { getProjectFiles } from "../fs/getProjectFiles";
@@ -28,7 +29,7 @@ export const indexProject = async (
     if (shouldSummarize) {
       // Check if filepath has a parent folder
       summarization = await summarizeCodeFile(filepath, content, {
-        llm: getLLM("openai", "gpt-4o-mini"),
+        llm: getLLM(chooseModel(project.classification, "small")),
       });
     }
     return db.saveProjectFile({

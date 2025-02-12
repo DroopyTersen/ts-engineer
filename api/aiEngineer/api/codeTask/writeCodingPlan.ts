@@ -2,6 +2,7 @@ import { db } from "api/aiEngineer/db/db.server";
 import { generateCodingPlan } from "api/aiEngineer/llm/codingPlan/generateCodingPlan";
 import { z } from "zod";
 import { getLLM, LLM } from "~/toolkit/ai/llm/getLLM";
+import { chooseModel } from "~/toolkit/ai/llm/modelProviders";
 import { LLMEventEmitter } from "~/toolkit/ai/streams/LLMEventEmitter";
 import { getProjectCodeContext } from "./getProjectCodeContext";
 
@@ -43,9 +44,9 @@ export const writeCodingPlan = async (
   });
 
   console.log("🚀 | existingCodeTask:", existingCodeTask);
-
-  // llm = llm || getLLM("openai", "gpt-4o-mini");
-  llm = llm || getLLM("anthropic", "claude-3-5-sonnet-20241022");
+  llm =
+    llm ||
+    getLLM(chooseModel(projectContext.classification || "private", "tools"));
 
   let codingPlan: string;
   let generateFn = validatedInput.followUpInput

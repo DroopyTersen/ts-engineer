@@ -1,3 +1,4 @@
+import { modelProviders } from "~/toolkit/ai/llm/modelProviders";
 import { readUrlTool } from "../../../../api/aiEngineer/tools/readUrl.tool";
 import { searchWebTool } from "../../../../api/aiEngineer/tools/searchWeb.tool";
 import { LLMEventEmitter } from "../streams/LLMEventEmitter";
@@ -16,8 +17,7 @@ const main = async () => {
   emitter.on("tool_result", (toolResult) => {
     console.log("tool_result", toolResult.toolName);
   });
-  // let llm = getLLM("openai", "gpt-4o-mini");
-  let llm = getLLM("deepseek", "deepseek-coder");
+  let llm = getLLM(modelProviders.deepseek("deepseek-chat"));
 
   let answer = await llm.runTools(
     {
