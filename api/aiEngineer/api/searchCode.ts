@@ -6,6 +6,7 @@ import { modelProviders } from "~/toolkit/ai/llm/modelProviders";
 import { rankFusion } from "~/toolkit/utils/rankFusion";
 import { db } from "../db/db.server";
 import { SearchFilesCriteria } from "../db/files.db";
+import { createProjectGit } from "../fs/gitCommands";
 import { classifySearchType } from "../llm/search/classifySearchType";
 import { rerankSearchResults } from "../llm/search/rerankSearchResults";
 import { memoryCache } from "../memoryCache";
@@ -109,7 +110,20 @@ export const searchCode = async (
     criteria.limit || 50
   );
 
-  return { results: finalResults, criteria };
+  // Get timestamps for final results
+  const resultsWithTimestamps = await Promise.all(
+    finalResults.map(async (result) => {
+      if (!result.project?.absolute_path) return result;
+      const git = createProjectGit(result.project.absolute_path);
+      const lastModified = await git.getFileTimestamp(result.filepath);
+      return {
+        ...result,
+        lastModified,
+      };
+    })
+  );
+
+  return { results: resultsWithTimestamps, criteria };
 };
 
 const generateHash = (contents: string) => {

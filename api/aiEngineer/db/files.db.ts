@@ -17,7 +17,9 @@ export type SearchFilesCriteria = {
 export type SearchFilesResponse = AsyncReturnType<typeof searchFiles>;
 
 export type CodeSearchResultItem = Prettify<
-  SearchFilesResponse["results"][number]
+  SearchFilesResponse["results"][number] & {
+    lastModified?: string | null;
+  }
 >;
 /** Hybrid search for files by embedding and keyword */
 const searchFiles = async (criteria: SearchFilesCriteria) => {

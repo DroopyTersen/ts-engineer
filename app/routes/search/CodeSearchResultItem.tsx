@@ -1,6 +1,7 @@
 import { SerializeFrom } from "@remix-run/node";
 import { Link } from "@remix-run/react";
 import type { CodeSearchResultItem } from "api/aiEngineer/db/files.db";
+import dayjs from "dayjs";
 import { useRef } from "react";
 import { Button } from "~/shadcn/components/ui/button";
 import {
@@ -63,15 +64,22 @@ export function CodeSearchResultItem({
                 </Button>
               </TooltipWrapper>
             </div>
-            <OpenInCursorButton
-              absolutePath={item.project?.absolute_path!}
-              projectId={item?.project_id!}
-              filepath={item.filepath}
-            >
-              <span className="text-sm text-muted-foreground font-normal font-mono">
-                {item.filepath}
-              </span>
-            </OpenInCursorButton>
+            <div className="flex items-center gap-4">
+              {item.lastModified && (
+                <span className="text-sm text-gray-500 font-medium">
+                  {dayjs(item.lastModified).format("MMM D, YYYY h:mm A")}
+                </span>
+              )}
+              <OpenInCursorButton
+                absolutePath={item.project?.absolute_path!}
+                projectId={item?.project_id!}
+                filepath={item.filepath}
+              >
+                <span className="text-sm text-muted-foreground font-normal font-mono">
+                  {item.filepath}
+                </span>
+              </OpenInCursorButton>
+            </div>
           </div>
         </CardTitle>
       </CardHeader>

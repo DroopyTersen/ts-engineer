@@ -9,6 +9,9 @@ const GIT_COMMANDS = {
     `git log --pretty=format:'%h %s' --name-status | head -c ${maxChars}`,
   listFiles: `git ls-files --exclude-standard -c && git ls-files --others --exclude-standard`,
   activeBranch: `git rev-parse --abbrev-ref HEAD`,
+  allFileTimestamps: `git log --format=format:%at --name-only --reverse | awk '{ if (NF > 0) { if ($1 ~ /^[0-9]+$/) { timestamp = $1 } else { print $0, timestamp } } }'`,
+  fileTimestamp: (filepath: string) =>
+    `git log -1 --format=%at -- "${filepath}"`,
 };
 export const createProjectGit = (absolutePath: string) => {
   const runGitCommand = async (command: string) => {
@@ -121,6 +124,30 @@ export const createProjectGit = (absolutePath: string) => {
     return output || null;
   };
 
+  const getAllFileTimestamps = async () => {
+    let output = await runGitCommand(GIT_COMMANDS.allFileTimestamps);
+    if (!output) return new Map();
+
+    const timestampMap = new Map<string, string>();
+    output.split("\n").forEach((line) => {
+      const [filepath, timestamp] = line.trim().split(" ");
+      if (filepath && timestamp) {
+        timestampMap.set(
+          filepath,
+          new Date(parseInt(timestamp) * 1000).toISOString()
+        );
+      }
+    });
+    return timestampMap;
+  };
+
+  const getFileTimestamp = async (filepath: string) => {
+    let output = await runGitCommand(GIT_COMMANDS.fileTimestamp(filepath));
+    if (!output) return null;
+    const timestamp = parseInt(output.trim());
+    return timestamp ? new Date(timestamp * 1000).toISOString() : null;
+  };
+
   return {
     listFiles,
     getUncommittedChanges,
@@ -128,6 +155,8 @@ export const createProjectGit = (absolutePath: string) => {
     getLastModifiedFile,
     getStatus,
     getActiveBranch,
+    getAllFileTimestamps,
+    getFileTimestamp,
   };
 };
 
