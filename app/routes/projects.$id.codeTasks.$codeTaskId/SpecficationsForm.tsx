@@ -34,7 +34,7 @@ export const SpecificationsForm = ({
   }, [specificationsStream.isStreaming]);
 
   return (
-    <form className="mt-4 max-w-3xl" onSubmit={(e) => e.preventDefault()}>
+    <form className="mt-4" onSubmit={(e) => e.preventDefault()}>
       <MarkdownTextarea
         label="Specifications"
         value={

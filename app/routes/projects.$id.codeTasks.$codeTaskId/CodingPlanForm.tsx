@@ -39,7 +39,7 @@ export const CodingPlanForm = ({
   };
 
   return (
-    <form className="mt-4 max-w-3xl" onSubmit={(e) => e.preventDefault()}>
+    <form className="mt-4 max-w-screen" onSubmit={(e) => e.preventDefault()}>
       <MarkdownTextarea
         label="Coding Plan"
         value={

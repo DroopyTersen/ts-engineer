@@ -17,7 +17,9 @@ pre {
 .line-number {
   height: var(--line-height);
 }
-
+.prose * {
+  word-break: break-all;
+}
 .prose table {
   background: white;
   padding: 16px;

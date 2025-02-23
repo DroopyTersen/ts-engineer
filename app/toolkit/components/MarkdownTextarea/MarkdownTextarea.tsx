@@ -31,7 +31,7 @@ export const MarkdownTextarea = (props: {
           <Label htmlFor={props.name} className="">
             {props.label}
           </Label>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-2 lg:hidden">
             <Label htmlFor="preview-mode">Preview</Label>
             <Switch
               id="preview-mode"
@@ -43,28 +43,31 @@ export const MarkdownTextarea = (props: {
           </div>
         </div>
 
-        <Textarea
-          id={props.name}
-          name={props.name}
-          value={props.value}
-          onChange={(e) => props.onChanged(e.target.value)}
-          rows={rows}
-          {...props.textareaProps}
-          className={cn(
-            mode === "preview" && "hidden",
-            props.textareaProps.className
-          )}
-        />
-        {mode === "preview" && (
+        <div className="lg:grid lg:grid-cols-2 lg:gap-4">
+          <Textarea
+            id={props.name}
+            name={props.name}
+            value={props.value}
+            onChange={(e) => props.onChanged(e.target.value)}
+            rows={rows}
+            {...props.textareaProps}
+            className={cn(
+              mode === "preview" && "hidden lg:block",
+              props.textareaProps.className
+            )}
+          />
           <div
-            className="border p-4 rounded-md"
+            className={cn(
+              "border p-4 rounded-md",
+              mode === "preview" ? "block" : "hidden lg:block"
+            )}
             style={{
               minHeight: minHeight + "px",
             }}
           >
             <Markdown>{props.value}</Markdown>
           </div>
-        )}
+        </div>
         {props.hint && <p className="text-sm text-gray-500">{props.hint}</p>}
       </div>
     </>
