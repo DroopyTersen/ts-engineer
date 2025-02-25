@@ -1,11 +1,9 @@
 import Markdown from "markdown-to-jsx";
 import React from "react";
+import { Logo } from "~/layout/components/Logo";
 import { CopyToClipboardButton } from "~/toolkit/components/buttons/CopyToClipboardButton";
-import { Spinner } from "~/toolkit/components/loaders/LoadingSpinner";
 import { cn, tw } from "~/toolkit/components/utils";
 import { LooseAutocomplete } from "~/toolkit/utils/typescript.utils";
-import { ToolUse } from "../streams/LLMDataStream";
-import { Logo } from "~/layout/components/Logo";
 
 function AIAvatar() {
   return (
@@ -53,28 +51,6 @@ export function ChatMessage({
       <UserAvatar />
       <div className="flex max-w-3xl items-center">{children}</div>
     </ChatMessageContainer>
-  );
-}
-
-export function ChatToolUseDebug({
-  toolUses,
-  className = "",
-}: {
-  toolUses: ToolUse[];
-  className?: string;
-}) {
-  if (!toolUses || toolUses.length === 0) {
-    return null;
-  }
-  return (
-    <div className={cn("prose prose-sm", className)}>
-      {toolUses.map((toolUse: any, index: number) => (
-        <details key={index} className="mb-2">
-          <summary>Tool: {toolUse.name}</summary>
-          <pre className="text-wrap">{JSON.stringify(toolUse, null, 2)}</pre>
-        </details>
-      ))}
-    </div>
   );
 }
 

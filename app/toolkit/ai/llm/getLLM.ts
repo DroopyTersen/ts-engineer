@@ -1,16 +1,19 @@
 import {
-  CoreMessage,
+  type CoreMessage,
   generateId,
-  LanguageModel,
+  type LanguageModel,
   generateObject as vercelGenerateObject,
-  GenerateObjectResult as VercelGenerateObjectResult,
+  type GenerateObjectResult as VercelGenerateObjectResult,
   generateText as vercelGenerateText,
-  GenerateTextResult as VercelGenerateTextResult,
+  type GenerateTextResult as VercelGenerateTextResult,
   streamObject as vercelStreamObject,
   streamText as vercelStreamText,
 } from "ai";
 import { z } from "zod";
-import { AsyncReturnType, Prettify } from "~/toolkit/utils/typescript.utils";
+import type {
+  AsyncReturnType,
+  Prettify,
+} from "~/toolkit/utils/typescript.utils";
 import { LLMEventEmitter } from "../streams/LLMEventEmitter";
 
 export type LLM = ReturnType<typeof getLLM>;
@@ -217,8 +220,7 @@ const _streamText = async (
           resolve(result);
         },
       });
-
-      for await (const chunk of stream.textStream) {
+      function handleTextChunk(chunk: string) {
         if (params.startSequence) {
           buffer += chunk;
 
@@ -241,6 +243,17 @@ const _streamText = async (
           emitter?.emit("content", chunk);
         }
       }
+      // TODO: Will this handle tools still since we consuming full stream?
+      for await (const chunk of stream.fullStream) {
+        if (chunk.type === "text-delta") {
+          handleTextChunk(chunk.textDelta);
+        } else if (chunk.type === "reasoning") {
+          emitter?.emit("reasoning", chunk.textDelta);
+        }
+      }
+      // for await (const chunk of stream.textStream) {
+      //   handleTextChunk(chunk);
+      // }
     } catch (err: any) {
       console.error("❌ | streamText err:", err);
       emitter?.emit("error", err);
@@ -302,7 +315,11 @@ const _streamTextWithTools = async (
   const { signal, emitter } = asyncOptions || {};
   let messages: Array<VercelChatMessage> = params.messages || [];
   let loopCount = 0;
-  const maxLoops = params.maxLoops || 5;
+  const maxLoops = params.maxLoops || 10;
+  console.log("🚀 | _streamTextWithTools maxLoops:", {
+    maxLoops,
+    messagesLength: messages.length,
+  });
   let requestId = generateId();
 
   return new Promise(async (resolve, reject) => {
@@ -321,6 +338,11 @@ const _streamTextWithTools = async (
           messages: messages as VercelChatMessages,
           maxRetries: 3,
           abortSignal: signal,
+          onError: (err: any) => {
+            console.error("❌ | streamTextWithTools err:", err);
+            emitter?.emit("error", err);
+            reject(err);
+          },
           onFinish: async (result) => {
             emitter?.emit("llm_end", { requestId, ...result });
             if (
@@ -367,6 +389,10 @@ const _streamTextWithTools = async (
                           ...rest
                         } = result;
                         forcedResponse = newToolHandledResponse;
+                        console.log(
+                          "🚀 | content:result.toolResults.map | forcedResponse:",
+                          forcedResponse
+                        );
                         result = rest;
                       }
                       emitter?.emit("tool_result", {
@@ -384,10 +410,14 @@ const _streamTextWithTools = async (
                     }),
                   };
                   messages.push(toolResultMessage);
+                  console.log(
+                    "🚀 | onFinish: | messages.push(toolResultMessage)"
+                  );
                 }
               }
 
               loopCount++;
+              console.log("🚀 | onFinish: | forcedResponse:", forcedResponse);
               const nextResult = forcedResponse
                 ? forcedResponse
                 : await _streamTextWithTools(
@@ -399,6 +429,7 @@ const _streamTextWithTools = async (
                     asyncOptions
                   );
 
+              console.log("🚀 | onFinish: | loopCount++;:", loopCount);
               resolve({
                 ...nextResult,
                 toolCalls: [
@@ -453,6 +484,9 @@ const _streamTextWithTools = async (
               finalContent += chunk.textDelta;
               emitter?.emit("content", chunk.textDelta);
             }
+          } else if (chunk.type === "reasoning") {
+            console.log("🚀 | forawait | chunk.textDelta:", chunk.textDelta);
+            emitter?.emit("reasoning", chunk.textDelta);
           } else if (chunk.type === "tool-call") {
             emitter?.emit("tool_call", {
               id: chunk.toolCallId,
@@ -486,7 +520,9 @@ const _streamTextWithTools = async (
     };
 
     try {
+      console.log("🚀 | attemptStream...:");
       await attemptStream();
+      console.log("🚀 | done attemptStream");
     } catch (err: any) {
       console.error("❌ | streamTextWithTools err:", err);
       emitter?.emit("error", err);

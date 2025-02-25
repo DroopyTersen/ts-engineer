@@ -8,6 +8,8 @@ import { cn, tw } from "~/shadcn/utils";
 import { LLMDataMessage } from "~/toolkit/ai/streams/LLMDataStream";
 import { CopyToClipboardButton } from "~/toolkit/components/buttons/CopyToClipboardButton";
 import { Markdown } from "~/toolkit/components/Markdown/Markdown";
+import { ReasoningDisplay } from "./ReasoningDisplay";
+import { ChatToolUsesDebug } from "./ToolUsesDebug";
 
 interface ChatMessageProps {
   message: LLMDataMessage;
@@ -61,6 +63,16 @@ export const EditableMessage = ({
               : "bg-gray-100 hover:bg-gray-100 "
           )}
         >
+          {message?.reasoning && (
+            <ReasoningDisplay defaultOpen={isStreaming}>
+              <Markdown>{message.reasoning}</Markdown>
+            </ReasoningDisplay>
+          )}
+          {message?.toolUses?.length ? (
+            <div className="flex flex-col">
+              <ChatToolUsesDebug toolUses={message.toolUses} />
+            </div>
+          ) : null}
           <Markdown
             id={messageId}
             className={cn(

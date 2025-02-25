@@ -1,5 +1,5 @@
-import { JSONValue } from "ai";
-import { createParser, EventSourceMessage } from "eventsource-parser";
+import type { JSONValue } from "ai";
+import { createParser, type EventSourceMessage } from "eventsource-parser";
 import { fetchStream } from "~/toolkit/http/fetch.utils";
 
 export async function fetchTextStream(

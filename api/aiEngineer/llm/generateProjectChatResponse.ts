@@ -32,6 +32,11 @@ export const generateProjectChatResponse = async (
   console.log("LLM Model for chat:", llm._model?.modelId);
   const result = await llm.runTools(
     {
+      providerOptions: {
+        anthropic: {
+          thinking: { type: "enabled", budgetTokens: 2000 },
+        },
+      },
       messages: [
         {
           role: "system",
@@ -44,7 +49,7 @@ export const generateProjectChatResponse = async (
         ...messages,
       ],
       temperature: 0,
-      maxTokens: 1800,
+      maxTokens: 5000,
       tools: {
         readFileContents: createReadFilesTool(projectContext.absolutePath),
         searchCodeSnippets: createSearchCodeSnippetsTool(

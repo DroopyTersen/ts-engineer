@@ -1,4 +1,4 @@
-import {
+import type {
   JSONValue,
   LLMDataStream,
   StreamMessage,
@@ -62,6 +62,10 @@ export function createEventStreamDataStream(
     send({ type: "data", data });
   };
 
+  const sendReasoning = (reasoning: string) => {
+    send({ type: "reasoning", data: reasoning });
+  };
+
   const createEventEmitter = () => {
     let emitter = new LLMEventEmitter();
     emitter.on("content", sendText);
@@ -69,6 +73,7 @@ export function createEventStreamDataStream(
     emitter.on("tool_result", sendToolResult);
     emitter.on("error", sendError);
     emitter.on("data", sendData);
+    emitter.on("reasoning", sendReasoning);
     return emitter;
   };
 
@@ -89,6 +94,7 @@ export function createEventStreamDataStream(
     sendToolResult,
     sendError,
     sendData,
+    sendReasoning,
     createEventEmitter,
   };
 }

@@ -1,6 +1,7 @@
 import { createAnthropic } from "@ai-sdk/anthropic";
 import { createAzure } from "@ai-sdk/azure";
 import { createDeepSeek } from "@ai-sdk/deepseek";
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { createOpenAI } from "@ai-sdk/openai";
 import { ProjectClassification } from "@shared/db.schema";
 import { customProvider } from "ai";
@@ -15,6 +16,9 @@ export const modelProviders = {
   }),
   deepseek: createDeepSeek({
     apiKey: process.env.DEEPSEEK_API_KEY!,
+  }),
+  google: createGoogleGenerativeAI({
+    apiKey: process.env.GOOGLE_API_KEY!,
   }),
   azure: createAzure({
     apiKey: process.env.AZURE_OPENAI_API_KEY!,
@@ -53,9 +57,9 @@ const privateProvider = customProvider({
     small_structured: modelProviders.openai("gpt-4o-mini", {
       structuredOutputs: true,
     }),
-    large: modelProviders.anthropic("claude-3-5-sonnet-20241022"),
-    tools: modelProviders.anthropic("claude-3-5-sonnet-20241022"),
-    reasoner: modelProviders.openai("o3-mini"),
+    large: modelProviders.anthropic("claude-3-7-sonnet-20250219"),
+    tools: modelProviders.anthropic("claude-3-7-sonnet-20250219"),
+    reasoner: modelProviders.anthropic("claude-3-7-sonnet-20250219"),
   } as const,
   textEmbeddingModels: {
     embedding: modelProviders.openai.textEmbeddingModel(
@@ -66,13 +70,11 @@ const privateProvider = customProvider({
 
 let publicProvider = customProvider({
   languageModels: {
-    small: modelProviders.openai("gpt-4o-mini"),
-    small_structured: modelProviders.openai("gpt-4o-mini", {
-      structuredOutputs: true,
-    }),
-    large: modelProviders.anthropic("claude-3-5-sonnet-20241022"),
-    tools: modelProviders.anthropic("claude-3-5-sonnet-20241022"),
-    reasoner: modelProviders.deepseek("deepseek-reasoner"),
+    small: modelProviders.google("gemini-2.0-flash-001"),
+    small_structured: modelProviders.google("gemini-2.0-flash-001"),
+    large: modelProviders.anthropic("claude-3-7-sonnet-20250219"),
+    tools: modelProviders.anthropic("claude-3-7-sonnet-20250219"),
+    reasoner: modelProviders.deepseek("claude-3-7-sonnet-20250219"),
   } as const,
   textEmbeddingModels: {
     embedding: modelProviders.openai.textEmbeddingModel(

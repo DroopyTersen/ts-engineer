@@ -1,6 +1,6 @@
-import { JSONValue } from "ai";
-import { LLMDataStream, ToolCall, ToolResult } from "./LLMDataStream";
-import { LLMEvent } from "./LLMEventEmitter";
+import type { JSONValue } from "ai";
+import type { LLMDataStream, ToolCall, ToolResult } from "./LLMDataStream";
+import type { LLMEvent } from "./LLMEventEmitter";
 
 export interface StdOutDataStream extends LLMDataStream {
   write: (text: string) => void;
@@ -25,6 +25,12 @@ export const createStdOutDataStream = ({
     }
     write(text);
   };
+  const sendReasoning = (reasoning: string) => {
+    if (exclude.includes("reasoning")) {
+      return;
+    }
+    writeLine("Reasoning: " + reasoning);
+  };
   const sendLog = (message: string) => {
     if (exclude.includes("log")) {
       return;
@@ -46,6 +52,12 @@ export const createStdOutDataStream = ({
   const sendError = (error: JSONValue) => {
     console.error(error);
   };
+  const sendData = (data: JSONValue) => {
+    if (exclude.includes("data")) {
+      return;
+    }
+    writeLine("Data: " + JSON.stringify(data, null, 2));
+  };
   console.log = (...args) => {
     if (exclude.includes("log")) {
       return;
@@ -61,5 +73,7 @@ export const createStdOutDataStream = ({
     sendToolCall,
     sendToolResult,
     sendError,
+    sendData,
+    sendReasoning,
   };
 };

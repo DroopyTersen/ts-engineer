@@ -1,6 +1,6 @@
-import OpenAI from "openai";
-import { VercelChatParams, VercelChatResult } from "../llm/getLLM";
-import { JSONValue, ToolCall, ToolResult } from "./LLMDataStream";
+import type { CoreMessage } from "ai";
+import type { VercelChatParams, VercelChatResult } from "../llm/getLLM";
+import type { JSONValue, ToolCall, ToolResult } from "./LLMDataStream";
 
 // This might be different depending on the LLM provider
 export type LLMStartData = VercelChatParams & {
@@ -27,7 +27,7 @@ export type LLMEvent =
     }
   | {
       type: "message";
-      data: OpenAI.Chat.Completions.ChatCompletionAssistantMessageParam;
+      data: CoreMessage;
     }
   | {
       type: "tool_call";
@@ -38,6 +38,7 @@ export type LLMEvent =
       data: ToolResult;
     }
   | { type: "content"; data: string }
+  | { type: "reasoning"; data: string }
   | { type: "llm_start"; data: LLMStartData }
   | { type: "llm_end"; data: LLMEndData }
   | { type: "final_content"; data: string };

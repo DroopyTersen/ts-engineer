@@ -4,8 +4,8 @@ import type { ConversationDbItem } from "@shared/db.schema";
 import { cn } from "~/shadcn/utils";
 import { DynamicMessageInput } from "~/toolkit/ai/ui/DynamicMessageInput";
 import { proxyApiRequestAsJson } from "~/toolkit/http/proxyApiRequest";
+import { EditableMessage } from "../../toolkit/ai/ui/EditableMessage";
 import { useProjectContext } from "../projects.$id/route";
-import { EditableMessage } from "./EditableMessage";
 import { useProjectChat } from "./useProjectChat";
 
 export const loader = async ({ params, request }: LoaderFunctionArgs) => {
@@ -22,20 +22,7 @@ export default function ChatRoute() {
   const { actions, messages, isStreaming, inputRef } =
     useProjectChat(conversation);
   let { project } = useProjectContext();
-  // let { scrollToBottom, isAtBottom } = useScrollToBottom(
-  //   isStreaming,
-  //   "#project-scroll-container"
-  // );
-  // useUpdateEffect(() => {
-  //   if (
-  //     messages.length > 0 &&
-  //     messages.length > (conversation?.messages?.length || 0)
-  //   ) {
-  //     scrollToBottom();
-  //   }
-  // }, [messages.length]);
-  const isAtBottom = true;
-  console.log("🚀 | ChatRoute ~ messages:", messages);
+
   return (
     <div
       className={cn(
