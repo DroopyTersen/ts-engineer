@@ -24,7 +24,7 @@ export const classifyCodeTask = async (
   const systemPrompt = createSystemPrompt();
   const userPrompt = taskDescription.trim();
 
-  const result = await llm.streamText(
+  const result = await llm.generateText(
     {
       maxTokens: 10,
       temperature: 0,

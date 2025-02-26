@@ -27,7 +27,9 @@ export const ReasoningDisplay = ({
       <summary className="py-2 pl-4 text-sm font-medium cursor-pointer hover:bg-base-200">
         Reasoning
       </summary>
-      <div className="pl-4 pr-4 pb-2 max-h-96 overflow-auto">{children}</div>
+      <div className="pl-4 pr-4 pb-2 max-h-96 overflow-auto bg-gray-100">
+        {children}
+      </div>
     </details>
   );
 };

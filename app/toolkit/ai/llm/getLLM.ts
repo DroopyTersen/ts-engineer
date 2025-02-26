@@ -192,18 +192,23 @@ const _streamText = async (
       const stream = vercelStreamText({
         abortSignal: signal,
         ...params,
-        onFinish: (result) => {
-          if (result.toolCalls) {
-            for (const toolCall of result.toolCalls) {
-              emitter?.emit("tool_call", {
-                id: toolCall.toolCallId,
-                name: toolCall.toolName,
-                args: toolCall.args,
-                timestamp: Date.now(),
-              });
+        onError: (err: any) => {
+          console.error("❌ | streamText err:", err);
+          emitter?.emit("error", err);
+          reject(err);
+        },
+        onStepFinish(stepResult) {
+          // TODO: End the prev generataion
+          // TODO: Start a new generation
+
+          if (stepResult.toolResults) {
+            for (const toolResult of stepResult.toolResults) {
+              emitter?.emit("tool_result", toolResult);
             }
           }
-
+        },
+        onFinish: (result) => {
+          // Handle processing startSequence if necessary
           if (params.startSequence && result.text) {
             const startIndex = result.text.indexOf(params.startSequence);
             if (startIndex !== -1) {
@@ -248,7 +253,15 @@ const _streamText = async (
         if (chunk.type === "text-delta") {
           handleTextChunk(chunk.textDelta);
         } else if (chunk.type === "reasoning") {
+          console.log("🚀 | forawait | chunk.textDelta:", chunk.textDelta);
           emitter?.emit("reasoning", chunk.textDelta);
+        } else if (chunk.type === "tool-call") {
+          emitter?.emit("tool_call", {
+            id: chunk.toolCallId,
+            name: chunk.toolName,
+            args: chunk.args,
+            timestamp: Date.now(),
+          });
         }
       }
       // for await (const chunk of stream.textStream) {

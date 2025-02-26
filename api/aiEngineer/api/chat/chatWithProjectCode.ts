@@ -8,9 +8,7 @@ import { getProjectCodeContext } from "../codeTask/getProjectCodeContext";
 
 export const chatWithProjectCode = async ({
   projectId,
-  conversationId,
   messages,
-  model,
   selectedFiles,
   emitter,
   signal,
@@ -24,7 +22,6 @@ export const chatWithProjectCode = async ({
   signal: AbortSignal;
 }) => {
   try {
-    console.log("🚀 | messages:", messages);
     let project = await db.getProjectById(projectId);
     let llm = getLLM(chooseModel(project.classification, "tools"));
     console.log("🚀 | llm:", llm._model.modelId);

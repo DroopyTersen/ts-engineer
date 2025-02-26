@@ -63,10 +63,20 @@ export const generateSpecifications = async (
     summary: projectContext.summary || "No summary provided",
     title: projectContext.title,
   });
+  console.log(
+    "🚀 | userMessageTextContents:",
+    JSON.stringify(userMessageTextContents, null, 2)
+  );
 
   let finalPrompt = createFinalPrompt(codeTask);
-  const result = await llm.runTools(
+  const result = await llm.streamText(
     {
+      providerOptions: {
+        anthropic: {
+          thinking: { type: "enabled", budgetTokens: 2000 },
+        },
+      },
+      maxSteps: 20,
       label: "generateSpecifications",
       maxTokens: 4000,
       temperature: 0.2,
@@ -123,32 +133,34 @@ const createSystemPrompt = (taskType: string) => {
     taskDescriptions[taskType as keyof typeof taskDescriptions]
   }. Your goal is to create a clear, concise, and actionable specification based on the provided information. Follow these steps:
 
+<process_guidelines>
   1. Analyze the task: Carefully review the provided information and task description.
-  
   2. Identify relevant files: Based on the task, think about which files in the <file_structure> might be relevant. List these files and explain why they're important.
-
-  
-  3. Read file contents: If any of the relevant files have not been provided already in the <file_contents>, Use the \`readFileContents\` tool to read the contents of the missing file. Pass an array of filepaths to this tool.
-  
-  4. Search for relevant code: After reading some files, if you have further questions about the codebase, use the \`searchCodeSnippets\` tool to find relevant code snippets related to the task. This can help you identify other files you may want to call readFileContents on. This can help you identify affected areas, understand current implementations, or find usage patterns. Use specific function names, variable names, or unique strings to narrow down your search.
-
+  3. Read file contents, <file_contents>: If any of the relevant files have not been provided already in the <file_contents>, Use the \`readFileContents\` tool to read the contents of the missing file. Pass an array of filepaths to this tool. IMPORTANT! - First check to see if the file was already provided in the <file_contents>. If it was you probably don't need to call the tool unless the contents were cutoff.
+  4. Search for relevant code: After reading some files, if you have further questions about the codebase, use the \`searchCodeSnippets\` tool to find relevant code snippets related to the task. This can help you identify other files you may want to call readFileContents on. This can help you identify affected areas, understand current implementations, or find usage patterns. Use specific function names, variable names, or unique strings to narrow down your search. You only need to call this tool if the provided <file_contents> doesn't have the information you need.
   5. Process information: Analyze the contents of the identified files and extracted code snippets, and extract key information relevant to the task.
-  
   6. Create specification: Using the gathered information, create a clear and actionable specification. Focus on essential details that will help developers understand and implement the task efficiently. Remember, the goal is a functional specification, NOT to create a technical spec. So things like acceptance criteria should be written so that they could be tested by an end user. AKA, update database schema is not a good acceptance criteria, because it is not testable by an end user.
+</process_guidelines>
 
-Remember, you can call \`readFileContents\` and \`searchCodeSnippets\` multiple times in your process. It is important to review the relevant and pertinent files in the codebase to understand how to best define the specifications for the coding task.
+<tool_usage_guidelines>
+Remember, you can call \`readFileContents\` and \`searchCodeSnippets\` multiple times in your process. It is important to review the relevant and pertinent files in the codebase to understand how to best define the specifications for the coding task. It would be strange to call getFileContents though on a file that was already provided in the <file_contents> section.
+</tool_usage_guidelines>
 
-## Response Format
-First provide your thought process in <thought> tags. In <thought> tags, provide your reasoning for why you are searching for specific code snippets or reading certain files, what you are looking for, and any key insights you have gained.
-  
-Then finally, provide the final specification in markdown format. Remember, the goal is to transform raw, unstructured ideas into well-structured backlog items, that clearly communication functional requirements, not to solve the problem or implement a solution. Ensure that project objectives are clearly defined and concisely and effectively communicated.
+<response_guidelines>
+Provide the final specification in markdown format. Remember, the goal is to transform raw, unstructured ideas into well-structured backlog items, that clearly communication functional requirements, not to solve the problem or implement a solution. Ensure that project objectives are clearly defined and concisely and effectively communicated. 
+
+IMPORTANT!! - Follow the formatting in the user provided template exactly!! Use bolds where they use bolds and headings only if they use headings. This is critical to matched their desired formatting! and put the final answer in <specifications> tags. There should be no other text in the <specifications> tag other than the filled out template!
+
+IMPORTANT!! - YOU SHOULD NEVER call read_file_contents on a file that was already provided in the <file_contents> section. Reference it from <file_contents> section. don't waste tokens on extra tool calls!
+
+For example, every <specifications> tag should start with **Title**: and all the sections should use bold labels not headings.
+</response_guidelines>
   `;
 };
 
 const createFinalPrompt = (codeTask: WriteSpecsInput["codeTask"]) => {
   const templates: Record<CodeTaskType, string> = {
-    bugfix: `
-**Title**: [Concise description of the bug]
+    bugfix: `**Title**: [Concise description of the bug]
 
 **Description**:
 - What is the current behavior?
@@ -160,8 +172,7 @@ const createFinalPrompt = (codeTask: WriteSpecsInput["codeTask"]) => {
 
 **Additional context**: [Any screenshots, error messages, or relevant information]
 `,
-    feature: `
-**Title**: [Brief description of the new feature]
+    feature: `**Title**: [Brief description of the new feature]
 
 **Description**:
 - What problem does this feature solve?
@@ -174,15 +185,13 @@ const createFinalPrompt = (codeTask: WriteSpecsInput["codeTask"]) => {
 
 **Additional context**: [Any mockups, or relevant information. Leave out technical details, that will come later. Focus on the requirements gathering an specifications.]
 `,
-    refactor: `
-**Title**: [Area or component to be refactored]
+    refactor: `**Title**: [Area or component to be refactored]
 
 **Description**:
 - What is the current issue with the code?
 - What improvements will this refactor bring?
 `,
-    documentation: `
-**Title**: [Topic or area to be documented]
+    documentation: `**Title**: [Topic or area to be documented]
 
 **Description**:
 - What needs to be documented?
@@ -221,10 +230,14 @@ Ensure your response is in markdown format and follows this structure closely. R
 ${
   codeTask.specifications && codeTask.followUpInput
     ? `
-Previous specifications:
+${
+  codeTask.specifications
+    ? `Previous specifications:
 <previous_specifications>
 ${codeTask.specifications}
-</previous_specifications>
+</previous_specifications>`
+    : ""
+}
 
 Follow-up input:
 <follow_up_input>

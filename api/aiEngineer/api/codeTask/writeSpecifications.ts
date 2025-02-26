@@ -43,12 +43,10 @@ export const writeSpecifications = async (
     input: validatedInput.input,
     projectId: validatedInput.projectId,
     selectedFiles,
-    maxTokens: llm._model.modelId === "deepseek-chat" ? 54_000 : 100_000,
+    maxTokens: llm._model.modelId === "deepseek-chat" ? 54_000 : 70_000,
   });
 
-  let newSpecifications = `<files>\n${projectContext.filepaths.join(
-    "\n"
-  )}\n</files>\n`;
+  let newSpecifications = ` `;
 
   emitter?.emit("content", newSpecifications);
 
@@ -77,14 +75,12 @@ export const writeSpecifications = async (
   // Save the code task to the database
   let codeTask;
   if (existingCodeTask) {
-    console.log("🚀 | title: update specifications", specifications);
     codeTask = await db.updateSpecifications({
       codeTaskId: validatedInput.codeTaskId,
       specifications,
       selected_files: projectContext.filepaths,
     });
   } else {
-    console.log("🚀 | title: save new code task", specifications);
     codeTask = await db.createNewCodeTask({
       id: validatedInput.codeTaskId,
       project_id: validatedInput.projectId,

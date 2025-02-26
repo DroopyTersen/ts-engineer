@@ -14,6 +14,9 @@ export const modelProviders = {
   anthropic: createAnthropic({
     apiKey: process.env.ANTHROPIC_API_KEY!,
   }),
+  workAnthropic: createAnthropic({
+    apiKey: process.env.COREBTS_ANTHROPIC_API_KEY!,
+  }),
   deepseek: createDeepSeek({
     apiKey: process.env.DEEPSEEK_API_KEY!,
   }),
@@ -38,11 +41,11 @@ let workProvider = customProvider({
         // structuredOutputs: true,
       }
     ),
-    large: modelProviders.azure(process.env.AZURE_OPENAI_LLM_DEPLOYMENT_NAME!),
-    tools: modelProviders.azure(process.env.AZURE_OPENAI_LLM_DEPLOYMENT_NAME!),
-    reasoner: modelProviders.azure(
-      process.env.AZURE_OPENAI_LLM_DEPLOYMENT_NAME!
-    ),
+    // large: modelProviders.azure(process.env.AZURE_OPENAI_LLM_DEPLOYMENT_NAME!),
+    large: modelProviders.workAnthropic("claude-3-7-sonnet-20250219"),
+    // tools: modelProviders.azure(process.env.AZURE_OPENAI_LLM_DEPLOYMENT_NAME!),
+    tools: modelProviders.workAnthropic("claude-3-7-sonnet-20250219"),
+    reasoner: modelProviders.workAnthropic("claude-3-7-sonnet-20250219"),
   } as const,
   textEmbeddingModels: {
     embedding: modelProviders.azure.textEmbeddingModel(
@@ -53,10 +56,8 @@ let workProvider = customProvider({
 
 const privateProvider = customProvider({
   languageModels: {
-    small: modelProviders.openai("gpt-4o-mini"),
-    small_structured: modelProviders.openai("gpt-4o-mini", {
-      structuredOutputs: true,
-    }),
+    small: modelProviders.google("gemini-2.0-flash-001"),
+    small_structured: modelProviders.google("gemini-2.0-flash-001"),
     large: modelProviders.anthropic("claude-3-7-sonnet-20250219"),
     tools: modelProviders.anthropic("claude-3-7-sonnet-20250219"),
     reasoner: modelProviders.anthropic("claude-3-7-sonnet-20250219"),

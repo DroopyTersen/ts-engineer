@@ -6,6 +6,9 @@ import { Button } from "~/shadcn/components/ui/button";
 import { Label } from "~/shadcn/components/ui/label";
 import { Textarea } from "~/shadcn/components/ui/textarea";
 import { cn } from "~/shadcn/utils";
+import { ReasoningDisplay } from "~/toolkit/ai/ui/ReasoningDisplay";
+import { ChatToolUsesDebug } from "~/toolkit/ai/ui/ToolUsesDebug";
+import { Markdown } from "~/toolkit/components/Markdown/Markdown";
 import { MarkdownTextarea } from "~/toolkit/components/MarkdownTextarea/MarkdownTextarea";
 import { useCodeTask } from "./useCodeTask";
 
@@ -33,8 +36,17 @@ export const SpecificationsForm = ({
     }
   }, [specificationsStream.isStreaming]);
 
+  let reasoning = specificationsStream?.message?.reasoning;
+  let toolUses = specificationsStream?.message?.toolUses || [];
+
   return (
     <form className="mt-4" onSubmit={(e) => e.preventDefault()}>
+      {reasoning && (
+        <ReasoningDisplay>
+          <Markdown className="prose prose-sm max-w-4xl">{reasoning}</Markdown>
+        </ReasoningDisplay>
+      )}
+      {toolUses?.length > 0 && <ChatToolUsesDebug toolUses={toolUses} />}
       <MarkdownTextarea
         label="Specifications"
         value={

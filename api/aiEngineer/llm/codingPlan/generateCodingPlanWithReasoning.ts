@@ -1,6 +1,7 @@
 import OpenAI from "openai";
-import { getCachedMessageContent, LLM } from "~/toolkit/ai/llm/getLLM";
+import { LLM } from "~/toolkit/ai/llm/getLLM";
 import { LLMEventEmitter } from "~/toolkit/ai/streams/LLMEventEmitter";
+import { createCachedProjectMessageTextContents } from "../specfications/generateSpecifications";
 
 export const generateCodingPlanWithReasoning = async (
   {
@@ -32,19 +33,16 @@ export const generateCodingPlanWithReasoning = async (
   const systemPrompt = createSystemPrompt();
   const { followUpInput, previousPlan } = codeTask;
   // Initialize userMessageTextContents with project context
-  let userMessageTextContents = [
-    getCachedMessageContent(
-      `<summary>${projectContext.summary || "No summary provided"}</summary>`
-    ),
-    getCachedMessageContent(
-      `<file_structure>${projectContext.fileStructure}</file_structure>`
-    ),
-    getCachedMessageContent(
-      `<file_contents>${projectContext.fileContents.join(
-        "\n\n"
-      )}</file_contents>`
-    ),
-    // Conditionally add code task based on presence of previousPlan and followUpInput
+
+  let userMessageTextContents = createCachedProjectMessageTextContents({
+    fileContents: projectContext.fileContents,
+    fileStructure: projectContext.fileStructure,
+    summary: projectContext.summary || "No summary provided",
+    title: projectContext.title,
+  });
+
+  // Add code task based on presence of previousPlan and followUpInput
+  userMessageTextContents.push(
     previousPlan && followUpInput
       ? {
           type: "text",
@@ -62,8 +60,8 @@ export const generateCodingPlanWithReasoning = async (
           }</raw_input>\n<specifications>${
             codeTask.specifications
           }</specifications>`,
-        },
-  ];
+        }
+  );
 
   const specificationRegex = /<specifications>([\s\S]*?)<\/specifications>/;
   const match = codeTask.specifications.match(specificationRegex);

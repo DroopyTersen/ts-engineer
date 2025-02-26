@@ -3,6 +3,9 @@ import { useEffect, useState } from "react";
 import { Button } from "~/shadcn/components/ui/button";
 import { Label } from "~/shadcn/components/ui/label";
 import { Textarea } from "~/shadcn/components/ui/textarea";
+import { ReasoningDisplay } from "~/toolkit/ai/ui/ReasoningDisplay";
+import { ChatToolUsesDebug } from "~/toolkit/ai/ui/ToolUsesDebug";
+import { Markdown } from "~/toolkit/components/Markdown/Markdown";
 import { MarkdownTextarea } from "~/toolkit/components/MarkdownTextarea/MarkdownTextarea";
 import { ApplyInCursorButton } from "./ApplyInCursorButton";
 import { useCodeTask } from "./useCodeTask";
@@ -37,9 +40,17 @@ export const CodingPlanForm = ({
       setIsSaving(false);
     }
   };
+  let reasoning = codingPlanStream?.message?.reasoning;
+  let toolUses = codingPlanStream?.message?.toolUses || [];
 
   return (
     <form className="mt-4 max-w-screen" onSubmit={(e) => e.preventDefault()}>
+      {reasoning && (
+        <ReasoningDisplay>
+          <Markdown className="prose prose-sm max-w-4xl">{reasoning}</Markdown>
+        </ReasoningDisplay>
+      )}
+      {toolUses?.length > 0 && <ChatToolUsesDebug toolUses={toolUses} />}
       <MarkdownTextarea
         label="Coding Plan"
         value={

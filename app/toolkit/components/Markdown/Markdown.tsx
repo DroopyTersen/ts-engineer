@@ -70,7 +70,7 @@ export const Markdown = React.memo(
             },
           }}
         >
-          {processedMarkdown}
+          {processedMarkdown.trim()}
         </MarkdownToJSX>
       </div>
     );

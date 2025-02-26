@@ -26,24 +26,34 @@ export const MarkdownTextarea = (props: {
 
   return (
     <>
-      <div className={cn("flex flex-col gap-2", props.className)}>
-        <div className="flex justify-between items-center">
+      <div
+        className={cn(
+          "flex flex-col gap-2",
+          props.className,
+          mode === "preview" ? "max-w-4xl" : ""
+        )}
+      >
+        <div className="flex justify-start items-center">
           <Label htmlFor={props.name} className="">
             {props.label}
           </Label>
-          <div className="flex items-center space-x-2 lg:hidden">
-            <Label htmlFor="preview-mode">Preview</Label>
+          <div className="flex items-center space-x-2 ml-12">
             <Switch
-              id="preview-mode"
-              checked={mode === "preview"}
+              id="edit-mode"
+              checked={mode === "edit"}
               onCheckedChange={(isChecked) =>
-                setMode(isChecked ? "preview" : "edit")
+                setMode(isChecked ? "edit" : "preview")
               }
             />
+            <Label htmlFor="edit-mode">Edit</Label>
           </div>
         </div>
 
-        <div className="lg:grid lg:grid-cols-2 lg:gap-4">
+        <div
+          className={cn(
+            mode === "edit" ? "lg:grid lg:grid-cols-2 lg:gap-4" : ""
+          )}
+        >
           <Textarea
             id={props.name}
             name={props.name}
@@ -52,14 +62,15 @@ export const MarkdownTextarea = (props: {
             rows={rows}
             {...props.textareaProps}
             className={cn(
-              mode === "preview" && "hidden lg:block",
+              "font-mono",
+              mode === "preview" ? "hidden" : "",
               props.textareaProps.className
             )}
           />
           <div
             className={cn(
               "border p-4 rounded-md",
-              mode === "preview" ? "block" : "hidden lg:block"
+              mode === "edit" ? "hidden lg:block" : "block"
             )}
             style={{
               minHeight: minHeight + "px",

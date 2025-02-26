@@ -58,9 +58,7 @@ export const EditableMessage = ({
         <ChatMessageContent
           className={cn(
             "transition-colors",
-            role === "AI"
-              ? "bg-white hover:bg-gray-50"
-              : "bg-gray-100 hover:bg-gray-100 "
+            role === "AI" ? "bg-white" : "bg-gray-100 hover:bg-gray-100 "
           )}
         >
           {message?.reasoning && (

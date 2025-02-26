@@ -30,8 +30,11 @@ export const generateProjectChatResponse = async (
     title: projectContext.title || "No title provided",
   }).filter((contentBlock) => contentBlock.text);
   console.log("LLM Model for chat:", llm._model?.modelId);
-  const result = await llm.runTools(
+  messages = messages.filter((msg) => msg.content);
+  await emitter?.emit("content", " ");
+  const result = await llm.streamText(
     {
+      maxSteps: 30,
       providerOptions: {
         anthropic: {
           thinking: { type: "enabled", budgetTokens: 2000 },
