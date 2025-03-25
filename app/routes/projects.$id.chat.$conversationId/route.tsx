@@ -63,17 +63,6 @@ export default function ChatRoute() {
           />
         </div>
       </div>
-      {/* <Button
-        className={cn(
-          "fixed bottom-8 right-8 rounded-full transition-opacity duration-500 shadow-lg",
-          isAtBottom ? "opacity-0" : "opacity-100",
-          isStreaming ? "animate-bounce" : ""
-        )}
-        size={"icon"}
-        onClick={() => scrollToBottom()}
-      >
-        <LuArrowDown size={20} />
-      </Button> */}
     </div>
   );
 }

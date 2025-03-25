@@ -1,15 +1,7 @@
-import { encode, encodeChat } from "gpt-tokenizer";
 export const countTokens = (text: string) => {
   if (!text) return 0;
-  const tokens = encode(text);
-  return tokens.length;
-};
-
-export const countConversationTokens = (messages: any[]) => {
-  if (!messages || messages.length === 0) return 0;
-
-  let tokens = encodeChat(messages as any[], "gpt-4");
-  return tokens.length;
+  const tokens = Math.ceil(text.length / 4);
+  return tokens;
 };
 
 export function estimateTokenCost(

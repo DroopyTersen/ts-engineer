@@ -144,6 +144,7 @@ export const _generateData = async <TSchema extends z.ZodTypeAny>(
   > & {
     schema: TSchema;
     label?: string;
+    maxRetries?: number;
   },
   asyncOptions?: AsyncOptions
 ) => {
@@ -153,16 +154,60 @@ export const _generateData = async <TSchema extends z.ZodTypeAny>(
     requestId,
     ...params,
   });
-  let result = await vercelGenerateObject<z.infer<TSchema>>({
-    ...params,
-    abortSignal: signal,
-  });
-  emitter?.emit("llm_end", { requestId, ...result });
 
-  return result as Omit<
-    AsyncReturnType<typeof vercelGenerateObject>,
-    "object"
-  > & { object: z.infer<TSchema> };
+  const maxRetries = params.maxRetries ?? 3;
+  let attempt = 0;
+  let lastError: any = null;
+
+  while (attempt <= maxRetries) {
+    try {
+      let result = await vercelGenerateObject<z.infer<TSchema>>({
+        ...params,
+        abortSignal: signal,
+      });
+
+      emitter?.emit("llm_end", { requestId, ...result });
+
+      return result as Omit<
+        AsyncReturnType<typeof vercelGenerateObject>,
+        "object"
+      > & { object: z.infer<TSchema> };
+    } catch (error: any) {
+      lastError = error;
+      attempt++;
+
+      // Check if it's a NoObjectGeneratedError
+      if (error.name === "NoObjectGeneratedError" && attempt <= maxRetries) {
+        // Log retry attempt
+        console.warn(
+          `Failed to generate object (attempt ${attempt}/${maxRetries}):`,
+          {
+            cause: error.cause?.message || error.cause,
+            text: error.text?.substring(0, 100) + "...", // Log a snippet of the text
+          }
+        );
+
+        emitter?.emit(
+          "log",
+          `Retrying object generation (attempt ${attempt}/${maxRetries})`
+        );
+
+        // Add exponential backoff
+        const backoffMs = Math.min(100 * Math.pow(2, attempt - 1), 2000);
+        await new Promise((resolve) => setTimeout(resolve, backoffMs));
+
+        // Continue to the next retry attempt
+        continue;
+      }
+
+      // For other errors or if we've exhausted retries, throw the error
+      break;
+    }
+  }
+
+  // If we get here, we've exhausted all retries
+  emitter?.emit("error", lastError);
+  throw lastError;
 };
 
 export type StreamTextResult = NonNullable<
