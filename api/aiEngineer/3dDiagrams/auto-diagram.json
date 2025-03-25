@@ -1,0 +1,106 @@
+{
+  "azure-cloud": {
+    "type": "group",
+    "label": "Azure Cloud",
+    "areaType": 1
+  },
+  "persistance": {
+    "type": "group",
+    "label": "Persistance",
+    "areaType": 0
+  },
+  "app-services": {
+    "type": "group",
+    "label": "App Services",
+    "areaType": 0
+  },
+  "ai": {
+    "type": "group",
+    "label": "AI",
+    "areaType": 0
+  },
+  "github": {
+    "type": "group",
+    "label": "GitHub",
+    "areaType": 1
+  },
+  "langfuse": {
+    "type": "component",
+    "componentType": "generic.server",
+    "label": "Langfuse",
+    "groups": ["azure-cloud", "app-services"],
+    "icon": "chart-line",
+    "accentColor": "#1079D7",
+    "iconColor": "#1079D7"
+  },
+  "app-service": {
+    "type": "component",
+    "componentType": "generic.server",
+    "label": "Full Stack React App",
+    "groups": ["azure-cloud", "app-services"],
+    "icon": "react",
+    "accentColor": "#1079D7",
+    "iconColor": "#1079D7"
+  },
+  "azure-ad": {
+    "type": "component",
+    "componentType": "security.azure-active-directory",
+    "label": "Azure AD",
+    "groups": ["azure-cloud"]
+  },
+  "postgres-db": {
+    "type": "component",
+    "componentType": "database.postgres",
+    "label": "Azure SQL for PostgreSQL",
+    "groups": ["azure-cloud", "persistance"]
+  },
+  "ai-search": {
+    "type": "component",
+    "componentType": "ai.azure-search",
+    "label": "Azure AI Search",
+    "groups": ["azure-cloud", "ai"]
+  },
+  "blob-storage": {
+    "type": "component",
+    "componentType": "storage.azure-blob-storage",
+    "label": "Azure Blob Storage",
+    "groups": ["azure-cloud", "persistance"]
+  },
+  "app-insights": {
+    "type": "component",
+    "componentType": "monitoring.azure-monitor",
+    "label": "Azure App Insights",
+    "groups": ["azure-cloud"]
+  },
+  "openai": {
+    "type": "component",
+    "componentType": "ai.azure-custom-vision",
+    "label": "Azure OpenAI",
+    "groups": ["azure-cloud", "ai"]
+  },
+  "container-registry": {
+    "type": "component",
+    "componentType": "container.azure-container-registry",
+    "label": "Azure Container Registry",
+    "groups": ["azure-cloud"]
+  },
+  "end-user": {
+    "type": "component",
+    "componentType": "generic.pc",
+    "tier": 5,
+    "label": "End User"
+  },
+  "developer": {
+    "type": "component",
+    "componentType": "generic.pc",
+    "label": "Developer",
+    "tier": 5
+  },
+  "github-actions": {
+    "type": "component",
+    "componentType": "generic.processor",
+    "label": "GitHub Actions",
+    "groups": ["github"],
+    "icon": "github"
+  }
+}
