@@ -41,6 +41,7 @@ export const writeCodingPlan = async (
     input: existingCodeTask?.input + existingCodeTask?.specifications,
     projectId: validatedInput.projectId,
     selectedFiles,
+    maxTokens: llm?._model.modelId.includes("gemini") ? 300_000 : 70_000,
   });
 
   console.log("🚀 | existingCodeTask:", existingCodeTask);

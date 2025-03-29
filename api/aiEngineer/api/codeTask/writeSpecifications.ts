@@ -43,7 +43,7 @@ export const writeSpecifications = async (
     input: validatedInput.input,
     projectId: validatedInput.projectId,
     selectedFiles,
-    maxTokens: llm._model.modelId === "deepseek-chat" ? 54_000 : 70_000,
+    maxTokens: llm._model.modelId.includes("gemini") ? 300_000 : 70_000,
   });
 
   let newSpecifications = ` `;

@@ -29,7 +29,7 @@ export const chatWithProjectCode = async ({
       input: JSON.stringify(messages.slice(-3), null, 2),
       projectId,
       selectedFiles,
-      maxTokens: llm._model.modelId.startsWith("deepseek") ? 54_000 : 100_000,
+      maxTokens: llm._model.modelId.includes("gemini") ? 300_000 : 70_000,
     });
     emitter.emit("data", {
       type: "selectedFiles",

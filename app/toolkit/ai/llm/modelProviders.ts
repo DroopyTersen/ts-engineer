@@ -73,9 +73,9 @@ let publicProvider = customProvider({
   languageModels: {
     small: modelProviders.google("gemini-2.0-flash-001"),
     small_structured: modelProviders.google("gemini-2.0-flash-001"),
-    large: modelProviders.anthropic("claude-3-7-sonnet-20250219"),
-    tools: modelProviders.anthropic("claude-3-7-sonnet-20250219"),
-    reasoner: modelProviders.deepseek("claude-3-7-sonnet-20250219"),
+    large: modelProviders.google("gemini-2.5-pro-exp-03-25"), // modelProviders.anthropic("claude-3-7-sonnet-20250219"),
+    tools: modelProviders.google("gemini-2.5-pro-exp-03-25"), // modelProviders.anthropic("claude-3-7-sonnet-20250219"),
+    reasoner: modelProviders.google("gemini-2.5-pro-exp-03-25"), // modelProviders.deepseek("claude-3-7-sonnet-20250219"),
   } as const,
   textEmbeddingModels: {
     embedding: modelProviders.openai.textEmbeddingModel(

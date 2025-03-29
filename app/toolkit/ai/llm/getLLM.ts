@@ -298,7 +298,6 @@ const _streamText = async (
         if (chunk.type === "text-delta") {
           handleTextChunk(chunk.textDelta);
         } else if (chunk.type === "reasoning") {
-          console.log("🚀 | forawait | chunk.textDelta:", chunk.textDelta);
           emitter?.emit("reasoning", chunk.textDelta);
         } else if (chunk.type === "tool-call") {
           emitter?.emit("tool_call", {
@@ -543,7 +542,6 @@ const _streamTextWithTools = async (
               emitter?.emit("content", chunk.textDelta);
             }
           } else if (chunk.type === "reasoning") {
-            console.log("🚀 | forawait | chunk.textDelta:", chunk.textDelta);
             emitter?.emit("reasoning", chunk.textDelta);
           } else if (chunk.type === "tool-call") {
             emitter?.emit("tool_call", {

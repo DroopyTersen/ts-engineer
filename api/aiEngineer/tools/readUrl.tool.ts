@@ -8,7 +8,6 @@ export const readUrlTool = tool({
   parameters: z.object({
     url: z
       .string()
-      .url()
       .describe(
         "The URL of the webpage to read. Must be a valid, publicly accessible URL."
       ),
