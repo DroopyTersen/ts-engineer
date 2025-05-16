@@ -18,7 +18,7 @@ export const initDb = async (dataDir?: string) => {
       },
     });
 
-    // await applyMigrations(pg);
+    await applyMigrations(pg);
     return pg;
   });
   return _pg;
