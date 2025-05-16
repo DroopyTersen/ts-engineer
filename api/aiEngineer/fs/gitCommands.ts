@@ -4,7 +4,8 @@ import { runShellCommand } from "./runShellCommand";
 
 const GIT_COMMANDS = {
   unCommittedChanges: `git status -s`,
-  lastFileModified: `{ git ls-files --exclude-standard -c && git ls-files --others --exclude-standard; } | xargs stat -f '%m %N' 2>/dev/null | sort -nr | head -n 1`,
+  // Use platform-independent git command instead of relying on stat
+  lastFileModified: `git ls-files --exclude-standard -c -m --with-tree=HEAD | xargs -I{} git log -1 --format="%at {}" -- {} 2>/dev/null | sort -nr | head -n 1`,
   log: (maxChars = 10_000) =>
     `git log --pretty=format:'%h %s' --name-status | head -c ${maxChars}`,
   listFiles: `git ls-files --exclude-standard -c && git ls-files --others --exclude-standard`,
@@ -44,13 +45,22 @@ export const createProjectGit = (absolutePath: string) => {
     // Try git first
     let output = await runGitCommand(GIT_COMMANDS.lastFileModified);
 
-    if (output) {
-      const [timestamp, ...filePathParts] = output.split(" ");
-      const filepath = filePathParts.join(" ");
-      return {
-        updatedAt: new Date(parseInt(timestamp) * 1000).toISOString(),
-        filepath,
-      };
+    if (output && output.trim()) {
+      try {
+        const [timestamp, ...filePathParts] = output.split(" ");
+        const filepath = filePathParts.join(" ");
+        const parsedTimestamp = parseInt(timestamp);
+
+        if (!isNaN(parsedTimestamp)) {
+          return {
+            updatedAt: new Date(parsedTimestamp * 1000).toISOString(),
+            filepath,
+          };
+        }
+      } catch (error) {
+        console.error(`Error parsing git timestamp output: ${error}`);
+        // Continue to fallback
+      }
     }
 
     try {
