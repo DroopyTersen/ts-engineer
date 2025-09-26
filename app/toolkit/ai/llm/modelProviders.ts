@@ -11,6 +11,9 @@ export const modelProviders = {
   openai: createOpenAI({
     apiKey: process.env.OPENAI_API_KEY!,
   }),
+  workOpenai: createOpenAI({
+    apiKey: process.env.NRI_OPENAI_API_KEY!,
+  }),
   anthropic: createAnthropic({
     apiKey: process.env.ANTHROPIC_API_KEY!,
   }),
@@ -31,21 +34,13 @@ export const modelProviders = {
 
 let workProvider = customProvider({
   languageModels: {
-    small: modelProviders.azure(
-      process.env.AZURE_OPENAI_FAST_LLM_DEPLOYMENT_NAME!
-    ),
-    small_structured: modelProviders.azure(
-      process.env.AZURE_OPENAI_FAST_LLM_DEPLOYMENT_NAME!,
-      {
-        // Model deployment doesn't support this. need newer version
-        // structuredOutputs: true,
-      }
-    ),
+    small: modelProviders.workOpenai("gpt-4.1-mini"),
+    small_structured: modelProviders.workOpenai.responses("gpt-4.1-mini"),
     // large: modelProviders.azure(process.env.AZURE_OPENAI_LLM_DEPLOYMENT_NAME!),
-    large: modelProviders.workAnthropic("claude-3-7-sonnet-20250219"),
+    large: modelProviders.workOpenai.responses("o3"),
     // tools: modelProviders.azure(process.env.AZURE_OPENAI_LLM_DEPLOYMENT_NAME!),
-    tools: modelProviders.workAnthropic("claude-3-7-sonnet-20250219"),
-    reasoner: modelProviders.workAnthropic("claude-3-7-sonnet-20250219"),
+    tools: modelProviders.workOpenai.responses("o3"),
+    reasoner: modelProviders.workOpenai.responses("o3"),
   } as const,
   textEmbeddingModels: {
     embedding: modelProviders.azure.textEmbeddingModel(
@@ -56,11 +51,14 @@ let workProvider = customProvider({
 
 const privateProvider = customProvider({
   languageModels: {
-    small: modelProviders.google("gemini-2.0-flash-001"),
-    small_structured: modelProviders.google("gemini-2.0-flash-001"),
-    large: modelProviders.anthropic("claude-3-7-sonnet-20250219"),
-    tools: modelProviders.anthropic("claude-3-7-sonnet-20250219"),
-    reasoner: modelProviders.anthropic("claude-3-7-sonnet-20250219"),
+    small: modelProviders.google("gemini-2.0-flash"),
+    small_structured: modelProviders.google("gemini-2.0-flash"),
+    // large: modelProviders.anthropic("claude-4-sonnet-20250514"),
+    // tools: modelProviders.anthropic("claude-4-sonnet-20250514"),
+    // reasoner: modelProviders.anthropic("claude-4-sonnet-20250514"),
+    large: modelProviders.openai.responses("o3"),
+    tools: modelProviders.openai.responses("gpt-5"),
+    reasoner: modelProviders.openai.responses("o3"),
   } as const,
   textEmbeddingModels: {
     embedding: modelProviders.openai.textEmbeddingModel(
@@ -71,11 +69,17 @@ const privateProvider = customProvider({
 
 let publicProvider = customProvider({
   languageModels: {
-    small: modelProviders.google("gemini-2.0-flash-001"),
-    small_structured: modelProviders.google("gemini-2.0-flash-001"),
-    large: modelProviders.google("gemini-2.5-pro-exp-03-25"), // modelProviders.anthropic("claude-3-7-sonnet-20250219"),
-    tools: modelProviders.google("gemini-2.5-pro-exp-03-25"), // modelProviders.anthropic("claude-3-7-sonnet-20250219"),
-    reasoner: modelProviders.google("gemini-2.5-pro-exp-03-25"), // modelProviders.deepseek("claude-3-7-sonnet-20250219"),
+    small: modelProviders.google("gemini-2.0-flash"),
+    small_structured: modelProviders.openai("gpt-4.1-mini", {
+      structuredOutputs: true,
+    }),
+    // large: modelProviders.google("gemini-2.5-pro-preview-03-25"), // modelProviders.anthropic("claude-3-7-sonnet-20250219"),
+    // tools: modelProviders.anthropic("claude-3-7-sonnet-20250219"), // modelProviders.google("gemini-2.5-pro-exp-03-25"), //
+    // tools: modelProviders.google("gemini-2.5-pro-preview-03-25"), // modelProviders.deepseek("claude-3-7-sonnet-20250219"),
+    // reasoner: modelProviders.google("gemini-2.5-pro-preview-03-25"), // modelProviders.deepseek("claude-3-7-sonnet-20250219"),
+    large: modelProviders.openai.responses("o3"),
+    tools: modelProviders.openai.responses("o3"),
+    reasoner: modelProviders.openai.responses("o3"),
   } as const,
   textEmbeddingModels: {
     embedding: modelProviders.openai.textEmbeddingModel(

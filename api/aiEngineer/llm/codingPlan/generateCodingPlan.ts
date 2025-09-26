@@ -31,7 +31,11 @@ export const generateCodingPlan = async (
   }
 ) => {
   const systemPrompt = createSystemPrompt();
-
+  llm._model.modelId;
+  console.log(
+    "🚀 | generateCodingPlan llm._model.modelId:",
+    llm._model.modelId
+  );
   let userMessageTextContents = [
     ...createCachedProjectMessageTextContents(projectContext),
     codeTask.previousPlan && codeTask.followUpInput
@@ -69,13 +73,17 @@ It is VERY IMPORTANT that you update the entire previous plan. Don't be lazy! Ge
         anthropic: {
           thinking: { type: "enabled", budgetTokens: 2000 },
         },
+        openai: {
+          reasoningEffort: "medium",
+          reasoningSummary: "detailed",
+        },
       },
-      maxSteps: 20,
+      maxSteps: 30,
       label: "generateCodingPlan",
-      maxTokens: 8000,
-      temperature: 0.1,
-      startSequence: "<coding_plan>",
-      stopSequences: ["</coding_plan>"],
+      // maxTokens: 18000,
+      // temperature: 0.1,
+      // startSequence: "<coding_plan>",
+      // stopSequences: ["</coding_plan>"],
       tools: {
         readFileContents: createReadFilesTool(projectContext.absolutePath),
         searchCodeSnippets: createSearchCodeSnippetsTool(
@@ -94,6 +102,9 @@ It is VERY IMPORTANT that you update the entire previous plan. Don't be lazy! Ge
       emitter,
     }
   );
+  console.log("🚀 | result:", result.text);
+  console.log("🚀 | result:", result.usage);
+  console.log("🚀 | result:", result.providerMetadata);
 
   let finalPlan = result.text.trim();
   // Extract the coding plan from the result
@@ -105,7 +116,11 @@ It is VERY IMPORTANT that you update the entire previous plan. Don't be lazy! Ge
 };
 
 const createSystemPrompt = () => {
-  return `You are an expert software engineer tasked with creating a detailed coding plan based on provided specifications and follow-up input (if any). Your plan should be clear, concise, and actionable for a junior developer to implement the required changes accurately. Follow these guidelines:
+  return `Formatting re-enabled. Please respond with richly formatted text in Markdown.
+Use only ASCII characters, no emojis, no unicode!!!!
+
+
+You are an expert software engineer tasked with creating a detailed coding plan based on provided specifications and follow-up input (if any). Your plan should be clear, concise, and actionable for a junior developer to implement the required changes accurately. Follow these guidelines:
 
 For each step of in the process, explain your thought process:
 - Why you're making specific decisions

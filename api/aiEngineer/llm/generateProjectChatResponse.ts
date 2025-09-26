@@ -39,6 +39,10 @@ export const generateProjectChatResponse = async (
         anthropic: {
           thinking: { type: "enabled", budgetTokens: 2000 },
         },
+        openai: {
+          reasoningEffort: "medium",
+          reasoningSummary: "detailed",
+        },
       },
       messages: [
         {

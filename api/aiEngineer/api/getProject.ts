@@ -31,7 +31,8 @@ export async function getProject(
 
   let markdown = await filesToMarkdown(filepaths, {
     projectPath: project.absolute_path,
-    maxTokens: 100_000,
+    // We can set a high number here because we're not using the markdown for anything other than an estimate
+    maxTokens: 700_000,
     maxLinesPerFile: 300,
   });
   let largestFiles = (
@@ -39,7 +40,9 @@ export async function getProject(
   ).slice(0, 10);
 
   // The accuracte countTokens takes too long (10ms at least usuallly)
-  let estimatedTokens = project.summary.length + markdown.length / 4;
+  // Only include project summary tokens if no files are selected
+  let summaryTokens = filepaths.length === 0 ? project.summary.length : 0;
+  let estimatedTokens = summaryTokens + markdown.length / 4;
 
   const usageEstimate = {
     tokens: estimatedTokens + 1000, // Input + Output tokens

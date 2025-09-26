@@ -26,7 +26,7 @@ export const classifyCodeTask = async (
 
   const result = await llm.generateText(
     {
-      maxTokens: 10,
+      maxTokens: 16,
       temperature: 0,
       system: systemPrompt,
       prompt: userPrompt,
@@ -38,6 +38,7 @@ export const classifyCodeTask = async (
   );
 
   const classification = result.text.trim();
+  console.log("🚀 | classification:", classification);
   return CodeTaskTypeSchema.parse(classification);
 };
 

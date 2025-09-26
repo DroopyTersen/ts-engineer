@@ -144,7 +144,6 @@ export const _generateData = async <TSchema extends z.ZodTypeAny>(
   > & {
     schema: TSchema;
     label?: string;
-    maxRetries?: number;
   },
   asyncOptions?: AsyncOptions
 ) => {
@@ -154,60 +153,16 @@ export const _generateData = async <TSchema extends z.ZodTypeAny>(
     requestId,
     ...params,
   });
+  let result = await vercelGenerateObject<z.infer<TSchema>>({
+    ...params,
+    abortSignal: signal,
+  });
+  emitter?.emit("llm_end", { requestId, ...result });
 
-  const maxRetries = params.maxRetries ?? 3;
-  let attempt = 0;
-  let lastError: any = null;
-
-  while (attempt <= maxRetries) {
-    try {
-      let result = await vercelGenerateObject<z.infer<TSchema>>({
-        ...params,
-        abortSignal: signal,
-      });
-
-      emitter?.emit("llm_end", { requestId, ...result });
-
-      return result as Omit<
-        AsyncReturnType<typeof vercelGenerateObject>,
-        "object"
-      > & { object: z.infer<TSchema> };
-    } catch (error: any) {
-      lastError = error;
-      attempt++;
-
-      // Check if it's a NoObjectGeneratedError
-      if (error.name === "NoObjectGeneratedError" && attempt <= maxRetries) {
-        // Log retry attempt
-        console.warn(
-          `Failed to generate object (attempt ${attempt}/${maxRetries}):`,
-          {
-            cause: error.cause?.message || error.cause,
-            text: error.text?.substring(0, 100) + "...", // Log a snippet of the text
-          }
-        );
-
-        emitter?.emit(
-          "log",
-          `Retrying object generation (attempt ${attempt}/${maxRetries})`
-        );
-
-        // Add exponential backoff
-        const backoffMs = Math.min(100 * Math.pow(2, attempt - 1), 2000);
-        await new Promise((resolve) => setTimeout(resolve, backoffMs));
-
-        // Continue to the next retry attempt
-        continue;
-      }
-
-      // For other errors or if we've exhausted retries, throw the error
-      break;
-    }
-  }
-
-  // If we get here, we've exhausted all retries
-  emitter?.emit("error", lastError);
-  throw lastError;
+  return result as Omit<
+    AsyncReturnType<typeof vercelGenerateObject>,
+    "object"
+  > & { object: z.infer<TSchema> };
 };
 
 export type StreamTextResult = NonNullable<
@@ -237,23 +192,18 @@ const _streamText = async (
       const stream = vercelStreamText({
         abortSignal: signal,
         ...params,
-        onError: (err: any) => {
-          console.error("❌ | streamText err:", err);
-          emitter?.emit("error", err);
-          reject(err);
-        },
-        onStepFinish(stepResult) {
-          // TODO: End the prev generataion
-          // TODO: Start a new generation
-
-          if (stepResult.toolResults) {
-            for (const toolResult of stepResult.toolResults) {
-              emitter?.emit("tool_result", toolResult);
+        onFinish: (result) => {
+          if (result.toolCalls) {
+            for (const toolCall of result.toolCalls) {
+              emitter?.emit("tool_call", {
+                id: toolCall.toolCallId,
+                name: toolCall.toolName,
+                args: toolCall.args,
+                timestamp: Date.now(),
+              });
             }
           }
-        },
-        onFinish: (result) => {
-          // Handle processing startSequence if necessary
+
           if (params.startSequence && result.text) {
             const startIndex = result.text.indexOf(params.startSequence);
             if (startIndex !== -1) {
@@ -299,13 +249,6 @@ const _streamText = async (
           handleTextChunk(chunk.textDelta);
         } else if (chunk.type === "reasoning") {
           emitter?.emit("reasoning", chunk.textDelta);
-        } else if (chunk.type === "tool-call") {
-          emitter?.emit("tool_call", {
-            id: chunk.toolCallId,
-            name: chunk.toolName,
-            args: chunk.args,
-            timestamp: Date.now(),
-          });
         }
       }
       // for await (const chunk of stream.textStream) {
@@ -372,11 +315,7 @@ const _streamTextWithTools = async (
   const { signal, emitter } = asyncOptions || {};
   let messages: Array<VercelChatMessage> = params.messages || [];
   let loopCount = 0;
-  const maxLoops = params.maxLoops || 10;
-  console.log("🚀 | _streamTextWithTools maxLoops:", {
-    maxLoops,
-    messagesLength: messages.length,
-  });
+  const maxLoops = params.maxLoops || 5;
   let requestId = generateId();
 
   return new Promise(async (resolve, reject) => {
@@ -395,11 +334,6 @@ const _streamTextWithTools = async (
           messages: messages as VercelChatMessages,
           maxRetries: 3,
           abortSignal: signal,
-          onError: (err: any) => {
-            console.error("❌ | streamTextWithTools err:", err);
-            emitter?.emit("error", err);
-            reject(err);
-          },
           onFinish: async (result) => {
             emitter?.emit("llm_end", { requestId, ...result });
             if (
@@ -446,10 +380,6 @@ const _streamTextWithTools = async (
                           ...rest
                         } = result;
                         forcedResponse = newToolHandledResponse;
-                        console.log(
-                          "🚀 | content:result.toolResults.map | forcedResponse:",
-                          forcedResponse
-                        );
                         result = rest;
                       }
                       emitter?.emit("tool_result", {
@@ -467,14 +397,10 @@ const _streamTextWithTools = async (
                     }),
                   };
                   messages.push(toolResultMessage);
-                  console.log(
-                    "🚀 | onFinish: | messages.push(toolResultMessage)"
-                  );
                 }
               }
 
               loopCount++;
-              console.log("🚀 | onFinish: | forcedResponse:", forcedResponse);
               const nextResult = forcedResponse
                 ? forcedResponse
                 : await _streamTextWithTools(
@@ -486,7 +412,6 @@ const _streamTextWithTools = async (
                     asyncOptions
                   );
 
-              console.log("🚀 | onFinish: | loopCount++;:", loopCount);
               resolve({
                 ...nextResult,
                 toolCalls: [
@@ -541,8 +466,6 @@ const _streamTextWithTools = async (
               finalContent += chunk.textDelta;
               emitter?.emit("content", chunk.textDelta);
             }
-          } else if (chunk.type === "reasoning") {
-            emitter?.emit("reasoning", chunk.textDelta);
           } else if (chunk.type === "tool-call") {
             emitter?.emit("tool_call", {
               id: chunk.toolCallId,
@@ -576,9 +499,7 @@ const _streamTextWithTools = async (
     };
 
     try {
-      console.log("🚀 | attemptStream...:");
       await attemptStream();
-      console.log("🚀 | done attemptStream");
     } catch (err: any) {
       console.error("❌ | streamTextWithTools err:", err);
       emitter?.emit("error", err);

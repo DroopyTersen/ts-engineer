@@ -1,7 +1,5 @@
 import { createReadFilesTool } from "api/aiEngineer/tools/readFiles.tool";
-import { readUrlTool } from "api/aiEngineer/tools/readUrl.tool";
 import { createSearchCodeSnippetsTool } from "api/aiEngineer/tools/searchCodeSnippets.tool";
-import { searchWebTool } from "api/aiEngineer/tools/searchWeb.tool";
 import { getCachedMessageContent, LLM } from "~/toolkit/ai/llm/getLLM";
 import { LLMEventEmitter } from "~/toolkit/ai/streams/LLMEventEmitter";
 import { CodeTaskType } from "./classifyCodeTask";
@@ -63,10 +61,6 @@ export const generateSpecifications = async (
     summary: projectContext.summary || "No summary provided",
     title: projectContext.title,
   });
-  console.log(
-    "🚀 | userMessageTextContents:",
-    JSON.stringify(userMessageTextContents, null, 2)
-  );
 
   let finalPrompt = createFinalPrompt(codeTask);
   const result = await llm.streamText(
@@ -75,21 +69,25 @@ export const generateSpecifications = async (
         anthropic: {
           thinking: { type: "enabled", budgetTokens: 2000 },
         },
+        openai: {
+          reasoningEffort: "medium",
+          reasoningSummary: "detailed",
+        },
       },
       maxSteps: 20,
       label: "generateSpecifications",
-      maxTokens: 4000,
+      maxTokens: 6000,
       temperature: 0.2,
       tools: {
-        readUrlContents: readUrlTool,
-        searchWeb: searchWebTool,
+        // readUrlContents: readUrlTool,
+        // searchWeb: searchWebTool,
         readFileContents: createReadFilesTool(projectContext.absolutePath),
         searchCodeSnippets: createSearchCodeSnippetsTool(
           projectContext.absolutePath
         ),
       },
-      startSequence: "<specifications>",
-      stopSequences: ["</specifications>"],
+      // startSequence: "<specifications>",
+      // stopSequences: ["</specifications>"],
       messages: [
         { role: "system", content: systemPrompt },
         {
@@ -105,6 +103,8 @@ export const generateSpecifications = async (
       emitter,
     }
   );
+  console.log("🚀 | result:", result.text);
+  console.log("🚀 | result:", result.usage);
   if (result.experimental_providerMetadata) {
     console.log("🚀 | LLMCache Usage:", result.experimental_providerMetadata);
   }
@@ -129,7 +129,9 @@ const createSystemPrompt = (taskType: string) => {
     documentation: "crafting thorough documentation specifications",
   };
 
-  return `You are an expert software engineer tasked with ${
+  return `Formatting re-enabled. Please respond with richly formatted text in Markdown.
+  
+  You are an expert software engineer tasked with ${
     taskDescriptions[taskType as keyof typeof taskDescriptions]
   }. Your goal is to create a clear, concise, and actionable specification based on the provided information. Follow these steps:
 

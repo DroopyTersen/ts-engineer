@@ -35,7 +35,7 @@ export const writeSpecifications = async (
   const validatedInput = WriteSpecificationsInput.parse(rawInput);
   let existingCodeTask = await db.getCodeTaskById(validatedInput.codeTaskId);
   let project = await db.getProjectById(validatedInput.projectId);
-  llm = llm || getLLM(chooseModel(project.classification, "tools"));
+  llm = llm || getLLM(chooseModel(project.classification, "reasoner"));
 
   const selectedFiles =
     validatedInput.selectedFiles || existingCodeTask?.selected_files || [];
@@ -49,12 +49,13 @@ export const writeSpecifications = async (
   let newSpecifications = ` `;
 
   emitter?.emit("content", newSpecifications);
-
+  console.log("🚀 | classify input:", validatedInput.input);
   // Classify the code task
   const taskType = await classifyCodeTask(validatedInput.input, {
-    llm,
+    llm: getLLM(chooseModel(project.classification, "small_structured")),
     emitter,
   });
+  console.log("🚀 | taskType:", taskType);
   // Prepare context for spec writing
   let { title, specifications } = await generateSpecifications(
     {

@@ -21,6 +21,7 @@ interface GetProjectCodeContextParams {
   projectId: string;
   selectedFiles: string[];
   maxTokens?: number;
+  maxLinesPerFile?: number;
 }
 
 export async function getProjectCodeContext({
@@ -28,6 +29,7 @@ export async function getProjectCodeContext({
   projectId,
   selectedFiles,
   maxTokens = 54_000,
+  maxLinesPerFile = 300,
 }: GetProjectCodeContextParams): Promise<ProjectCodeContext> {
   const project = await getProject(projectId);
   let filepaths: string[] = selectedFiles;
@@ -46,7 +48,7 @@ export async function getProjectCodeContext({
   let fileContents = await getFileContents(filepaths, {
     projectPath: project.absolute_path,
     maxTokens,
-    maxLinesPerFile: 300,
+    maxLinesPerFile,
   });
 
   const fileStructure = formatFileStructure(project.filepaths);

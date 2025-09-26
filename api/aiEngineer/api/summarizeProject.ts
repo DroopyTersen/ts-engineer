@@ -1,5 +1,5 @@
 import { getLLM } from "~/toolkit/ai/llm/getLLM";
-import { chooseModel } from "~/toolkit/ai/llm/modelProviders";
+import { modelProviders } from "~/toolkit/ai/llm/modelProviders";
 import { LLMEventEmitter } from "~/toolkit/ai/streams/LLMEventEmitter";
 import { db } from "../db/db.server";
 import { formatFileStructure, getFileContents } from "../fs/getFileContent";
@@ -17,7 +17,7 @@ export const summarizeProject = async (
     maxTokens: 100_000,
     maxLinesPerFile: 300,
   });
-  let llm = getLLM(chooseModel(project.classification, "large"));
+  let llm = getLLM(modelProviders.openai("gpt-4.1"));
 
   let summary = await generateProjectSummary(
     {
